@@ -61,7 +61,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Use a string path to avoid any Path/PosixPath subtlety when Django
         # constructs filesystem paths during template lookup.
-        'DIRS': [ BASE_DIR / 'templates', BASE_DIR / 'admin_ecomus'],
+        'DIRS': [BASE_DIR / 'templates', BASE_DIR / 'admin-ecomus'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -125,11 +125,11 @@ USE_TZ = True
 # Static URL used during development. Keep different from MEDIA_URL.
 STATIC_URL = '/static/'
 # In production use collectstatic to populate STATIC_ROOT and serve from a web server.
-STATIC_ROOT = BASE_DIR / 'static'  # where collectstatic puts files for production
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # where collectstatic puts files for production
 # Tell Django where to find the project-level static files directory.
-#STATICFILES_DIRS = [
-#    BASE_DIR / 'static',  # Archivos estáticos del panel admin
-#]
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # Archivos estáticos del proyecto
+]
 
 # Media (user-uploaded) files served at /media/ during development
 MEDIA_URL = '/media/'
