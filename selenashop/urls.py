@@ -17,12 +17,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from core import views as core_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', core_views.inicio, name='inicio'),
-    path('home-02/', core_views.home_02, name='home_02'),
+    path('', include('core.urls')),
     
     # URLs del admin personalizado (productos)
     path('admin-panel/productos/', include('apps.productos.urls')),
