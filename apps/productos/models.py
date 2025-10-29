@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.conf import settings
 
 
 class Categoria(models.Model):
@@ -327,9 +328,8 @@ class ResenaProducto(models.Model):
         related_name='resenas',
         verbose_name='Producto'
     )
-    # Nota: Temporalmente usamos User de Django, luego cambiaremos a modelo Usuario
     usuario = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         verbose_name='Usuario'
     )
