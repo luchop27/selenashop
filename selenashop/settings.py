@@ -61,7 +61,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Use a string path to avoid any Path/PosixPath subtlety when Django
         # constructs filesystem paths during template lookup.
-        'DIRS': [BASE_DIR / 'admin-ecomus', BASE_DIR / 'templates'],
+        'DIRS': [ BASE_DIR / 'templates', BASE_DIR / 'admin_ecomus'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
