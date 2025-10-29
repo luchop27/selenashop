@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Apps locales
+    'apps.productos',
     'core',
 ]
 
@@ -123,7 +126,7 @@ STATIC_URL = '/static/'
 # In production use collectstatic to populate STATIC_ROOT and serve from a web server.
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # where collectstatic puts files for production
 # Tell Django where to find the project-level static files directory.
-#STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'admin-ecomus']
 
 # Media (user-uploaded) files served at /media/ during development
 MEDIA_URL = '/media/'
