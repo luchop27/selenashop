@@ -4,6 +4,9 @@ from . import views
 app_name = 'productos'
 
 urlpatterns = [
+    # Dashboard Principal
+    path('dashboard/', views.dashboard_admin, name='dashboard'),
+    
     # URLs de Productos
     path('', views.producto_lista, name='producto_lista'),
     path('agregar/', views.producto_agregar, name='producto_agregar'),

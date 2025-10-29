@@ -5,6 +5,32 @@ from .models import Producto, Categoria, Marca, ImagenProducto, VarianteProducto
 
 
 # ============================================
+# DASHBOARD PRINCIPAL
+# ============================================
+
+def dashboard_admin(request):
+    """
+    Dashboard principal del panel de administración con estadísticas
+    """
+    # Obtener estadísticas básicas
+    total_productos = Producto.objects.count()
+    total_categorias = Categoria.objects.count()
+    total_marcas = Marca.objects.count()
+    productos_disponibles = Producto.objects.filter(estado='disponible').count()
+    productos_agotados = Producto.objects.filter(estado='agotado').count()
+    
+    context = {
+        'total_productos': total_productos,
+        'total_categorias': total_categorias,
+        'total_marcas': total_marcas,
+        'productos_disponibles': productos_disponibles,
+        'productos_agotados': productos_agotados,
+    }
+    
+    return render(request, 'index.html', context)
+
+
+# ============================================
 # VISTAS DE PRODUCTOS
 # ============================================
 
@@ -41,7 +67,7 @@ def producto_lista(request):
         'estado': estado,
     }
     
-    return render(request, 'admin/productos/producto_lista.html', context)
+    return render(request, 'product-list.html', context)
 
 
 def producto_agregar(request):
@@ -100,7 +126,7 @@ def producto_agregar(request):
         'marcas': marcas,
     }
     
-    return render(request, 'admin/productos/producto_agregar.html', context)
+    return render(request, 'add-product.html', context)
 
 
 def producto_editar(request, pk):
@@ -149,7 +175,7 @@ def producto_editar(request, pk):
         'editar': True,
     }
     
-    return render(request, 'admin/productos/producto_agregar.html', context)
+    return render(request, 'add-product.html', context)
 
 
 def producto_eliminar(request, pk):
@@ -177,7 +203,7 @@ def categoria_lista(request):
         'categorias': categorias,
     }
     
-    return render(request, 'admin/productos/categoria_lista.html', context)
+    return render(request, 'category-list.html', context)
 
 
 def categoria_agregar(request):
