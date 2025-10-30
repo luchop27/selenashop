@@ -235,7 +235,7 @@ def categoria_agregar(request):
         'categorias_padre': categorias_padre,
     }
     
-    return render(request, 'admin/productos/categoria_agregar.html', context)
+    return render(request, 'new-category.html', context)
 
 
 def categoria_editar(request, pk):
