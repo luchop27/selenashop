@@ -2503,7 +2503,7 @@
                         </a>
                         <div id="dropdown-menu-one" class="collapse">
                             <ul class="sub-nav-menu">
-                                <li><a href="index.html" class="sub-nav-link">Home Fashion 01</a></li>
+                                <li><a href="{% url 'inicio' %}" class="sub-nav-link">Home Fashion 01</a></li>
                                 <li><a href="{% url 'home_02' %}" class="sub-nav-link">Home Fashion 02</a></li>
                                 <li><a href="home-03.html" class="sub-nav-link">Home Fashion 03</a></li>
                                 <li><a href="home-04.html" class="sub-nav-link">Home Fashion 04</a></li>
@@ -3196,13 +3196,25 @@
                     <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
                 </div>
                 <div class="tf-login-form">
-                    <form class="" action="my-account.html" accept-charset="utf-8">
+                    <form method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        {% if messages %}
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                {% for message in messages %}
+                                    <span>{{ message }}</span>
+                                    {% if not forloop.last %}<br>{% endif %}
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                        
                         <div class="tf-field style-1">
-                            <input class="tf-field-input tf-input" placeholder=" " type="email" name="">
+                            <input class="tf-field-input tf-input" placeholder=" " type="email" name="email" required>
                             <label class="tf-field-label" for="">Email *</label>
                         </div>
                         <div class="tf-field style-1">
-                            <input class="tf-field-input tf-input" placeholder=" " type="password" name="">
+                            <input class="tf-field-input tf-input" placeholder=" " type="password" name="password" required>
                             <label class="tf-field-label" for="">Password *</label>
                         </div>
                         <div>
@@ -4035,6 +4047,33 @@
     <script src="{% static 'js/wow.min.js' %}"></script>
     <script src="{% static 'js/multiple-modal.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    
+    <!-- Script para limpiar formulario de login -->
+    <script>
+        // Limpiar campos del formulario de login al cargar la página y cuando se abre el modal
+        function clearLoginForm() {
+            const loginModal = document.getElementById('login');
+            if (loginModal) {
+                const form = loginModal.querySelector('form');
+                if (form) {
+                    form.reset();
+                }
+            }
+        }
+        
+        // Limpiar al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            clearLoginForm();
+        });
+        
+        // Limpiar cuando se abre el modal
+        const loginModal = document.getElementById('login');
+        if (loginModal) {
+            loginModal.addEventListener('show.bs.modal', function () {
+                clearLoginForm();
+            });
+        }
+    </script>
 </body>
 
 </html>

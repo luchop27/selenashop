@@ -17,10 +17,18 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from core import views as core_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('core.urls')),
+    
+    # URLs de core (inicio, home-02, login, logout)
+    path('', core_views.inicio, name='inicio'),
+    path('home-02/', core_views.home_02, name='home_02'),
+    path('login/', core_views.login_usuario, name='login'),
+    path('logout/', core_views.logout_usuario, name='logout'),
+    path('dashboard/', core_views.dashboard_redirect, name='dashboard'),
+    path('admin-ecomus/', core_views.admin_index, name='admin_index'),
     
     # URLs del admin personalizado (productos)
     path('admin-panel/productos/', include('apps.productos.urls')),
