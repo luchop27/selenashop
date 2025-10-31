@@ -31,9 +31,7 @@ urlpatterns = [
     path('admin-ecomus/', core_views.admin_index, name='admin_index'),
     
    # URLs del admin personalizado (productos)
-    # Mount the `apps.productos` urls under a single prefix and give it a namespace
-    # so templates and reverse lookups can use e.g. {% url 'productos:producto_lista' %}
-    path('admin-panel/productos/', include(('apps.productos.urls', 'productos'), namespace='productos')),
+    path('', include('apps.catalogo.urls')),
 ] 
 
 if settings.DEBUG:
