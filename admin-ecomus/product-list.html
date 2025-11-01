@@ -66,8 +66,8 @@
                                                 </div>
                                             </form>
                                         </div>
-                                        <a class="tf-button style-1 w208" href="add-product.html"><i
-                                                class="icon-plus"></i>Add new</a>
+                    <a class="tf-button style-1 w208" href="{% url 'catalogo:panel_producto_crear' %}"><i
+                        class="icon-plus"></i>Add new</a>
                                     </div>
                                     <div class="wg-table table-product-list">
     <ul class="table-title flex gap20 mb-14">
@@ -82,78 +82,88 @@
     </ul>
 
     <ul class="flex flex-column">
-        {% for producto in productos %}
-        <li class="wg-product item-row gap20">
-            <!-- nombre + imagen -->
-            <div class="name">
-                <div class="image">
-                    {% if producto.imagen %}
-                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+    {% for producto in productos %}
+    <li class="wg-product item-row gap20">
+        <!-- nombre + imagen -->
+        <div class="name">
+            <div class="image">
+                {# tu modelo de Imagen usa url, no ImageField #}
+                {% with img=producto.imagenes.first %}
+                    {% if img and img.url %}
+                        <img src="{{ img.url }}" alt="{{ producto.nombre }}">
                     {% else %}
-                        <img src="{% static 'images/products/product-1.jpg' %}" alt="">
+                        <img src="{% static 'panel_admin/images/products/product-1.jpg' %}" alt="">
                     {% endif %}
+                {% endwith %}
+            </div>
+            <div class="title line-clamp-2 mb-0">
+                <a href="#" class="body-text">
+                    {{ producto.nombre }}
+                </a>
+                <div class="text-tiny">
+                    {% if producto.categoria %}{{ producto.categoria.nombre }}{% else %}Sin categoría{% endif %}
                 </div>
-                <div class="title line-clamp-2 mb-0">
-                    <a href="#" class="body-text">{{ producto.nombre }}</a>
-                </div>
             </div>
+        </div>
 
-            <!-- ID -->
-            <div class="body-text text-main-dark mt-4">#{{ producto.id }}</div>
+        <!-- ID -->
+        <div class="body-text text-main-dark mt-4">#{{ producto.id }}</div>
 
-            <!-- precio -->
-            <div class="body-text text-main-dark mt-4">
-                {% if producto.precio %}
-                    ${{ producto.precio }}
-                {% else %}
-                    -
-                {% endif %}
-            </div>
+        <!-- PRICE -->
+        <div class="body-text text-main-dark mt-4">
+            {% if producto.precio_variante %}
+                ${{ producto.precio_variante }}
+            {% else %}
+                ${{ producto.precio_base }}
+            {% endif %}
+        </div>
 
-            <!-- cantidad (si tu modelo tiene stock) -->
-            <div class="body-text text-main-dark mt-4">
-                {% if producto.stock is not None %}
-                    {{ producto.stock }}
-                {% else %}
-                    0
-                {% endif %}
-            </div>
+        <!-- QUANTITY (stock total de variantes) -->
+        <div class="body-text text-main-dark mt-4">
+            {% if producto.total_stock %}
+                {{ producto.total_stock }}
+            {% else %}
+                0
+            {% endif %}
+        </div>
 
-            <!-- sale: por ahora vacío -->
-            <div class="body-text text-main-dark mt-4">-</div>
+        <!-- SALE (porcentaje de descuento) -->
+        <div class="body-text text-main-dark mt-4">
+            {% if producto.sale_percent %}
+                {{ producto.sale_percent }}%
+            {% else %}
+                -
+            {% endif %}
+        </div>
 
-            <!-- estado stock -->
-            <div>
-                {% if producto.stock and producto.stock > 0 %}
-                    <div class="block-available bg-1 fw-7">In Stock</div>
-                {% else %}
-                    <div class="block-stock bg-1 fw-7">Out of stock</div>
-                {% endif %}
-            </div>
+        <!-- STOCK badge -->
+        <div>
+            {% if producto.total_stock and producto.total_stock > 0 %}
+                <div class="block-available bg-1 fw-7">In Stock</div>
+            {% else %}
+                <div class="block-stock bg-1 fw-7">Out of stock</div>
+            {% endif %}
+        </div>
 
-            <!-- fecha -->
-            <div class="body-text text-main-dark mt-4">
-                {% if producto.created_at %}
-                    {{ producto.created_at|date:"d/m/Y" }}
-                {% else %}
-                    -
-                {% endif %}
-            </div>
+        <!-- fecha -->
+        <div class="body-text text-main-dark mt-4">
+            {{ producto.created_at|date:"d/m/Y" }}
+        </div>
 
-            <!-- acciones -->
-            <div class="list-icon-function">
-                <div class="item eye"><i class="icon-eye"></i></div>
-                <div class="item edit"><i class="icon-edit-3"></i></div>
-                <div class="item trash"><i class="icon-trash-2"></i></div>
-            </div>
-        </li>
-        {% empty %}
-        <!-- AQUÍ se muestra cuando la tabla está vacía -->
-        <li class="item-row gap20">
-            <div class="body-text">No hay productos registrados todavía.</div>
-        </li>
-        {% endfor %}
-    </ul>
+        <!-- acciones -->
+        <div class="list-icon-function">
+            <div class="item eye"><i class="icon-eye"></i></div>
+            <div class="item edit"><i class="icon-edit-3"></i></div>
+            <div class="item trash"><i class="icon-trash-2"></i></div>
+        </div>
+    </li>
+    {% empty %}
+    <li class="item-row gap20">
+        <div class="body-text">No hay productos registrados todavía.</div>
+    </li>
+    {% endfor %}
+</ul>
+
 </div>
 
                                     <div class="divider"></div>

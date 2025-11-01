@@ -56,9 +56,9 @@ class EstiloAdmin(admin.ModelAdmin):
 class ImagenInline(admin.TabularInline):
     model = Imagen
     extra = 1
-    fields = ('url', 'alt', 'posicion', 'producto', 'variante')
+    # As inline of Producto we don't show producto (it's implicit). Alt/posicion were removed.
+    fields = ('url', 'variante')
     autocomplete_fields = ('variante',)
-    ordering = ('posicion',)
 
 
 class VarianteInline(admin.TabularInline):
@@ -173,9 +173,8 @@ class ImagenAdmin(admin.ModelAdmin):
         'url',
         'producto',
         'variante',
-        'posicion',
     )
     list_filter = ('producto',)
-    search_fields = ('url', 'alt', 'producto__nombre')
+    search_fields = ('url', 'producto__nombre')
     autocomplete_fields = ('producto', 'variante')
-    ordering = ('producto', 'posicion')
+    ordering = ('producto', 'url')

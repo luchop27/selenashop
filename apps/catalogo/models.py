@@ -198,18 +198,30 @@ class Imagen(models.Model):
         blank=True,
         related_name='imagenes'
     )
-    url = models.URLField()
-    alt = models.CharField(max_length=200, blank=True, null=True)
-    posicion = models.PositiveIntegerField(default=0)
+    # store URL (path) returned by the file manager used in the admin frontend
+    # Temporarily set a default so migrations converting existing rows to NOT NULL
+    # do not prompt for an interactive one-off default. The default is an empty
+    # string which represents "no file selected".
+    url = models.TextField(default='', blank=True)
 
     class Meta:
-        ordering = ['posicion']
         verbose_name = "Imagen"
         verbose_name_plural = "Imágenes"
+        constraints = [
+            # Require at least one relation: producto OR variante must be set
+            models.CheckConstraint(check=(
+                models.Q(producto__isnull=False) | models.Q(variante__isnull=False)
+            ), name='imagen_producto_o_variante_not_null'),
+        ]
 
     def __str__(self):
         if self.producto:
             return f"Imagen de {self.producto.nombre}"
         if self.variante:
             return f"Imagen de variante {self.variante}"
-        return self.url
+        return self.url or ""
+
+    @property
+    def src(self):
+        """Return the stored URL for the image or empty string."""
+        return self.url or ""

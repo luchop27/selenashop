@@ -1,8 +1,23 @@
 # apps/catalogo/views.py
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import ListView, DetailView
 from .models import Categoria, Estilo, Producto
+from django.db.models import Sum, Min
+from decimal import Decimal
+from django.urls import reverse
+from django.contrib import messages
+from .forms import ProductoForm, VarianteFormSet, ImagenFormSet
 
+
+def panel_dashboard(request):
+    """Vista principal del dashboard"""
+    total_productos = Producto.objects.count()
+    total_categorias = Categoria.objects.filter(estado=True).count()
+    
+    return render(request, "index.html", {
+        "total_productos": total_productos,
+        "total_categorias": total_categorias,
+    })
 
 # =========================
 #  VISTAS PÚBLICAS
@@ -145,7 +160,6 @@ class EstiloProductoListView(ListView):
 # =========================
 #  VISTAS DEL PANEL (admin-ecomus)
 # =========================
-
 def panel_productos_list(request):
     """
     Renderiza tu HTML del panel: admin-ecomus/product-list.html
@@ -153,20 +167,64 @@ def panel_productos_list(request):
     productos = (
         Producto.objects
         .select_related("categoria", "estilo")
-        .prefetch_related("variantes")
-        .all()
+        .prefetch_related("variantes", "imagenes")
+        # agregamos datos calculados:
+        .annotate(
+            total_stock=Sum("variantes__stock"),          # suma de stock de todas las variantes
+            precio_variante=Min("variantes__precio"),     # el precio más barato de las variantes
+        )
+        .order_by("-created_at")
     )
+
+    # Calcular porcentaje de descuento (sale) para mostrar en la tabla
+    for p in productos:
+        pv = getattr(p, 'precio_variante', None)
+        pb = getattr(p, 'precio_base', None)
+        try:
+            if pv is not None and pb is not None and pb > 0 and pv < pb:
+                # pv and pb are Decimals; calcular porcentaje entero
+                percent = int(((pb - pv) / pb) * Decimal(100))
+                p.sale_percent = percent
+            else:
+                p.sale_percent = None
+        except Exception:
+            p.sale_percent = None
     return render(request, "product-list.html", {
         "productos": productos
     })
-
 
 def panel_producto_crear(request):
     """
     Renderiza el HTML de crear producto del panel.
     Luego lo cambiamos a un ModelForm.
     """
-    return render(request, "add-product.html")
+    if request.method == 'POST':
+        form = ProductoForm(request.POST)
+        if form.is_valid():
+            producto = form.save()
+            variante_formset = VarianteFormSet(request.POST, instance=producto)
+            imagen_formset = ImagenFormSet(request.POST, instance=producto)
+            if variante_formset.is_valid() and imagen_formset.is_valid():
+                variante_formset.save()
+                imagen_formset.save()
+                messages.success(request, 'Producto creado correctamente.')
+                return redirect(reverse('catalogo:panel_productos'))
+            else:
+                # si los formsets fallan, mostramos errores en la plantilla
+                pass
+        else:
+            variante_formset = VarianteFormSet(request.POST)
+            imagen_formset = ImagenFormSet(request.POST, request.FILES)
+    else:
+        form = ProductoForm()
+        variante_formset = VarianteFormSet()
+        imagen_formset = ImagenFormSet()
+
+    return render(request, "add-product.html", {
+        'form': form,
+        'variante_formset': variante_formset,
+        'imagen_formset': imagen_formset,
+    })
 
 
 def panel_categorias_list(request):
