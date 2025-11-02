@@ -30,8 +30,8 @@ urlpatterns = [
     path('dashboard/', core_views.dashboard_redirect, name='dashboard'),
     path('admin-ecomus/', core_views.admin_index, name='admin_index'),
     
-    # URLs del admin personalizado (productos)
-    path('admin-panel/productos/', include('apps.productos.urls')),
+   # URLs del admin personalizado (productos)
+    path('', include('apps.catalogo.urls')),
 ] 
 
 if settings.DEBUG:
