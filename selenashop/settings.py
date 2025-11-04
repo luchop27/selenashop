@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Apps locales
     'apps.usuarios',
     'apps.productos',
+    'apps.resenas',
     'core',
 ]
 AUTH_USER_MODEL = 'usuarios.Usuario'

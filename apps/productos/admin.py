@@ -55,7 +55,6 @@ class EstiloAdmin(admin.ModelAdmin):
 class ImagenInline(admin.TabularInline):
 	model = Imagen
 	extra = 1
-	# As inline of Producto we don't show producto (it's implicit). Alt/posicion were removed.
 	fields = ('url', 'variante')
 	autocomplete_fields = ('variante',)
 
@@ -78,6 +77,9 @@ class ProductoAdmin(admin.ModelAdmin):
 		'categoria',
 		'estilo',
 		'precio_base',
+		'stock_total',
+		'num_variantes',
+		'promedio_resenas',
 		'tiene_tallas',
 		'activo',
 		'created_at',
@@ -94,6 +96,10 @@ class ProductoAdmin(admin.ModelAdmin):
 	list_editable = ('activo', 'precio_base', 'tiene_tallas')
 	inlines = [ImagenInline, VarianteInline]
 	ordering = ('-created_at',)
+	autocomplete_fields = ('categoria', 'estilo')
+	actions = ['activar_productos', 'desactivar_productos', 'duplicar_producto']
+	list_per_page = 20
+	date_hierarchy = 'created_at'
 
 	fieldsets = (
 		('Datos básicos', {
@@ -129,6 +135,74 @@ class ProductoAdmin(admin.ModelAdmin):
 		}),
 	)
 	readonly_fields = ('created_at', 'updated_at')
+
+	def stock_total(self, obj):
+		"""Muestra el stock total sumando todas las variantes"""
+		total = sum(v.stock for v in obj.variantes.all())
+		if total == 0:
+			return '❌ Sin stock'
+		elif total < 10:
+			return f'⚠️ {total}'
+		return f'✅ {total}'
+	stock_total.short_description = 'Stock Total'
+
+	def num_variantes(self, obj):
+		"""Número de variantes del producto"""
+		count = obj.variantes.count()
+		return f'{count} variante{"s" if count != 1 else ""}'
+	num_variantes.short_description = 'Variantes'
+
+	def promedio_resenas(self, obj):
+		"""Calcula el promedio de las reseñas"""
+		resenas = obj.resenas.all()
+		if not resenas:
+			return '—'
+		promedio = sum(r.calificacion for r in resenas) / len(resenas)
+		estrellas = '⭐' * round(promedio)
+		return f'{estrellas} ({promedio:.1f})'
+	promedio_resenas.short_description = 'Reseñas'
+
+	def activar_productos(self, request, queryset):
+		"""Acción para activar productos seleccionados"""
+		updated = queryset.update(activo=True)
+		self.message_user(request, f'{updated} producto(s) activado(s).')
+	activar_productos.short_description = '✅ Activar productos seleccionados'
+
+	def desactivar_productos(self, request, queryset):
+		"""Acción para desactivar productos seleccionados"""
+		updated = queryset.update(activo=False)
+		self.message_user(request, f'{updated} producto(s) desactivado(s).')
+	desactivar_productos.short_description = '❌ Desactivar productos seleccionados'
+
+	def duplicar_producto(self, request, queryset):
+		"""Acción para duplicar productos"""
+		for producto in queryset:
+			# Guardamos las variantes e imágenes originales
+			variantes_originales = list(producto.variantes.all())
+			imagenes_originales = list(producto.imagenes.all())
+			
+			# Duplicamos el producto
+			producto.pk = None
+			producto.nombre = f'{producto.nombre} (Copia)'
+			producto.slug = f'{producto.slug}-copia'
+			producto.save()
+			
+			# Duplicamos las variantes
+			for variante in variantes_originales:
+				variante.pk = None
+				variante.producto = producto
+				variante.sku = f'{variante.sku}-copia'
+				variante.save()
+			
+			# Duplicamos las imágenes
+			for imagen in imagenes_originales:
+				imagen.pk = None
+				imagen.producto = producto
+				imagen.variante = None
+				imagen.save()
+		
+		self.message_user(request, f'{queryset.count()} producto(s) duplicado(s).')
+	duplicar_producto.short_description = '📋 Duplicar productos seleccionados'
 
 
 # =========================
