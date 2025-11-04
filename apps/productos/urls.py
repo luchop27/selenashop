@@ -1,9 +1,9 @@
-# apps/catalogo/urls.py
+# apps/productos/urls.py
 
 from django.urls import path
 from . import views
 
-app_name = "catalogo"
+app_name = "productos"
 
 urlpatterns = [
     # públicas
@@ -13,7 +13,7 @@ urlpatterns = [
     path('estilo/<slug:slug>/', views.EstiloProductoListView.as_view(), name='producto_por_estilo'),
 
     # ----- PANEL CUSTOM -----
-    path('admin-panel/', views.panel_dashboard, name='panel_dashboard'),  # ⬅️ NUEVA LÍNEA
+    path('admin-panel/', views.panel_dashboard, name='panel_dashboard'),
     path('admin-panel/productos/', views.panel_productos_list, name='panel_productos'),
     path('admin-panel/productos/agregar/', views.panel_producto_crear, name='panel_producto_crear'),
     path('admin-panel/categorias/', views.panel_categorias_list, name='panel_categorias'),

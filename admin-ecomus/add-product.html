@@ -16,7 +16,7 @@
                 <h3>Agregar producto</h3>
                 <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                     <li>
-                        <a href="{% url 'catalogo:panel_dashboard' %}">
+                        <a href="{% url 'productos:panel_dashboard' %}">
                             <div class="text-tiny">Panel</div>
                         </a>
                     </li>
@@ -24,7 +24,7 @@
                         <i class="icon-chevron-right"></i>
                     </li>
                     <li>
-                        <a href="{% url 'catalogo:panel_productos' %}">
+                        <a href="{% url 'productos:panel_productos' %}">
                             <div class="text-tiny">Productos</div>
                         </a>
                     </li>
@@ -224,7 +224,7 @@
                 <!-- Submit buttons -->
                 <div class="cols gap10">
                     <button class="tf-button w380" type="submit">Add product</button>
-                    <a href="{% url 'catalogo:panel_productos' %}" class="tf-button style-3 w380">Cancel</a>
+                    <a href="{% url 'productos:panel_productos' %}" class="tf-button style-3 w380">Cancel</a>
                 </div>
             </form>
             <!-- /form-add-product -->
