@@ -22,13 +22,13 @@ from core import views as core_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # URLs de core (inicio, home-02, login, logout)
+    # URLs de core (inicio como home-05)
     path('', core_views.inicio, name='inicio'),
-    path('home-02/', core_views.home_02, name='home_02'),
-    path('login/', core_views.login_usuario, name='login'),
-    path('logout/', core_views.logout_usuario, name='logout'),
     path('dashboard/', core_views.dashboard_redirect, name='dashboard'),
     path('admin-ecomus/', core_views.admin_index, name='admin_index'),
+    
+    # URLs de usuarios (login, logout, my-account)
+    path('', include('apps.usuarios.urls')),
     
    # URLs del admin personalizado (productos)
     path('', include('apps.catalogo.urls')),

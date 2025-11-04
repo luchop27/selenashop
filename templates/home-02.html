@@ -967,7 +967,7 @@
                                                 <a href="#" class="menu-link-text link text_black-2">My account</a>
                                                 <div class="sub-menu submenu-default">
                                                     <ul class="menu-list">
-                                                        <li><a href="my-account.html"
+                                                        <li><a href="{% url 'usuarios:my_account' %}"
                                                                 class="menu-link-text link text_black-2">My account</a>
                                                         </li>
                                                         <li><a href="my-account-orders.html"
@@ -2811,7 +2811,7 @@
                                     </a>
                                     <div id="sub-account" class="collapse">
                                         <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="my-account.html" class="sub-nav-link">My account</a></li>
+                                            <li><a href="{% url 'my-account' %}" class="sub-nav-link">My account</a></li>
                                             <li><a href="my-account-orders.html" class="sub-nav-link">My order</a></li>
                                             <li><a href="my-account-orders-details.html" class="sub-nav-link">My order
                                                     details</a></li>
@@ -3196,7 +3196,7 @@
                     <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
                 </div>
                 <div class="tf-login-form">
-                    <form method="POST" action="{% url 'login' %}">
+                    <form method="POST" action="{% url 'usuarios:login' %}">
                         {% csrf_token %}
                         
                         {% if messages %}
