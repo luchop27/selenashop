@@ -3,9 +3,9 @@ from django.db import models
 from django.urls import reverse
 
 
-# ------------------------------
+# -----------------------------
 # CATEGORÍA
-# ------------------------------
+# -----------------------------
 class Categoria(models.Model):
     """
     Agrupa productos (Ropa, Accesorios, Perfumes, etc.)
