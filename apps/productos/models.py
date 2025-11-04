@@ -1,7 +1,11 @@
-# apps/catalogo/models.py
+# apps/productos/models.py
 from django.db import models
+from django.urls import reverse
 
 
+# ------------------------------
+# CATEGORÍA
+# ------------------------------
 class Categoria(models.Model):
     """
     Agrupa productos (Ropa, Accesorios, Perfumes, etc.)
@@ -10,6 +14,7 @@ class Categoria(models.Model):
     nombre = models.CharField(max_length=150)
     slug = models.SlugField(max_length=180, unique=True)
     descripcion = models.TextField(blank=True, null=True)
+
     padre = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -29,14 +34,20 @@ class Categoria(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['posicion', 'nombre']
+        ordering = ['posicion']
         verbose_name = "Categoría"
         verbose_name_plural = "Categorías"
 
     def __str__(self):
         return self.nombre
 
+    def get_absolute_url(self):
+        return reverse('productos:lista_por_categoria', args=[self.slug])
 
+
+# ------------------------------
+# ESTILO
+# ------------------------------
 class Estilo(models.Model):
     """
     Para navegar por estilo: gala, playa, casual, oficina, sport...
@@ -44,11 +55,12 @@ class Estilo(models.Model):
     nombre = models.CharField(max_length=150)
     slug = models.SlugField(max_length=180, unique=True)
     descripcion = models.TextField(blank=True, null=True)
+
     posicion = models.PositiveIntegerField(default=0)
     activo = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['posicion', 'nombre']
+        ordering = ['posicion']
         verbose_name = "Estilo"
         verbose_name_plural = "Estilos"
 
@@ -56,6 +68,9 @@ class Estilo(models.Model):
         return self.nombre
 
 
+# ------------------------------
+# PRODUCTO
+# ------------------------------
 class Producto(models.Model):
     """
     Producto base que se muestra en la tienda.
@@ -81,25 +96,17 @@ class Producto(models.Model):
         null=True,
         help_text="Ej: vestido, perfume, reloj..."
     )
+
     nombre = models.CharField(max_length=200)
     slug = models.SlugField(max_length=200, unique=True)
     descripcion_corta = models.TextField(blank=True, null=True)
     descripcion_larga = models.TextField(blank=True, null=True)
+
     marca = models.CharField(max_length=100, blank=True, null=True)
     material = models.CharField(max_length=100, blank=True, null=True)
-
+    precio_base = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    tiene_tallas = models.BooleanField(default=False)
     activo = models.BooleanField(default=True)
-    precio_base = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0,
-        help_text="Se usa cuando no hay variante o la variante no define precio."
-    )
-    tiene_tallas = models.BooleanField(
-        default=False,
-        help_text="Si es true, el cliente elegirá talla/variante."
-    )
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -111,7 +118,13 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
+    def get_absolute_url(self):
+        return reverse('productos:detalle', args=[self.id, self.slug])
 
+
+# ------------------------------
+# TALLA
+# ------------------------------
 class Talla(models.Model):
     """
     Catálogo general de tallas (S, M, L, 36, 38, Única...).
@@ -128,6 +141,9 @@ class Talla(models.Model):
         return self.codigo
 
 
+# ------------------------------
+# VARIANTE
+# ------------------------------
 class Variante(models.Model):
     """
     Variante del producto -> combina producto + talla + color.
@@ -155,18 +171,16 @@ class Variante(models.Model):
         help_text="Si lo dejas vacío, el sistema puede usar precio_base del producto."
     )
     stock = models.PositiveIntegerField(default=0)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = "Variante"
         verbose_name_plural = "Variantes"
-        # esto emula tu UNIQUE lógico (producto, talla, color)
         constraints = [
             models.UniqueConstraint(
                 fields=['producto', 'talla', 'color'],
-                name='uq_variante_producto_talla_color'
+                name='productos_uq_variante_producto_talla_color'
             )
         ]
 
@@ -179,10 +193,12 @@ class Variante(models.Model):
         return base
 
 
+# ------------------------------
+# IMAGEN
+# ------------------------------
 class Imagen(models.Model):
     """
     Imagen asociada a un producto o a una variante específica.
-    Al menos uno de los dos debe estar presente.
     """
     producto = models.ForeignKey(
         Producto,
@@ -198,20 +214,16 @@ class Imagen(models.Model):
         blank=True,
         related_name='imagenes'
     )
-    # store URL (path) returned by the file manager used in the admin frontend
-    # Temporarily set a default so migrations converting existing rows to NOT NULL
-    # do not prompt for an interactive one-off default. The default is an empty
-    # string which represents "no file selected".
     url = models.TextField(default='', blank=True)
 
     class Meta:
         verbose_name = "Imagen"
         verbose_name_plural = "Imágenes"
         constraints = [
-            # Require at least one relation: producto OR variante must be set
-            models.CheckConstraint(check=(
-                models.Q(producto__isnull=False) | models.Q(variante__isnull=False)
-            ), name='imagen_producto_o_variante_not_null'),
+            models.CheckConstraint(
+                check=(models.Q(producto__isnull=False) | models.Q(variante__isnull=False)),
+                name='productos_imagen_producto_o_variante_not_null',
+            ),
         ]
 
     def __str__(self):
@@ -223,5 +235,4 @@ class Imagen(models.Model):
 
     @property
     def src(self):
-        """Return the stored URL for the image or empty string."""
         return self.url or ""

@@ -30,8 +30,8 @@ urlpatterns = [
     # URLs de usuarios (login, logout, my-account)
     path('', include('apps.usuarios.urls')),
     
-   # URLs del admin personalizado (productos)
-    path('', include('apps.catalogo.urls')),
+    # URLs del admin personalizado (productos)
+     path('', include('apps.productos.urls')),
 ] 
 
 if settings.DEBUG:
