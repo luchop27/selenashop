@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'baseadmin.html' %}
 {% load static %}
 
 {% block title %}Agregar Producto - Selena Store{% endblock %}
@@ -16,15 +16,15 @@
                 <h3>Agregar producto</h3>
                 <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                     <li>
-                        <a href="{% url 'productos:panel_dashboard' %}">
-                            <div class="text-tiny">Panel</div>
+                        <a href="{% url 'core:admin_index' %}">
+                            <div class="text-tiny">Dashboard</div>
                         </a>
                     </li>
                     <li>
                         <i class="icon-chevron-right"></i>
                     </li>
                     <li>
-                        <a href="{% url 'productos:panel_productos' %}">
+                        <a href="{% url 'productos:admin_productos_list' %}">
                             <div class="text-tiny">Productos</div>
                         </a>
                     </li>
@@ -36,12 +36,20 @@
                     </li>
                 </ul>
             </div>
+            
+            <!-- Mensajes -->
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} mb-20">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            
             <!-- form-add-product -->
             <form class="form-add-product" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 
                 {% if form.non_field_errors %}
-                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    <div class="alert alert-danger mb-20">{{ form.non_field_errors }}</div>
                 {% endif %}
 
                 <!-- Upload images -->
@@ -71,21 +79,6 @@
                         {% for f in imagen_formset.forms %}
                             <div class="mb-10">
                                 {{ f.id }}
-                                {% if f.url %}
-                                    <fieldset class="name mb-8">
-                                        <div class="body-text mb-4">{{ f.url.label }}</div>
-                                        {{ f.url }}
-                                        {% if f.url.errors %}
-                                            <div class="text-danger">{{ f.url.errors }}</div>
-                                        {% endif %}
-                                    </fieldset>
-                                {% endif %}
-                                {% if f.variante %}
-                                    <fieldset class="name mb-8">
-                                        <div class="body-text mb-4">{{ f.variante.label }}</div>
-                                        {{ f.variante }}
-                                    </fieldset>
-                                {% endif %}
                                 {% if f.DELETE %}
                                     <div class="mb-8">
                                         {{ f.DELETE }} <label>Eliminar</label>
@@ -172,14 +165,6 @@
                                 </div>
                             </fieldset>
 
-                            <fieldset class="name">
-                                <div class="body-title mb-10">Tiene tallas</div>
-                                <div class="flex gap10 items-center">
-                                    {{ form.tiene_tallas }}
-                                    <label for="{{ form.tiene_tallas.id_for_label }}">Habilitar tallas</label>
-                                </div>
-                            </fieldset>
-
                             <fieldset class="category">
                                 <div class="body-title mb-10">Slug</div>
                                 {{ form.slug }}
@@ -190,41 +175,33 @@
                         </div>
                     </div>
 
-                <!-- Variants Section -->
+                <!-- Attributes & Variants Section -->
                 <div class="wg-box mb-30">
-                    <fieldset>
-                        <div class="body-title mb-10">Variantes del producto</div>
-                        <div class="text-tiny mb-16">Agregar variantes como talla, color, material, etc.</div>
+                    <div class="body-title mb-10">Atributos y Variantes</div>
+                    <div class="text-tiny mb-20">Agrega atributos al producto (Talla, Color, Material, etc.)</div>
+                    
+                    <!-- Add Attribute Button -->
+                    <button type="button" class="tf-button style-3 mb-20" id="btn-add-attribute">
+                        <i class="icon-plus"></i> Agregar Atributo
+                    </button>
+
+                    <!-- Attributes Container -->
+                    <div id="attributes-container"></div>
+
+                    <!-- Variants will be generated dynamically based on selected attributes -->
+                    <div id="variants-container" class="mt-30" style="display: none;">
+                        <div class="body-title mb-10">Variantes generadas</div>
+                        <div class="text-tiny mb-16">Establece SKU, precio y stock para cada variante</div>
                         
                         {{ variante_formset.management_form }}
-                        {% for vf in variante_formset.forms %}
-                            <div class="variant-item mb-20" style="border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px;">
-                                <div class="body-text mb-10 fw-7">Variante #{{ forloop.counter }}</div>
-                                
-                                {% for field in vf.visible_fields %}
-                                    <fieldset class="name mb-10">
-                                        <div class="body-text mb-4">{{ field.label }}</div>
-                                        {{ field }}
-                                        {% if field.errors %}
-                                            <div class="text-danger">{{ field.errors }}</div>
-                                        {% endif %}
-                                    </fieldset>
-                                {% endfor %}
-                                
-                                {% if vf.DELETE %}
-                                    <div class="mt-10">
-                                        {{ vf.DELETE }} <label class="text-danger">Eliminar esta variante</label>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </fieldset>
+                        <div id="variants-list"></div>
+                    </div>
                 </div>
 
                 <!-- Submit buttons -->
                 <div class="cols gap10">
-                    <button class="tf-button w380" type="submit">Add product</button>
-                    <a href="{% url 'productos:panel_productos' %}" class="tf-button style-3 w380">Cancel</a>
+                    <button class="tf-button w380" type="submit"><i class="icon-plus"></i> Agregar Producto</button>
+                    <a href="{% url 'productos:admin_productos_list' %}" class="tf-button style-3 w380"><i class="icon-x"></i> Cancelar</a>
                 </div>
             </form>
             <!-- /form-add-product -->
@@ -239,4 +216,271 @@
     <!-- /bottom-page -->
 </div>
 <!-- /main-content -->
+
+<script>
+// Atributos disponibles (se carga dinámicamente desde la base de datos)
+let atributosDisponibles = [];
+let atributosSeleccionados = [];
+
+// Cargar atributos desde el servidor
+async function cargarAtributos() {
+    try {
+        const response = await fetch('/admin-panel/api/atributos/');
+        atributosDisponibles = await response.json();
+    } catch (error) {
+        console.error('Error cargando atributos:', error);
+    }
+}
+
+// Mostrar modal para seleccionar atributo
+document.getElementById('btn-add-attribute').addEventListener('click', function() {
+    if (atributosDisponibles.length === 0) {
+        alert('No hay atributos disponibles. Por favor, crea atributos primero.');
+        return;
+    }
+
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = 'background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%;';
+    
+    let opciones = '<h3 style="margin-bottom: 20px;">Seleccionar Atributo</h3>';
+    opciones += '<div class="list-group">';
+    
+    atributosDisponibles.forEach(attr => {
+        // Verificar si ya está seleccionado
+        const yaSeleccionado = atributosSeleccionados.find(a => a.id === attr.id);
+        if (!yaSeleccionado) {
+            opciones += `
+                <div class="list-group-item" style="padding: 12px; margin-bottom: 8px; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: all 0.3s;" 
+                     onmouseover="this.style.background='#f9fafb'" 
+                     onmouseout="this.style.background='white'"
+                     onclick="seleccionarAtributo(${attr.id}, '${attr.nombre}', '${attr.tipo}')">
+                    <strong>${attr.nombre}</strong> <span style="color: #6b7280; font-size: 12px;">(${attr.tipo})</span>
+                </div>
+            `;
+        }
+    });
+    
+    opciones += '</div>';
+    opciones += '<button onclick="this.closest(\'.modal-overlay\').remove()" class="tf-button style-3 mt-20" style="width: 100%;">Cancelar</button>';
+    
+    modalContent.innerHTML = opciones;
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+});
+
+// Seleccionar un atributo y mostrar sus valores
+function seleccionarAtributo(id, nombre, tipo) {
+    // Cerrar modal
+    document.querySelector('.modal-overlay').remove();
+    
+    // Buscar el atributo completo
+    const atributo = atributosDisponibles.find(a => a.id === id);
+    if (!atributo) return;
+    
+    // Agregar a seleccionados
+    atributosSeleccionados.push(atributo);
+    
+    // Crear el elemento HTML para el atributo
+    const container = document.getElementById('attributes-container');
+    const attrDiv = document.createElement('div');
+    attrDiv.className = 'attribute-selector mb-20';
+    attrDiv.setAttribute('data-attribute-id', id);
+    attrDiv.style.cssText = 'border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; background: #f9fafb;';
+    
+    let valoresHTML = '';
+    
+    if (tipo === 'color') {
+        // Mostrar cuadros de color
+        valoresHTML = '<div class="flex gap10 flex-wrap">';
+        atributo.valores.forEach(valor => {
+            valoresHTML += `
+                <div class="color-option" style="position: relative; cursor: pointer;" onclick="toggleValor(this, ${id}, ${valor.id})">
+                    <div style="width: 50px; height: 50px; background: ${valor.codigo_color}; border: 2px solid #e5e7eb; border-radius: 6px; transition: all 0.3s;"></div>
+                    <div style="text-align: center; font-size: 11px; margin-top: 4px;">${valor.valor}</div>
+                    <div class="checkmark" style="display: none; position: absolute; top: -5px; right: -5px; background: #10b981; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px;">✓</div>
+                </div>
+            `;
+        });
+        valoresHTML += '</div>';
+    } else if (tipo === 'talla') {
+        // Mostrar botones de talla
+        valoresHTML = '<div class="flex gap10 flex-wrap">';
+        atributo.valores.forEach(valor => {
+            valoresHTML += `
+                <button type="button" class="size-option" style="min-width: 60px; padding: 10px 16px; border: 2px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; transition: all 0.3s; font-weight: 600;" 
+                        onclick="toggleValor(this, ${id}, ${valor.id})">
+                    ${valor.valor}
+                </button>
+            `;
+        });
+        valoresHTML += '</div>';
+    } else {
+        // Mostrar lista de selección
+        valoresHTML = '<select class="form-select" onchange="seleccionarValorTexto(this, ' + id + ')" multiple style="height: 120px;">';
+        atributo.valores.forEach(valor => {
+            valoresHTML += `<option value="${valor.id}">${valor.valor}</option>`;
+        });
+        valoresHTML += '</select>';
+    }
+    
+    attrDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-16">
+            <div>
+                <div class="body-title">${nombre}</div>
+                <div class="text-tiny text-surface-2">Selecciona los valores para este atributo</div>
+            </div>
+            <button type="button" class="tf-button style-3" onclick="eliminarAtributo(${id})" style="padding: 8px 12px;">
+                <i class="icon-trash-2"></i>
+            </button>
+        </div>
+        ${valoresHTML}
+        <input type="hidden" name="atributo_${id}_valores" id="atributo_${id}_valores">
+    `;
+    
+    container.appendChild(attrDiv);
+    
+    // Generar variantes
+    generarVariantes();
+}
+
+// Toggle selección de valor
+function toggleValor(element, atributoId, valorId) {
+    element.classList.toggle('selected');
+    
+    // Actualizar estilos visuales
+    if (element.classList.contains('selected')) {
+        if (element.classList.contains('color-option')) {
+            element.querySelector('div').style.border = '3px solid #10b981';
+            element.querySelector('.checkmark').style.display = 'flex';
+        } else if (element.classList.contains('size-option')) {
+            element.style.background = '#10b981';
+            element.style.color = 'white';
+            element.style.borderColor = '#10b981';
+        }
+    } else {
+        if (element.classList.contains('color-option')) {
+            element.querySelector('div').style.border = '2px solid #e5e7eb';
+            element.querySelector('.checkmark').style.display = 'none';
+        } else if (element.classList.contains('size-option')) {
+            element.style.background = 'white';
+            element.style.color = 'black';
+            element.style.borderColor = '#e5e7eb';
+        }
+    }
+    
+    // Actualizar valores seleccionados
+    actualizarValoresSeleccionados(atributoId);
+    
+    // Regenerar variantes
+    generarVariantes();
+}
+
+// Actualizar valores seleccionados en input hidden
+function actualizarValoresSeleccionados(atributoId) {
+    const attrDiv = document.querySelector(`[data-attribute-id="${atributoId}"]`);
+    const selected = attrDiv.querySelectorAll('.selected');
+    const valores = Array.from(selected).map(el => {
+        if (el.classList.contains('color-option')) {
+            return el.getAttribute('onclick').match(/toggleValor\(this, \d+, (\d+)\)/)[1];
+        } else {
+            return el.getAttribute('onclick').match(/toggleValor\(this, \d+, (\d+)\)/)[1];
+        }
+    });
+    
+    document.getElementById(`atributo_${atributoId}_valores`).value = valores.join(',');
+}
+
+// Eliminar atributo
+function eliminarAtributo(id) {
+    // Remover de seleccionados
+    atributosSeleccionados = atributosSeleccionados.filter(a => a.id !== id);
+    
+    // Remover elemento HTML
+    document.querySelector(`[data-attribute-id="${id}"]`).remove();
+    
+    // Regenerar variantes
+    generarVariantes();
+}
+
+// Generar variantes combinando atributos
+function generarVariantes() {
+    const variantsContainer = document.getElementById('variants-container');
+    const variantsList = document.getElementById('variants-list');
+    
+    // Obtener todos los valores seleccionados por atributo
+    const atributosConValores = [];
+    
+    atributosSeleccionados.forEach(attr => {
+        const valores = document.getElementById(`atributo_${attr.id}_valores`).value;
+        if (valores) {
+            const valoresIds = valores.split(',').map(Number);
+            const valoresObj = valoresIds.map(vid => {
+                const valorData = attr.valores.find(v => v.id === vid);
+                return { atributoId: attr.id, atributoNombre: attr.nombre, valorId: vid, valorNombre: valorData.valor };
+            });
+            atributosConValores.push(valoresObj);
+        }
+    });
+    
+    if (atributosConValores.length === 0) {
+        variantsContainer.style.display = 'none';
+        variantsList.innerHTML = '';
+        return;
+    }
+    
+    // Generar combinaciones (producto cartesiano)
+    const combinaciones = atributosConValores.reduce((acc, valores) => {
+        if (acc.length === 0) return valores.map(v => [v]);
+        
+        const result = [];
+        acc.forEach(combo => {
+            valores.forEach(valor => {
+                result.push([...combo, valor]);
+            });
+        });
+        return result;
+    }, []);
+    
+    // Mostrar variantes
+    variantsContainer.style.display = 'block';
+    variantsList.innerHTML = '';
+    
+    combinaciones.forEach((combo, index) => {
+        const nombre = combo.map(c => c.valorNombre).join(' / ');
+        const variantDiv = document.createElement('div');
+        variantDiv.className = 'variant-item mb-16';
+        variantDiv.style.cssText = 'border: 1px solid #e5e7eb; padding: 16px; border-radius: 8px; background: white;';
+        
+        variantDiv.innerHTML = `
+            <div class="body-text fw-7 mb-12">${nombre}</div>
+            <div class="cols-lg gap16">
+                <fieldset>
+                    <div class="body-text mb-4">SKU</div>
+                    <input type="text" name="variante_${index}_sku" class="form-control" placeholder="SKU-${index + 1}">
+                </fieldset>
+                <fieldset>
+                    <div class="body-text mb-4">Precio</div>
+                    <input type="number" name="variante_${index}_precio" class="form-control" step="0.01" placeholder="0.00">
+                </fieldset>
+                <fieldset>
+                    <div class="body-text mb-4">Stock</div>
+                    <input type="number" name="variante_${index}_stock" class="form-control" placeholder="0">
+                </fieldset>
+            </div>
+            <input type="hidden" name="variante_${index}_atributos" value='${JSON.stringify(combo)}'>
+        `;
+        
+        variantsList.appendChild(variantDiv);
+    });
+}
+
+// Cargar atributos al inicio
+cargarAtributos();
+</script>
+
 {% endblock %}

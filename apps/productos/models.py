@@ -236,3 +236,98 @@ class Imagen(models.Model):
     @property
     def src(self):
         return self.url or ""
+
+
+# ------------------------------
+# ATRIBUTO (Nuevo sistema)
+# ------------------------------
+class Atributo(models.Model):
+    """
+    Define tipos de atributos personalizables: Color, Talla, Marca, Material, etc.
+    Ejemplo: nombre="Color", tipo="color"
+    """
+    TIPO_CHOICES = [
+        ('color', 'Color'),
+        ('talla', 'Talla/Tamaño'),
+        ('texto', 'Texto'),
+        ('numero', 'Número'),
+    ]
+    
+    nombre = models.CharField(max_length=100, unique=True, help_text="Ej: Color, Talla, Marca")
+    slug = models.SlugField(max_length=120, unique=True)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='texto')
+    descripcion = models.TextField(blank=True, null=True)
+    activo = models.BooleanField(default=True)
+    posicion = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['posicion', 'nombre']
+        verbose_name = "Atributo"
+        verbose_name_plural = "Atributos"
+
+    def __str__(self):
+        return self.nombre
+
+
+# ------------------------------
+# VALOR ATRIBUTO
+# ------------------------------
+class ValorAtributo(models.Model):
+    """
+    Valores específicos de cada atributo.
+    Ejemplo: atributo=Color, valor="Rojo", codigo_color="#FF0000"
+    """
+    atributo = models.ForeignKey(
+        Atributo,
+        on_delete=models.CASCADE,
+        related_name='valores'
+    )
+    valor = models.CharField(max_length=100, help_text="Ej: Rojo, S, Nike")
+    codigo_color = models.CharField(
+        max_length=7, 
+        blank=True, 
+        null=True,
+        help_text="Para colores: código HEX (#FF0000)"
+    )
+    posicion = models.PositiveIntegerField(default=0)
+    activo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['atributo', 'posicion', 'valor']
+        verbose_name = "Valor de Atributo"
+        verbose_name_plural = "Valores de Atributos"
+        unique_together = [['atributo', 'valor']]
+
+    def __str__(self):
+        return f"{self.atributo.nombre}: {self.valor}"
+
+
+# ------------------------------
+# VARIANTE ATRIBUTO (Relación N:M)
+# ------------------------------
+class VarianteAtributo(models.Model):
+    """
+    Relaciona una variante con sus atributos.
+    Ejemplo: Variante X tiene Color=Rojo, Talla=M
+    """
+    variante = models.ForeignKey(
+        Variante,
+        on_delete=models.CASCADE,
+        related_name='atributos'
+    )
+    valor_atributo = models.ForeignKey(
+        ValorAtributo,
+        on_delete=models.CASCADE,
+        related_name='variantes'
+    )
+
+    class Meta:
+        verbose_name = "Atributo de Variante"
+        verbose_name_plural = "Atributos de Variantes"
+        unique_together = [['variante', 'valor_atributo']]
+
+    def __str__(self):
+        return f"{self.variante} - {self.valor_atributo}"

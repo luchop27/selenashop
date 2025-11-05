@@ -19,19 +19,22 @@ from django.conf import settings
 from django.conf.urls.static import static
 from core import views as core_views
 
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # URLs de core (inicio como home-05)
-    path('', core_views.inicio, name='inicio'),
-    path('dashboard/', core_views.dashboard_redirect, name='dashboard'),
-    path('admin-ecomus/', core_views.admin_index, name='admin_index'),
+    # URLs de core (inicio, dashboard, admin-panel, login, logout)
+    path('', include('core.urls')),
     
-    # URLs de usuarios (login, logout, my-account)
+    # URLs de usuarios (my-account, etc)
     path('', include('apps.usuarios.urls')),
     
-    # URLs del admin personalizado (productos)
-     path('', include('apps.productos.urls')),
+    # URLs del catálogo de productos
+    path('', include('apps.productos.urls')),
 ] 
 
 if settings.DEBUG:

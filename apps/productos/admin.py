@@ -6,6 +6,9 @@ from .models import (
 	Talla,
 	Variante,
 	Imagen,
+	Atributo,
+	ValorAtributo,
+	VarianteAtributo,
 )
 
 
@@ -251,3 +254,76 @@ class ImagenAdmin(admin.ModelAdmin):
 	search_fields = ('url', 'producto__nombre')
 	autocomplete_fields = ('producto', 'variante')
 	ordering = ('producto', 'url')
+
+
+# =========================
+#  ATRIBUTOS (Nuevo)
+# =========================
+class ValorAtributoInline(admin.TabularInline):
+	model = ValorAtributo
+	extra = 3
+	fields = ('valor', 'codigo_color', 'posicion', 'activo')
+
+
+@admin.register(Atributo)
+class AtributoAdmin(admin.ModelAdmin):
+	list_display = ('nombre', 'tipo', 'num_valores', 'activo', 'posicion', 'created_at')
+	list_filter = ('tipo', 'activo', 'created_at')
+	search_fields = ('nombre', 'slug', 'descripcion')
+	prepopulated_fields = {'slug': ('nombre',)}
+	list_editable = ('activo', 'posicion')
+	inlines = [ValorAtributoInline]
+	ordering = ('posicion', 'nombre')
+
+	fieldsets = (
+		('Información Básica', {
+			'fields': ('nombre', 'slug', 'tipo', 'descripcion')
+		}),
+		('Configuración', {
+			'fields': ('activo', 'posicion')
+		}),
+		('Fechas', {
+			'fields': ('created_at', 'updated_at'),
+			'classes': ('collapse',)
+		}),
+	)
+	readonly_fields = ('created_at', 'updated_at')
+
+	def num_valores(self, obj):
+		"""Muestra el número de valores del atributo"""
+		count = obj.valores.filter(activo=True).count()
+		total = obj.valores.count()
+		return f'{count} activos de {total}'
+	num_valores.short_description = 'Valores'
+
+
+@admin.register(ValorAtributo)
+class ValorAtributoAdmin(admin.ModelAdmin):
+	list_display = ('atributo', 'valor', 'mostrar_color', 'posicion', 'activo', 'created_at')
+	list_filter = ('atributo', 'activo', 'created_at')
+	search_fields = ('valor', 'atributo__nombre')
+	list_editable = ('posicion', 'activo')
+	autocomplete_fields = ('atributo',)
+	ordering = ('atributo', 'posicion', 'valor')
+
+	def mostrar_color(self, obj):
+		"""Muestra el color visualmente si existe"""
+		if obj.codigo_color:
+			return f'<span style="display:inline-block;width:20px;height:20px;background:{obj.codigo_color};border:1px solid #ccc;border-radius:3px;"></span> {obj.codigo_color}'
+		return '—'
+	mostrar_color.short_description = 'Color'
+	mostrar_color.allow_tags = True
+
+
+@admin.register(VarianteAtributo)
+class VarianteAtributoAdmin(admin.ModelAdmin):
+	list_display = ('variante', 'valor_atributo', 'producto_nombre')
+	list_filter = ('valor_atributo__atributo',)
+	search_fields = ('variante__producto__nombre', 'variante__sku', 'valor_atributo__valor')
+	autocomplete_fields = ('variante', 'valor_atributo')
+	ordering = ('variante', 'valor_atributo')
+
+	def producto_nombre(self, obj):
+		"""Muestra el nombre del producto"""
+		return obj.variante.producto.nombre
+	producto_nombre.short_description = 'Producto'
