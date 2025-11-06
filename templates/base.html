@@ -5,7 +5,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Ecomus - Ultimate HTML</title>
+    <title>SelenaShop</title>
 
     <meta name="author" content="themesflat.com">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -38,31 +38,7 @@
         </div>
     </div>
     <!-- /preload -->
-    <div id="wrapper">
-        <!-- Announcement Bar -->
-        <div class="announcement-bar bg_orange-2">
-            <div class="px_15 lg-px_40">
-                <div class="row justify-content-center">
-                    <div class="col-xl-3 col-md-4 col-12 text-center wrap-announcement-bar-2">
-                        <div dir="ltr" class="swiper tf-sw-top_bar" data-preview="1" data-space="0" data-loop="true"
-                            data-speed="1000" data-delay="2000">
-                            <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <p class="noti-bar-text text-white fw-5">Welcome to our store</p>
-                                </div>
-                                <div class="swiper-slide">
-                                    <p class="noti-bar-text text-white fw-5">The best HTML theme</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="navigation-topbar nav-next-topbar"><span class="icon icon-arrow-left"></span></div>
-                        <div class="navigation-topbar nav-prev-topbar"><span class="icon icon-arrow-right"></span></div>
-                    </div>
-                </div>
-                <span class="icon-close close-announcement-bar"></span>
-            </div>
-        </div>
-        <!-- /Announcement Bar -->
+    
         <!-- Header -->
         <header id="header" class="header-default header-absolute header-white bg_light-grey-2">
             <div class="px_15 lg-px_40">
@@ -79,163 +55,13 @@
                         </a>
                     </div>
                     <div class="col-xl-3 col-md-4 col-6">
-                        <a href="{% url 'inicio' %}" class="logo-header">
+                        <a href="{% url 'core:inicio' %}" class="logo-header">
                             <img src="{% static 'images/logo/logo-white@2x.png' %}" alt="logo" class="logo">
                         </a>
                     </div>
                     <div class="col-xl-6 tf-md-hidden">
                         <nav class="box-navigation text-center">
                             <ul class="box-nav-ul d-flex align-items-center justify-content-center gap-30">
-                                <li class="menu-item">
-                                    <a href="#" class="item-link">Home<i class="icon icon-arrow-down"></i></a>
-                                    <div class="sub-menu mega-menu">
-                                        <div class="container">
-                                            <div class="row-demo">
-                                                <div class="demo-item">
-                                                    <a href="{% url 'inicio' %}">
-                                                        <div class="demo-image position-relative">
-                                                            <img class="lazyload" data-src="{% static 'images/demo/home-01.jpg' %}"
-                                                                src="{% static 'images/demo/home-01.jpg' %}" alt="home-01">
-                                                            <div class="demo-label">
-                                                                <span class="demo-new">New</span>
-                                                                <span>Trend</span>
-                                                            </div>
-                                                        </div>
-                                                        <span class="demo-name">Home Fashion 01</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-multi-brand.html">
-                                                        <div class="demo-image position-relative">
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/demo/home-multi-brand.jpg' %}"
-                                                                src="{% static 'images/demo/home-multi-brand.jpg' %}"
-                                                                alt="home-multi-brand">
-                                                            <div class="demo-label">
-                                                                <span class="demo-new">New</span>
-                                                                <span class="demo-hot">Hot</span>
-                                                            </div>
-                                                        </div>
-                                                        <span class="demo-name">Home Multi Brand</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-02.html">
-                                                        <div class="demo-image position-relative">
-                                                            <img class="lazyload" data-src="{% static 'images/demo/home-02.jpg' %}"
-                                                                src="{% static 'images/demo/home-02.jpg' %}" alt="home-02">
-                                                            <div class="demo-label">
-                                                                <span class="demo-hot">Hot</span>
-                                                            </div>
-                                                        </div>
-                                                        <span class="demo-name">Home Fashion 02</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-03.html">
-                                                        <div class="demo-image">
-                                                            <img class="lazyload" data-src="{% static 'images/demo/home-03.jpg' %}"
-                                                                src="{% static 'images/demo/home-03.jpg' %}" alt="home-03">
-                                                        </div>
-                                                        <span class="demo-name">Home Fashion 03</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-04.html">
-                                                        <div class="demo-image">
-                                                            <img class="lazyload" data-src="{% static 'images/demo/home-04.jpg' %}"
-                                                                src="{% static 'images/demo/home-04.jpg' %}" alt="home-04">
-                                                        </div>
-                                                        <span class="demo-name">Home Fashion 04</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-05.html">
-                                                        <div class="demo-image">
-                                                            <img class="lazyload" data-src="{% static 'images/demo/home-05.jpg' %}"
-                                                                src="{% static 'images/demo/home-05.jpg' %}" alt="home-05">
-                                                        </div>
-                                                        <span class="demo-name">Home Fashion 05</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-06.html">
-                                                        <div class="demo-image position-relative">
-                                                            <img class="lazyload" data-src="{% static 'images/demo/home-06.jpg' %}"
-                                                                src="{% static 'images/demo/home-06.jpg' %}" alt="home-06">
-                                                        </div>
-                                                        <span class="demo-name">Home Fashion 06</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item position-relative">
-                                                    <a href="home-drinkwear.html">
-                                                        <div class="demo-image">
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/demo/home-drinkwear.png' %}"
-                                                                src="{% static 'images/demo/home-drinkwear.png' %}"
-                                                                alt="home-personalized-pod">
-                                                            <div class="demo-label">
-                                                                <span class="demo-new">New</span>
-                                                            </div>
-                                                        </div>
-                                                        <span class="demo-name">Home Drinkwear</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item position-relative">
-                                                    <a href="home-supplement.html">
-                                                        <div class="demo-image">
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/demo/home-supplement.png' %}"
-                                                                src="{% static 'images/demo/home-supplement.png' %}"
-                                                                alt="home-personalized-pod">
-                                                            <div class="demo-label">
-                                                                <span class="demo-new">New</span>
-                                                            </div>
-                                                        </div>
-                                                        <span class="demo-name">Home Supplement</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-personalized-pod.html">
-                                                        <div class="demo-image">
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/demo/home-personalized-pod.jpg' %}"
-                                                                src="{% static 'images/demo/home-personalized-pod.jpg' %}"
-                                                                alt="home-personalized-pod">
-                                                        </div>
-                                                        <span class="demo-name">Home Personalized Pod</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-pickleball.html">
-                                                        <div class="demo-image">
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/demo/home-pickleball.png' %}"
-                                                                src="{% static 'images/demo/home-pickleball.png' %}"
-                                                                alt="home-pickleball">
-                                                        </div>
-                                                        <span class="demo-name">Home Pickleball</span>
-                                                    </a>
-                                                </div>
-                                                <div class="demo-item">
-                                                    <a href="home-ceramic.html">
-                                                        <div class="demo-image">
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/demo/home-ceramic.png' %}"
-                                                                src="{% static 'images/demo/home-ceramic.png' %}" alt="home-ceramic">
-                                                        </div>
-                                                        <span class="demo-name">Home Ceramic</span>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <div class="text-center view-all-demo">
-                                                <a href="#modalDemo" data-bs-toggle="modal"
-                                                    class="tf-btn btn-xl btn-fill radius-3 animate-hover-btn fw-6"><span>View
-                                                        all demos (48+)</span><i class="icon icon-arrow-right"></i></a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
                                 <li class="menu-item">
                                     <a href="#" class="item-link">Shop<i class="icon icon-arrow-down"></i></a>
                                     <div class="sub-menu mega-menu">

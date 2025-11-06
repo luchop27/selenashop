@@ -1,34 +1,167 @@
 from django.contrib import admin
 from .models import (
+	Coleccion,
 	Categoria,
 	Estilo,
 	Producto,
 	Talla,
 	Variante,
 	Imagen,
+	Atributo,
+	ValorAtributo,
+	VarianteAtributo,
 )
+
+
+# =========================
+#  COLECCIONES
+# =========================
+class CategoriaInline(admin.TabularInline):
+	"""Inline para ver/agregar categorías dentro de una colección"""
+	model = Categoria
+	extra = 0
+	fields = ('nombre', 'slug', 'padre', 'tipo', 'estado', 'posicion')
+	prepopulated_fields = {'slug': ('nombre',)}
+	show_change_link = True
+
+
+@admin.register(Coleccion)
+class ColeccionAdmin(admin.ModelAdmin):
+	list_display = (
+		'nombre',
+		'slug',
+		'activo',
+		'destacada',
+		'posicion',
+		'num_categorias',
+		'created_at',
+	)
+	list_filter = ('activo', 'destacada', 'created_at')
+	search_fields = ('nombre', 'slug', 'descripcion')
+	prepopulated_fields = {'slug': ('nombre',)}
+	list_editable = ('activo', 'destacada', 'posicion')
+	ordering = ('posicion', 'nombre')
+	
+	# Agregar inline de categorías
+	inlines = [CategoriaInline]
+	
+	# Organizar campos en el formulario
+	fieldsets = (
+		('Información Básica', {
+			'fields': ('nombre', 'slug', 'descripcion')
+		}),
+		('Imagen', {
+			'fields': ('imagen',)
+		}),
+		('Configuración', {
+			'fields': ('activo', 'destacada', 'posicion')
+		}),
+	)
+	
+	def num_categorias(self, obj):
+		"""Mostrar número de categorías en la colección"""
+		count = obj.categorias.count()
+		return f"{count} categorías"
+	num_categorias.short_description = 'Categorías'
 
 
 # =========================
 #  CATEGORÍAS
 # =========================
+class SubcategoriaInline(admin.TabularInline):
+	"""Inline para ver/agregar subcategorías dentro de una categoría"""
+	model = Categoria
+	fk_name = 'padre'
+	extra = 0
+	fields = ('nombre', 'slug', 'estado', 'posicion')
+	prepopulated_fields = {'slug': ('nombre',)}
+	show_change_link = True
+	verbose_name = "Subcategoría"
+	verbose_name_plural = "Subcategorías"
+	
+	def get_formset(self, request, obj=None, **kwargs):
+		"""Heredar la colección del padre automáticamente"""
+		formset = super().get_formset(request, obj, **kwargs)
+		
+		# Si hay un objeto padre (categoría principal), guardar la colección
+		if obj and hasattr(obj, 'coleccion'):
+			formset.parent_coleccion = obj.coleccion
+		
+		return formset
+
+
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
 	list_display = (
 		'nombre',
 		'slug',
+		'coleccion',
 		'padre',
-		'tipo',
+		'num_subcategorias',
+		'num_productos',
 		'estado',
 		'posicion',
-		'created_at',
 	)
-	list_filter = ('estado', 'tipo', 'created_at')
-	search_fields = ('nombre', 'slug')
+	list_filter = ('estado', 'coleccion', 'padre', 'created_at')
+	search_fields = ('nombre', 'slug', 'descripcion')
 	prepopulated_fields = {'slug': ('nombre',)}
 	list_editable = ('estado', 'posicion')
-	autocomplete_fields = ('padre',)
-	ordering = ('posicion', 'nombre')
+	autocomplete_fields = ('padre', 'coleccion')
+	ordering = ('coleccion', 'posicion', 'nombre')
+	
+	# Agregar inline de subcategorías
+	inlines = [SubcategoriaInline]
+	
+	# Organizar campos en el formulario
+	fieldsets = (
+		('Información Básica', {
+			'fields': ('nombre', 'slug', 'descripcion')
+		}),
+		('Jerarquía', {
+			'fields': ('coleccion', 'padre'),
+			'description': '<strong>GUÍA:</strong><br>'
+			              '• <strong>Categoría Principal:</strong> Selecciona solo COLECCIÓN (ej: Ropa)<br>'
+			              '• <strong>Subcategoría:</strong> Selecciona PADRE (ej: Pantalones con padre=Ropa)<br>'
+		}),
+		('Configuración', {
+			'fields': ('estado', 'posicion')
+		}),
+	)
+	
+	def save_model(self, request, obj, form, change):
+		"""Heredar colección del padre si es subcategoría"""
+		if obj.padre and obj.padre.coleccion:
+			# Si tiene padre, heredar su colección automáticamente
+			obj.coleccion = obj.padre.coleccion
+		super().save_model(request, obj, form, change)
+	
+	def save_formset(self, request, form, formset, change):
+		"""Guardar subcategorías con la colección heredada del padre"""
+		instances = formset.save(commit=False)
+		
+		for instance in instances:
+			# Heredar colección del padre
+			if hasattr(formset, 'parent_coleccion'):
+				instance.coleccion = formset.parent_coleccion
+			instance.save()
+		
+		formset.save_m2m()
+	
+	
+	def num_subcategorias(self, obj):
+		"""Mostrar número de subcategorías"""
+		count = obj.subcategorias.count()
+		if count > 0:
+			return f"✓ {count}"
+		return "-"
+	num_subcategorias.short_description = 'Subcategorías'
+	
+	def num_productos(self, obj):
+		"""Mostrar número de productos en la categoría"""
+		from .models import Producto
+		count = Producto.objects.filter(categoria=obj).count()
+		return count
+	num_productos.short_description = 'Productos'
 
 
 # =========================
@@ -55,7 +188,6 @@ class EstiloAdmin(admin.ModelAdmin):
 class ImagenInline(admin.TabularInline):
 	model = Imagen
 	extra = 1
-	# As inline of Producto we don't show producto (it's implicit). Alt/posicion were removed.
 	fields = ('url', 'variante')
 	autocomplete_fields = ('variante',)
 
@@ -76,8 +208,11 @@ class ProductoAdmin(admin.ModelAdmin):
 		'nombre',
 		'slug',
 		'categoria',
-		'estilo',
+		'coleccion',
 		'precio_base',
+		'stock_total',
+		'num_variantes',
+		'promedio_resenas',
 		'tiene_tallas',
 		'activo',
 		'created_at',
@@ -86,7 +221,7 @@ class ProductoAdmin(admin.ModelAdmin):
 		'activo',
 		'tiene_tallas',
 		'categoria',
-		'estilo',
+		'coleccion',
 		'created_at',
 	)
 	search_fields = ('nombre', 'slug', 'descripcion_corta', 'descripcion_larga')
@@ -94,6 +229,10 @@ class ProductoAdmin(admin.ModelAdmin):
 	list_editable = ('activo', 'precio_base', 'tiene_tallas')
 	inlines = [ImagenInline, VarianteInline]
 	ordering = ('-created_at',)
+	autocomplete_fields = ('categoria', 'coleccion')
+	actions = ['activar_productos', 'desactivar_productos', 'duplicar_producto']
+	list_per_page = 20
+	date_hierarchy = 'created_at'
 
 	fieldsets = (
 		('Datos básicos', {
@@ -108,9 +247,8 @@ class ProductoAdmin(admin.ModelAdmin):
 		('Clasificación', {
 			'fields': (
 				'categoria',
-				'estilo',
+				'coleccion',
 				'marca',
-				'material',
 			)
 		}),
 		('Venta', {
@@ -129,6 +267,74 @@ class ProductoAdmin(admin.ModelAdmin):
 		}),
 	)
 	readonly_fields = ('created_at', 'updated_at')
+
+	def stock_total(self, obj):
+		"""Muestra el stock total sumando todas las variantes"""
+		total = sum(v.stock for v in obj.variantes.all())
+		if total == 0:
+			return '❌ Sin stock'
+		elif total < 10:
+			return f'⚠️ {total}'
+		return f'✅ {total}'
+	stock_total.short_description = 'Stock Total'
+
+	def num_variantes(self, obj):
+		"""Número de variantes del producto"""
+		count = obj.variantes.count()
+		return f'{count} variante{"s" if count != 1 else ""}'
+	num_variantes.short_description = 'Variantes'
+
+	def promedio_resenas(self, obj):
+		"""Calcula el promedio de las reseñas"""
+		resenas = obj.resenas.all()
+		if not resenas:
+			return '—'
+		promedio = sum(r.calificacion for r in resenas) / len(resenas)
+		estrellas = '⭐' * round(promedio)
+		return f'{estrellas} ({promedio:.1f})'
+	promedio_resenas.short_description = 'Reseñas'
+
+	def activar_productos(self, request, queryset):
+		"""Acción para activar productos seleccionados"""
+		updated = queryset.update(activo=True)
+		self.message_user(request, f'{updated} producto(s) activado(s).')
+	activar_productos.short_description = '✅ Activar productos seleccionados'
+
+	def desactivar_productos(self, request, queryset):
+		"""Acción para desactivar productos seleccionados"""
+		updated = queryset.update(activo=False)
+		self.message_user(request, f'{updated} producto(s) desactivado(s).')
+	desactivar_productos.short_description = '❌ Desactivar productos seleccionados'
+
+	def duplicar_producto(self, request, queryset):
+		"""Acción para duplicar productos"""
+		for producto in queryset:
+			# Guardamos las variantes e imágenes originales
+			variantes_originales = list(producto.variantes.all())
+			imagenes_originales = list(producto.imagenes.all())
+			
+			# Duplicamos el producto
+			producto.pk = None
+			producto.nombre = f'{producto.nombre} (Copia)'
+			producto.slug = f'{producto.slug}-copia'
+			producto.save()
+			
+			# Duplicamos las variantes
+			for variante in variantes_originales:
+				variante.pk = None
+				variante.producto = producto
+				variante.sku = f'{variante.sku}-copia'
+				variante.save()
+			
+			# Duplicamos las imágenes
+			for imagen in imagenes_originales:
+				imagen.pk = None
+				imagen.producto = producto
+				imagen.variante = None
+				imagen.save()
+		
+		self.message_user(request, f'{queryset.count()} producto(s) duplicado(s).')
+	duplicar_producto.short_description = '📋 Duplicar productos seleccionados'
 
 
 # =========================
@@ -177,3 +383,76 @@ class ImagenAdmin(admin.ModelAdmin):
 	search_fields = ('url', 'producto__nombre')
 	autocomplete_fields = ('producto', 'variante')
 	ordering = ('producto', 'url')
+
+
+# =========================
+#  ATRIBUTOS (Nuevo)
+# =========================
+class ValorAtributoInline(admin.TabularInline):
+	model = ValorAtributo
+	extra = 3
+	fields = ('valor', 'codigo_color', 'posicion', 'activo')
+
+
+@admin.register(Atributo)
+class AtributoAdmin(admin.ModelAdmin):
+	list_display = ('nombre', 'tipo', 'num_valores', 'activo', 'posicion', 'created_at')
+	list_filter = ('tipo', 'activo', 'created_at')
+	search_fields = ('nombre', 'slug', 'descripcion')
+	prepopulated_fields = {'slug': ('nombre',)}
+	list_editable = ('activo', 'posicion')
+	inlines = [ValorAtributoInline]
+	ordering = ('posicion', 'nombre')
+
+	fieldsets = (
+		('Información Básica', {
+			'fields': ('nombre', 'slug', 'tipo', 'descripcion')
+		}),
+		('Configuración', {
+			'fields': ('activo', 'posicion')
+		}),
+		('Fechas', {
+			'fields': ('created_at', 'updated_at'),
+			'classes': ('collapse',)
+		}),
+	)
+	readonly_fields = ('created_at', 'updated_at')
+
+	def num_valores(self, obj):
+		"""Muestra el número de valores del atributo"""
+		count = obj.valores.filter(activo=True).count()
+		total = obj.valores.count()
+		return f'{count} activos de {total}'
+	num_valores.short_description = 'Valores'
+
+
+@admin.register(ValorAtributo)
+class ValorAtributoAdmin(admin.ModelAdmin):
+	list_display = ('atributo', 'valor', 'mostrar_color', 'posicion', 'activo', 'created_at')
+	list_filter = ('atributo', 'activo', 'created_at')
+	search_fields = ('valor', 'atributo__nombre')
+	list_editable = ('posicion', 'activo')
+	autocomplete_fields = ('atributo',)
+	ordering = ('atributo', 'posicion', 'valor')
+
+	def mostrar_color(self, obj):
+		"""Muestra el color visualmente si existe"""
+		if obj.codigo_color:
+			return f'<span style="display:inline-block;width:20px;height:20px;background:{obj.codigo_color};border:1px solid #ccc;border-radius:3px;"></span> {obj.codigo_color}'
+		return '—'
+	mostrar_color.short_description = 'Color'
+	mostrar_color.allow_tags = True
+
+
+@admin.register(VarianteAtributo)
+class VarianteAtributoAdmin(admin.ModelAdmin):
+	list_display = ('variante', 'valor_atributo', 'producto_nombre')
+	list_filter = ('valor_atributo__atributo',)
+	search_fields = ('variante__producto__nombre', 'variante__sku', 'valor_atributo__valor')
+	autocomplete_fields = ('variante', 'valor_atributo')
+	ordering = ('variante', 'valor_atributo')
+
+	def producto_nombre(self, obj):
+		"""Muestra el nombre del producto"""
+		return obj.variante.producto.nombre
+	producto_nombre.short_description = 'Producto'

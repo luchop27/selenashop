@@ -54,7 +54,7 @@
                 <!-- section-menu-left -->
                 <div class="section-menu-left">
                     <div class="box-logo">
-                        <a href="{% url 'productos:panel_productos' %}" id="site-logo-inner">
+                        <a href="{% url 'core:admin_index' %}" id="site-logo-inner">
 
 
                             <img class="" id="logo_header" alt="Selena Store" src="{% static 'panel_admin/images/logo/logo.svg' %}"
@@ -70,7 +70,7 @@
                             <div class="center-item">
                                 <ul class="">
                                     <li class="menu-item {% block menu_dashboard %}{% endblock %}">
-                                        <a href="{% url 'productos:panel_productos' %}" class="">
+                                        <a href="{% url 'core:admin_index' %}" class="">
                                             <div class="icon">
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                                                     xmlns="http://www.w3.org/2000/svg">
@@ -89,12 +89,12 @@
                                         </a>
                                         <ul class="sub-menu">
                                             <li class="sub-menu-item">
-                                                <a href="{% url 'productos:panel_productos' %}" class="">
+                                                <a href="{% url 'productos:admin_productos_list' %}" class="">
                                                     <div class="text">Todos los Productos</div>
                                                 </a>
                                             </li>
                                             <li class="sub-menu-item">
-                                                <a href="{% url 'productos:panel_producto_crear' %}" class="">
+                                                <a href="{% url 'productos:admin_producto_add' %}" class="">
                                                     <div class="text">Agregar Producto</div>
                                                 </a>
                                             </li>
@@ -118,7 +118,36 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    <li class="menu-item has-children {% block menu_brand %}{% endblock %}">
+                                    
+                                    <!-- Colecciones -->
+                                    <li class="menu-item has-children {% block menu_collections %}{% endblock %}">
+                                        <a href="#" class="menu-item-button">
+                                            <div class="icon">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                                        d="M7 4C6.44772 4 6 4.44772 6 5V7C6 7.55228 6.44772 8 7 8H17C17.5523 8 18 7.55228 18 7V5C18 4.44772 17.5523 4 17 4H7ZM4 5C4 3.34315 5.34315 2 7 2H17C18.6569 2 20 3.34315 20 5V7C20 8.65685 18.6569 10 17 10H7C5.34315 10 4 8.65685 4 7V5ZM5 12C4.44772 12 4 12.4477 4 13V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V13C20 12.4477 19.5523 12 19 12H5ZM2 13C2 11.3431 3.34315 10 5 10H19C20.6569 10 22 11.3431 22 13V19C22 20.6569 20.6569 22 19 22H5C3.34315 22 2 20.6569 2 19V13Z"
+                                                        fill="#111111" />
+                                                </svg>
+                                            </div>
+                                            <div class="text">Colecciones</div>
+                                        </a>
+                                        <ul class="sub-menu">
+                                            <li class="sub-menu-item">
+                                                <a href="{% url 'productos:admin_colecciones_list' %}" class="">
+                                                    <div class="text">Todas las Colecciones</div>
+                                                </a>
+                                            </li>
+                                            <li class="sub-menu-item">
+                                                <a href="{% url 'productos:admin_coleccion_add' %}" class="">
+                                                    <div class="text">Agregar Colección</div>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    
+                                    <!-- Atributos -->
+                                    <li class="menu-item has-children {% block menu_attributes %}{% endblock %}">
                                         <a href="#" class="menu-item-button">
                                             <div class="icon">
                                                 <svg width="24" height="22" viewBox="0 0 22 18" fill="none"
@@ -128,21 +157,22 @@
                                                         fill="#111111" />
                                                 </svg>
                                             </div>
-                                            <div class="text">Marcas</div>
+                                            <div class="text">Atributos</div>
                                         </a>
                                         <ul class="sub-menu">
                                             <li class="sub-menu-item">
-                                                <a href="#" class="">
-                                                    <div class="text">Lista de Marcas</div>
+                                                <a href="{% url 'productos:admin_atributos_list' %}" class="">
+                                                    <div class="text">Todos los Atributos</div>
                                                 </a>
                                             </li>
                                             <li class="sub-menu-item">
-                                                <a href="#" class="">
-                                                    <div class="text">Agregar Marca</div>
+                                                <a href="{% url 'productos:admin_atributo_add' %}" class="">
+                                                    <div class="text">Agregar Atributo</div>
                                                 </a>
                                             </li>
                                         </ul>
                                     </li>
+                                    
                                     <li class="menu-item has-children">
                                         <a href="#" class="menu-item-button">
                                             <div class="icon">
@@ -200,7 +230,7 @@
                                         </a>
                                         <ul class="sub-menu">
                                             <li class="sub-menu-item">
-                                                <a href="{% url 'inicio' %}" class="" target="_blank">
+                                                <a href="{% url 'core:inicio' %}" class="" target="_blank">
                                                     <div class="text">Ver Tienda</div>
                                                 </a>
                                             </li>
@@ -257,7 +287,7 @@
                     <div class="header-dashboard">
                         <div class="wrap">
                             <div class="header-left">
-                                <a href="{% url 'productos:panel_productos' %}">
+                                <a href="{% url 'core:admin_index' %}">
                                     <img class="" id="logo_header_mobile" alt="" src="{% static 'panel_admin/images/logo/logo.svg' %}"
                                         data-light="{% static 'panel_admin/images/logo/logo.svg' %}" data-dark="{% static 'panel_admin/images/logo/logo-white.svg' %}">
                                 </a>
@@ -721,7 +751,7 @@
                     {% block footer %}
                     <!-- bottom-page -->
                     <div class="bottom-page">
-                        <div class="body-text">Copyright © 2024 <a href="{% url 'inicio' %}">Selena Store</a>. Design by Themesflat All rights reserved</div>
+                        <div class="body-text">Copyright © 2024 <a href="{% url 'core:inicio' %}">Selena Store</a>. Design by Themesflat All rights reserved</div>
                     </div>
                     <!-- /bottom-page -->
                     {% endblock %}

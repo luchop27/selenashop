@@ -1,9 +1,9 @@
 {% extends 'baseadmin.html' %}
 {% load static %}
 
-{% block title %}Todos los Atributos - Selena Store{% endblock %}
+{% block title %}Todas las Colecciones - Selena Store{% endblock %}
 
-{% block menu_attributes %}active{% endblock %}
+{% block menu_collections %}active{% endblock %}
 
 {% block content %}
                     <!-- main-content -->
@@ -13,7 +13,7 @@
                             <!-- main-content-wrap -->
                             <div class="main-content-wrap">
                                 <div class="flex items-center flex-wrap justify-between gap20 mb-30">
-                                    <h3>Todos los Atributos</h3>
+                                    <h3>Todas las Colecciones</h3>
                                     <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                                         <li>
                                             <a href="{% url 'core:admin_index' %}">
@@ -25,14 +25,14 @@
                                         </li>
                                         <li>
                                             <a href="#">
-                                                <div class="text-tiny">Atributos</div>
+                                                <div class="text-tiny">Colecciones</div>
                                             </a>
                                         </li>
                                         <li>
                                             <i class="icon-chevron-right"></i>
                                         </li>
                                         <li>
-                                            <div class="text-tiny">Todos los Atributos</div>
+                                            <div class="text-tiny">Todas las Colecciones</div>
                                         </li>
                                     </ul>
                                 </div>
@@ -45,13 +45,13 @@
                                     {% endfor %}
                                 {% endif %}
 
-                                <!-- all-attribute -->
+                                <!-- all-collections -->
                                 <div class="wg-box">
                                     <div class="flex items-center justify-between gap10 flex-wrap">
                                         <div class="wg-filter flex-grow">
                                             <form class="form-search" method="get">
                                                 <fieldset class="name">
-                                                    <input type="text" placeholder="Buscar atributos..." class="" name="search"
+                                                    <input type="text" placeholder="Buscar colecciones..." class="" name="search"
                                                         tabindex="2" value="{{ search }}" aria-required="true">
                                                 </fieldset>
                                                 <div class="button-submit">
@@ -59,47 +59,63 @@
                                                 </div>
                                             </form>
                                         </div>
-                                        <a class="tf-button style-1 w208" href="{% url 'productos:admin_atributo_add' %}"><i
-                                                class="icon-plus"></i>Agregar nuevo</a>
+                                        <a class="tf-button style-1 w208" href="{% url 'productos:admin_coleccion_add' %}"><i
+                                                class="icon-plus"></i>Agregar nueva</a>
                                     </div>
                                     <div class="wg-table table-all-attribute">
                                         <ul class="table-title flex gap20 mb-14">
                                             <li>
-                                                <div class="body-title">Atributo</div>
+                                                <div class="body-title">Colección</div>
                                             </li>
                                             <li>
-                                                <div class="body-title">Tipo</div>
+                                                <div class="body-title">Estado</div>
                                             </li>
                                             <li>
-                                                <div class="body-title">Valores</div>
+                                                <div class="body-title">Destacada</div>
+                                            </li>
+                                            <li>
+                                                <div class="body-title">Posición</div>
                                             </li>
                                             <li>
                                                 <div class="body-title">Acciones</div>
                                             </li>
                                         </ul>
                                         <ul class="flex flex-column">
-                                            {% for atributo in atributos %}
+                                            {% for coleccion in colecciones %}
                                             <li class="attribute-item item-row flex items-center justify-between gap20">
                                                 <div class="name">
-                                                    <a href="{% url 'productos:admin_atributo_edit' atributo.pk %}" class="body-title-2">
-                                                        {{ atributo.nombre }}
+                                                    <a href="{% url 'productos:admin_coleccion_edit' coleccion.pk %}" class="body-title-2">
+                                                        {{ coleccion.nombre }}
                                                     </a>
                                                 </div>
                                                 <div class="body-text">
-                                                    <span class="badge" style="padding: 4px 8px; border-radius: 4px; background: #f0f0f0; font-size: 12px;">
-                                                        {{ atributo.get_tipo_display }}
+                                                    {% if coleccion.activo %}
+                                                    <span class="badge" style="padding: 4px 12px; border-radius: 4px; background: #10b981; color: white; font-size: 12px;">
+                                                        Activo
                                                     </span>
+                                                    {% else %}
+                                                    <span class="badge" style="padding: 4px 12px; border-radius: 4px; background: #ef4444; color: white; font-size: 12px;">
+                                                        Inactivo
+                                                    </span>
+                                                    {% endif %}
                                                 </div>
-                                                <div class="body-text">{{ atributo.valores_str }}</div>
+                                                <div class="body-text">
+                                                    {% if coleccion.destacada %}
+                                                    <span style="color: #f59e0b; font-size: 18px;">⭐</span>
+                                                    {% else %}
+                                                    <span style="color: #d1d5db;">-</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="body-text">{{ coleccion.posicion }}</div>
                                                 <div class="list-icon-function">
                                                     <div class="item edit">
-                                                        <a href="{% url 'productos:admin_atributo_edit' atributo.pk %}">
+                                                        <a href="{% url 'productos:admin_coleccion_edit' coleccion.pk %}">
                                                             <i class="icon-edit-3"></i>
                                                         </a>
                                                     </div>
                                                     <div class="item trash">
-                                                        <a href="{% url 'productos:admin_atributo_delete' atributo.pk %}" 
-                                                           onclick="return confirm('¿Estás seguro de eliminar este atributo?')">
+                                                        <a href="{% url 'productos:admin_coleccion_delete' coleccion.pk %}" 
+                                                           onclick="return confirm('¿Estás seguro de eliminar esta colección?')">
                                                             <i class="icon-trash-2"></i>
                                                         </a>
                                                     </div>
@@ -107,45 +123,45 @@
                                             </li>
                                             {% empty %}
                                             <li class="text-center" style="padding: 40px; text-align: center;">
-                                                <p class="body-text" style="margin-bottom: 20px;">No se encontraron atributos.</p>
-                                                <a href="{% url 'productos:admin_atributo_add' %}" class="tf-button style-1">
-                                                    <i class="icon-plus"></i> Crear primer atributo
+                                                <p class="body-text" style="margin-bottom: 20px;">No se encontraron colecciones.</p>
+                                                <a href="{% url 'productos:admin_coleccion_add' %}" class="tf-button style-1">
+                                                    <i class="icon-plus"></i> Crear primera colección
                                                 </a>
                                             </li>
                                             {% endfor %}
                                         </ul>
                                     </div>
                                     
-                                    {% if atributos.has_other_pages %}
+                                    {% if colecciones.has_other_pages %}
                                     <div class="divider"></div>
                                     <div class="flex items-center justify-between flex-wrap gap10">
                                         <div class="text-tiny">
-                                            Mostrando {{ atributos.start_index }} - {{ atributos.end_index }} de {{ atributos.paginator.count }} atributos
+                                            Mostrando {{ colecciones.start_index }} - {{ colecciones.end_index }} de {{ colecciones.paginator.count }} colecciones
                                         </div>
                                         <ul class="wg-pagination">
-                                            {% if atributos.has_previous %}
+                                            {% if colecciones.has_previous %}
                                             <li>
-                                                <a href="?page={{ atributos.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                                <a href="?page={{ colecciones.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
                                                     <i class="icon-chevron-left"></i>
                                                 </a>
                                             </li>
                                             {% endif %}
                                             
-                                            {% for num in atributos.paginator.page_range %}
-                                                {% if atributos.number == num %}
+                                            {% for num in colecciones.paginator.page_range %}
+                                                {% if colecciones.number == num %}
                                                 <li class="active">
                                                     <a href="#">{{ num }}</a>
                                                 </li>
-                                                {% elif num > atributos.number|add:'-3' and num < atributos.number|add:'3' %}
+                                                {% elif num > colecciones.number|add:'-3' and num < colecciones.number|add:'3' %}
                                                 <li>
                                                     <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
                                                 </li>
                                                 {% endif %}
                                             {% endfor %}
                                             
-                                            {% if atributos.has_next %}
+                                            {% if colecciones.has_next %}
                                             <li>
-                                                <a href="?page={{ atributos.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                                <a href="?page={{ colecciones.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
                                                     <i class="icon-chevron-right"></i>
                                                 </a>
                                             </li>
@@ -154,15 +170,14 @@
                                     </div>
                                     {% endif %}
                                 </div>
-                                <!-- /all-attribute -->
+                                <!-- /all-collections -->
                             </div>
                             <!-- /main-content-wrap -->
                         </div>
                         <!-- /main-content-wrap -->
                         <!-- bottom-page -->
                         <div class="bottom-page">
-                            <div class="body-text">Copyright © 2024 <a href="../index.html">Ecomus</a>. Design by
-                                Themesflat All rights reserved</div>
+                            <div class="body-text">Copyright © 2024 <a href="#">Selena Store</a>. Design by Themesflat All rights reserved</div>
                         </div>
                         <!-- /bottom-page -->
                     </div>
