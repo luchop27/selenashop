@@ -16,6 +16,9 @@ urlpatterns = [
     path('admin-panel/', views.panel_dashboard, name='panel_dashboard'),
     path('admin-panel/products/', views.admin_productos_list, name='admin_productos_list'),
     path('admin-panel/products/add/', views.admin_producto_add, name='admin_producto_add'),
+    path('admin-panel/products/view/<int:pk>/', views.admin_producto_view, name='admin_producto_view'),
+    path('admin-panel/products/edit/<int:pk>/', views.admin_producto_edit, name='admin_producto_edit'),
+    path('admin-panel/products/delete/<int:pk>/', views.admin_producto_delete, name='admin_producto_delete'),
     
     # Atributos
     path('admin-panel/attributes/', views.admin_atributos_list, name='admin_atributos_list'),
@@ -23,8 +26,16 @@ urlpatterns = [
     path('admin-panel/attributes/edit/<int:pk>/', views.admin_atributo_edit, name='admin_atributo_edit'),
     path('admin-panel/attributes/delete/<int:pk>/', views.admin_atributo_delete, name='admin_atributo_delete'),
     
+    # Colecciones
+    path('admin-panel/collections/', views.admin_colecciones_list, name='admin_colecciones_list'),
+    path('admin-panel/collections/add/', views.admin_coleccion_add, name='admin_coleccion_add'),
+    path('admin-panel/collections/edit/<int:pk>/', views.admin_coleccion_edit, name='admin_coleccion_edit'),
+    path('admin-panel/collections/delete/<int:pk>/', views.admin_coleccion_delete, name='admin_coleccion_delete'),
+    
     # API Atributos
     path('admin-panel/api/atributos/', views.api_atributos_list, name='api_atributos_list'),
+    path('admin-panel/api/categorias/', views.api_categorias_list, name='api_categorias_list'),
+    path('admin-panel/api/colecciones/', views.api_colecciones_list, name='api_colecciones_list'),
     
     # Panel custom legacy
     path('admin-panel/productos/', views.panel_productos_list, name='panel_productos'),

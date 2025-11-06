@@ -1,7 +1,7 @@
 {% extends 'baseadmin.html' %}
 {% load static %}
 
-{% block title %}Agregar Producto - Selena Store{% endblock %}
+{% block title %}Editar Producto - Selena Store{% endblock %}
 
 {% block menu_product %}active{% endblock %}
 
@@ -13,7 +13,7 @@
         <!-- main-content-wrap -->
         <div class="main-content-wrap">
             <div class="flex items-center flex-wrap justify-between gap20 mb-30">
-                <h3>Agregar producto</h3>
+                <h3>Editar producto: {{ producto.nombre }}</h3>
                 <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                     <li>
                         <a href="{% url 'core:admin_index' %}">
@@ -32,7 +32,7 @@
                         <i class="icon-chevron-right"></i>
                     </li>
                     <li>
-                        <div class="text-tiny">Agregar producto</div>
+                        <div class="text-tiny">Editar producto</div>
                     </li>
                 </ul>
             </div>
@@ -55,24 +55,47 @@
                 <!-- Upload images -->
                 <div class="wg-box mb-30">
                     <fieldset>
-                        <div class="body-title mb-10">Subir imágenes <span class="tf-color-1">*</span></div>
+                        <div class="body-title mb-10">Imágenes del producto</div>
+                        
+                        <!-- Imágenes existentes -->
+                        {% if producto.imagenes.all %}
+                        <div class="mb-16">
+                            <div class="body-text mb-10">Imágenes actuales:</div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;" id="existing-images">
+                                {% for imagen in producto.imagenes.all %}
+                                <div class="image-preview-item" style="position: relative; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; aspect-ratio: 1;">
+                                    <img src="{{ imagen.src }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <button type="button" onclick="eliminarImagenExistente({{ imagen.id }}, this)" 
+                                        style="position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                        ×
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Subir nuevas imágenes -->
                         <div class="upload-image mb-16">
-                            <div class="up-load" id="upload-area" style="min-height: 200px; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center;">
+                            <div class="up-load" id="upload-area" style="min-height: 150px; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center;">
                                 <label class="uploadfile" for="imageFiles" style="cursor: pointer; display: block;">
                                     <span class="icon">
                                         <i class="icon-upload-cloud"></i>
                                     </span>
-                                    <div class="text-tiny">Arrastra tus imágenes aquí o selecciona <span class="text-secondary">clic para examinar</span></div>
+                                    <div class="text-tiny">Arrastra nuevas imágenes aquí o <span class="text-secondary">clic para examinar</span></div>
                                     <input type="file" id="imageFiles" name="imagenes" multiple accept="image/*" style="display: none;">
                                 </label>
                             </div>
                         </div>
-                        <div class="body-text mb-16">Puedes añadir 5 o más imágenes. Presta atención a la calidad de las fotos. Las imágenes deben mostrar todos los detalles del producto.</div>
+                        <div class="body-text mb-16">Puedes añadir más imágenes. Las imágenes deben mostrar todos los detalles del producto.</div>
                         
-                        <!-- Preview de imágenes -->
+                        <!-- Preview de nuevas imágenes -->
                         <div id="images-preview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;">
-                            <!-- Las imágenes seleccionadas aparecerán aquí -->
+                            <!-- Las nuevas imágenes aparecerán aquí -->
                         </div>
+                        
+                        <!-- Input oculto para guardar IDs de imágenes a eliminar -->
+                        <input type="hidden" name="imagenes_eliminar" id="imagenes_eliminar" value="">
                     </fieldset>
                 </div>
 
@@ -510,20 +533,66 @@ function generarVariantes() {
     });
 }
 
-// Auto-generar slug
+// Auto-generar slug (solo si está vacío en edición)
 document.querySelector('[name="nombre"]').addEventListener('input', function() {
-    const nombre = this.value;
-    const slug = nombre.toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-    document.querySelector('[name="slug"]').value = slug;
+    const slugInput = document.querySelector('[name="slug"]');
+    if (!slugInput.value || slugInput.dataset.autoGenerated === 'true') {
+        const nombre = this.value;
+        const slug = nombre.toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        slugInput.value = slug;
+        slugInput.dataset.autoGenerated = 'true';
+    }
 });
 
+// Cargar datos al inicio
+cargarDatosIniciales().then(() => {
+    // Después de cargar los datos, pre-cargar variantes existentes si hay
+    const variantesExistentes = {{ variantes_json|safe }};
+    if (variantesExistentes && variantesExistentes.length > 0) {
+        generarVariantesDesdeExistentes(variantesExistentes);
+    }
+});
+
+function generarVariantesDesdeExistentes(variantesExistentes) {
+    const variantsContainer = document.getElementById('variants-container');
+    const variantsList = document.getElementById('variants-list');
+    
+    variantsContainer.style.display = 'block';
+    variantsList.innerHTML = '';
+    
+    variantesExistentes.forEach((variante, index) => {
+        const nombre = variante.atributos.map(a => a.valorNombre).join(' / ');
+        const variantDiv = document.createElement('div');
+        variantDiv.className = 'variant-item mb-16';
+        variantDiv.style.cssText = 'border: 1px solid #e5e7eb; padding: 16px; border-radius: 8px; background: white;';
+        
+        variantDiv.innerHTML = `
+            <div class="body-text fw-7 mb-12">${nombre}</div>
+            <div class="cols-lg gap16">
+                <fieldset>
+                    <div class="body-text mb-4">SKU</div>
+                    <input type="text" name="variante_${index}_sku" class="tf-input" placeholder="SKU-${index + 1}" value="${variante.sku}">
+                </fieldset>
+                <fieldset>
+                    <div class="body-text mb-4">Stock</div>
+                    <input type="number" name="variante_${index}_stock" class="tf-input" placeholder="0" value="${variante.stock}">
+                </fieldset>
+            </div>
+            <input type="hidden" name="variante_${index}_atributos" value='${JSON.stringify(variante.atributos)}'>
+        `;
+        
+        variantsList.appendChild(variantDiv);
+    });
+}
+
 // ========================================
-// MANEJO DE CARGA DE IMÁGENES MÚLTIPLES
+// MANEJO DE IMÁGENES EN EDICIÓN
 // ========================================
 const imageFiles = [];
+const imagenesEliminar = [];
 const imageFilesInput = document.getElementById('imageFiles');
 const imagesPreview = document.getElementById('images-preview');
 const uploadArea = document.getElementById('upload-area');
@@ -578,7 +647,7 @@ function displayImage(file, index) {
         
         imageDiv.innerHTML = `
             <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">
-            <button type="button" onclick="removeImage(${index})" 
+            <button type="button" onclick="removeNewImage(${index})" 
                 style="position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                 ×
             </button>
@@ -593,28 +662,30 @@ function displayImage(file, index) {
     reader.readAsDataURL(file);
 }
 
-function removeImage(index) {
-    // Remover del array
+function removeNewImage(index) {
     imageFiles.splice(index, 1);
-    
-    // Remover del DOM
-    const imageDiv = document.querySelector(`[data-index="${index}"]`);
+    const imageDiv = document.querySelector(`#images-preview [data-index="${index}"]`);
     if (imageDiv) {
         imageDiv.remove();
     }
-    
-    // Reindexar elementos restantes
-    document.querySelectorAll('.image-preview-item').forEach((item, newIndex) => {
+    document.querySelectorAll('#images-preview .image-preview-item').forEach((item, newIndex) => {
         item.dataset.index = newIndex;
         const button = item.querySelector('button');
-        button.onclick = () => removeImage(newIndex);
+        button.onclick = () => removeNewImage(newIndex);
     });
 }
 
-// Interceptar el envío del formulario para agregar las imágenes
+function eliminarImagenExistente(imagenId, button) {
+    if (confirm('¿Estás seguro de eliminar esta imagen?')) {
+        imagenesEliminar.push(imagenId);
+        document.getElementById('imagenes_eliminar').value = imagenesEliminar.join(',');
+        button.closest('.image-preview-item').remove();
+    }
+}
+
+// Interceptar envío del formulario
 document.querySelector('.form-add-product').addEventListener('submit', function(e) {
-    // Si no hay imágenes, permitir el envío normal
-    if (imageFiles.length === 0) {
+    if (imageFiles.length === 0 && imagenesEliminar.length === 0) {
         return true;
     }
     
@@ -622,12 +693,14 @@ document.querySelector('.form-add-product').addEventListener('submit', function(
     
     const formData = new FormData(this);
     
-    // Agregar todas las imágenes al FormData
-    imageFiles.forEach((file, index) => {
+    // Agregar nuevas imágenes
+    imageFiles.forEach((file) => {
         formData.append('imagenes', file);
     });
     
-    // Enviar con fetch
+    // Agregar IDs de imágenes a eliminar
+    formData.set('imagenes_eliminar', imagenesEliminar.join(','));
+    
     fetch(this.action || window.location.href, {
         method: 'POST',
         body: formData,
@@ -636,30 +709,21 @@ document.querySelector('.form-add-product').addEventListener('submit', function(
         }
     })
     .then(response => {
-        if (response.ok) {
-            return response.text();
-        }
-        throw new Error('Error en la respuesta del servidor');
-    })
-    .then(html => {
-        // Si la respuesta es un redirect o success, recargar o redirigir
-        if (html.includes('exitosamente') || html.includes('success')) {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else if (response.ok) {
             window.location.href = '/admin-panel/products/';
         } else {
-            // Si hay errores, mostrar el formulario con los errores
-            document.body.innerHTML = html;
+            throw new Error('Error en la respuesta');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al guardar el producto. Por favor, inténtalo de nuevo.');
+        alert('Error al actualizar el producto. Por favor, inténtalo de nuevo.');
     });
     
     return false;
 });
-
-// Cargar datos al inicio
-cargarDatosIniciales();
 </script>
 
 {% endblock %}

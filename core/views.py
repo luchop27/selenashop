@@ -12,10 +12,9 @@ def home_05(request):
     """Alias para la función inicio"""
     return inicio(request)
 
-
-def home_02(request):
-    """Renderiza la plantilla home-02.html"""
-    return render(request, 'home-05.html')
+def shop_collection_sub(request):
+    # Aquí va la lógica de la vista
+    return render(request, 'collection_sub.html')
 
 
 # Alias para las vistas de usuarios (para mantener compatibilidad)

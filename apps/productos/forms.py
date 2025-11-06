@@ -7,8 +7,8 @@ class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
         fields = [
-            'nombre', 'slug', 'categoria', 'estilo', 'tipo',
-            'descripcion_corta', 'descripcion_larga', 'marca', 'material',
+            'nombre', 'slug', 'categoria', 'coleccion', 'tipo',
+            'descripcion_corta', 'descripcion_larga', 'marca',
             'precio_base', 'tiene_tallas', 'activo'
         ]
         widgets = {
@@ -16,12 +16,11 @@ class ProductoForm(forms.ModelForm):
             'nombre': forms.TextInput(attrs={'class': 'mb-10 tf-input', 'placeholder': 'Título del producto'}),
             'slug': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'slug-ejemplo'}),
             'categoria': forms.Select(attrs={'class': 'tf-input', 'placeholder': 'Seleccionar categoría'}),
-            'estilo': forms.Select(attrs={'class': 'tf-input'}),
+            'coleccion': forms.Select(attrs={'class': 'tf-input', 'placeholder': 'Seleccionar colección'}),
             'tipo': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Tipo (ej: vestido)'}),
             'descripcion_corta': forms.Textarea(attrs={'rows': 2, 'class': 'tf-input mb-10', 'placeholder': 'Descripción corta del producto'}),
             'descripcion_larga': forms.Textarea(attrs={'rows': 4, 'class': 'tf-input', 'placeholder': 'Descripción larga del producto'}),
             'marca': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Marca'}),
-            'material': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Material'}),
             'precio_base': forms.NumberInput(attrs={'class': 'tf-input', 'placeholder': 'Precio base'}),
             'tiene_tallas': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
             'activo': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),

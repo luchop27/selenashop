@@ -4,16 +4,59 @@ from django.urls import reverse
 
 
 # -----------------------------
+# COLECCIÓN
+# -----------------------------
+class Coleccion(models.Model):
+    """
+    Colecciones que agrupan categorías completas.
+    Ejemplo: "Primavera 2024", "Verano Casual", "Formal Elegante"
+    """
+    nombre = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=180, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+    imagen = models.ImageField(upload_to='colecciones/', blank=True, null=True)
+    
+    posicion = models.PositiveIntegerField(default=0, help_text="Orden de visualización")
+    activo = models.BooleanField(default=True)
+    destacada = models.BooleanField(default=False, help_text="Mostrar en página principal")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['posicion', 'nombre']
+        verbose_name = "Colección"
+        verbose_name_plural = "Colecciones"
+
+    def __str__(self):
+        return self.nombre
+
+    def get_absolute_url(self):
+        return reverse('productos:lista_por_coleccion', args=[self.slug])
+
+
+# -----------------------------
 # CATEGORÍA
 # -----------------------------
 class Categoria(models.Model):
     """
     Agrupa productos (Ropa, Accesorios, Perfumes, etc.)
     Soporta jerarquía con padre -> subcategorías.
+    CONECTADA A COLECCIÓN mediante FK.
     """
     nombre = models.CharField(max_length=150)
     slug = models.SlugField(max_length=180, unique=True)
     descripcion = models.TextField(blank=True, null=True)
+    
+    # 🔗 CONEXIÓN A COLECCIÓN
+    coleccion = models.ForeignKey(
+        Coleccion,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='categorias',
+        help_text="Colección a la que pertenece esta categoría"
+    )
 
     padre = models.ForeignKey(
         'self',
@@ -22,12 +65,7 @@ class Categoria(models.Model):
         blank=True,
         related_name='subcategorias'
     )
-    tipo = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        help_text="Opcional: ropa, accesorio, perfume..."
-    )
+    
     posicion = models.PositiveIntegerField(default=0)
     estado = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -83,12 +121,13 @@ class Producto(models.Model):
         blank=True,
         related_name='productos'
     )
-    estilo = models.ForeignKey(
-        Estilo,
+    coleccion = models.ForeignKey(
+        'Coleccion',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='productos'
+        related_name='productos',
+        help_text="Colección a la que pertenece este producto"
     )
     tipo = models.CharField(
         max_length=100,
@@ -103,7 +142,6 @@ class Producto(models.Model):
     descripcion_larga = models.TextField(blank=True, null=True)
 
     marca = models.CharField(max_length=100, blank=True, null=True)
-    material = models.CharField(max_length=100, blank=True, null=True)
     precio_base = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     tiene_tallas = models.BooleanField(default=False)
     activo = models.BooleanField(default=True)
@@ -214,9 +252,13 @@ class Imagen(models.Model):
         blank=True,
         related_name='imagenes'
     )
-    url = models.TextField(default='', blank=True)
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
+    url = models.TextField(default='', blank=True, help_text="URL alternativa si no se usa archivo")
+    posicion = models.PositiveIntegerField(default=0, help_text="Orden de visualización")
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
+        ordering = ['posicion', 'created_at']
         verbose_name = "Imagen"
         verbose_name_plural = "Imágenes"
         constraints = [
@@ -235,6 +277,8 @@ class Imagen(models.Model):
 
     @property
     def src(self):
+        if self.imagen:
+            return self.imagen.url
         return self.url or ""
 
 

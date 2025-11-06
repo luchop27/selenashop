@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import (
+	Coleccion,
 	Categoria,
 	Estilo,
 	Producto,
@@ -13,25 +14,154 @@ from .models import (
 
 
 # =========================
+#  COLECCIONES
+# =========================
+class CategoriaInline(admin.TabularInline):
+	"""Inline para ver/agregar categorías dentro de una colección"""
+	model = Categoria
+	extra = 0
+	fields = ('nombre', 'slug', 'padre', 'tipo', 'estado', 'posicion')
+	prepopulated_fields = {'slug': ('nombre',)}
+	show_change_link = True
+
+
+@admin.register(Coleccion)
+class ColeccionAdmin(admin.ModelAdmin):
+	list_display = (
+		'nombre',
+		'slug',
+		'activo',
+		'destacada',
+		'posicion',
+		'num_categorias',
+		'created_at',
+	)
+	list_filter = ('activo', 'destacada', 'created_at')
+	search_fields = ('nombre', 'slug', 'descripcion')
+	prepopulated_fields = {'slug': ('nombre',)}
+	list_editable = ('activo', 'destacada', 'posicion')
+	ordering = ('posicion', 'nombre')
+	
+	# Agregar inline de categorías
+	inlines = [CategoriaInline]
+	
+	# Organizar campos en el formulario
+	fieldsets = (
+		('Información Básica', {
+			'fields': ('nombre', 'slug', 'descripcion')
+		}),
+		('Imagen', {
+			'fields': ('imagen',)
+		}),
+		('Configuración', {
+			'fields': ('activo', 'destacada', 'posicion')
+		}),
+	)
+	
+	def num_categorias(self, obj):
+		"""Mostrar número de categorías en la colección"""
+		count = obj.categorias.count()
+		return f"{count} categorías"
+	num_categorias.short_description = 'Categorías'
+
+
+# =========================
 #  CATEGORÍAS
 # =========================
+class SubcategoriaInline(admin.TabularInline):
+	"""Inline para ver/agregar subcategorías dentro de una categoría"""
+	model = Categoria
+	fk_name = 'padre'
+	extra = 0
+	fields = ('nombre', 'slug', 'estado', 'posicion')
+	prepopulated_fields = {'slug': ('nombre',)}
+	show_change_link = True
+	verbose_name = "Subcategoría"
+	verbose_name_plural = "Subcategorías"
+	
+	def get_formset(self, request, obj=None, **kwargs):
+		"""Heredar la colección del padre automáticamente"""
+		formset = super().get_formset(request, obj, **kwargs)
+		
+		# Si hay un objeto padre (categoría principal), guardar la colección
+		if obj and hasattr(obj, 'coleccion'):
+			formset.parent_coleccion = obj.coleccion
+		
+		return formset
+
+
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
 	list_display = (
 		'nombre',
 		'slug',
+		'coleccion',
 		'padre',
-		'tipo',
+		'num_subcategorias',
+		'num_productos',
 		'estado',
 		'posicion',
-		'created_at',
 	)
-	list_filter = ('estado', 'tipo', 'created_at')
-	search_fields = ('nombre', 'slug')
+	list_filter = ('estado', 'coleccion', 'padre', 'created_at')
+	search_fields = ('nombre', 'slug', 'descripcion')
 	prepopulated_fields = {'slug': ('nombre',)}
 	list_editable = ('estado', 'posicion')
-	autocomplete_fields = ('padre',)
-	ordering = ('posicion', 'nombre')
+	autocomplete_fields = ('padre', 'coleccion')
+	ordering = ('coleccion', 'posicion', 'nombre')
+	
+	# Agregar inline de subcategorías
+	inlines = [SubcategoriaInline]
+	
+	# Organizar campos en el formulario
+	fieldsets = (
+		('Información Básica', {
+			'fields': ('nombre', 'slug', 'descripcion')
+		}),
+		('Jerarquía', {
+			'fields': ('coleccion', 'padre'),
+			'description': '<strong>GUÍA:</strong><br>'
+			              '• <strong>Categoría Principal:</strong> Selecciona solo COLECCIÓN (ej: Ropa)<br>'
+			              '• <strong>Subcategoría:</strong> Selecciona PADRE (ej: Pantalones con padre=Ropa)<br>'
+		}),
+		('Configuración', {
+			'fields': ('estado', 'posicion')
+		}),
+	)
+	
+	def save_model(self, request, obj, form, change):
+		"""Heredar colección del padre si es subcategoría"""
+		if obj.padre and obj.padre.coleccion:
+			# Si tiene padre, heredar su colección automáticamente
+			obj.coleccion = obj.padre.coleccion
+		super().save_model(request, obj, form, change)
+	
+	def save_formset(self, request, form, formset, change):
+		"""Guardar subcategorías con la colección heredada del padre"""
+		instances = formset.save(commit=False)
+		
+		for instance in instances:
+			# Heredar colección del padre
+			if hasattr(formset, 'parent_coleccion'):
+				instance.coleccion = formset.parent_coleccion
+			instance.save()
+		
+		formset.save_m2m()
+	
+	
+	def num_subcategorias(self, obj):
+		"""Mostrar número de subcategorías"""
+		count = obj.subcategorias.count()
+		if count > 0:
+			return f"✓ {count}"
+		return "-"
+	num_subcategorias.short_description = 'Subcategorías'
+	
+	def num_productos(self, obj):
+		"""Mostrar número de productos en la categoría"""
+		from .models import Producto
+		count = Producto.objects.filter(categoria=obj).count()
+		return count
+	num_productos.short_description = 'Productos'
 
 
 # =========================
@@ -78,7 +208,7 @@ class ProductoAdmin(admin.ModelAdmin):
 		'nombre',
 		'slug',
 		'categoria',
-		'estilo',
+		'coleccion',
 		'precio_base',
 		'stock_total',
 		'num_variantes',
@@ -91,7 +221,7 @@ class ProductoAdmin(admin.ModelAdmin):
 		'activo',
 		'tiene_tallas',
 		'categoria',
-		'estilo',
+		'coleccion',
 		'created_at',
 	)
 	search_fields = ('nombre', 'slug', 'descripcion_corta', 'descripcion_larga')
@@ -99,7 +229,7 @@ class ProductoAdmin(admin.ModelAdmin):
 	list_editable = ('activo', 'precio_base', 'tiene_tallas')
 	inlines = [ImagenInline, VarianteInline]
 	ordering = ('-created_at',)
-	autocomplete_fields = ('categoria', 'estilo')
+	autocomplete_fields = ('categoria', 'coleccion')
 	actions = ['activar_productos', 'desactivar_productos', 'duplicar_producto']
 	list_per_page = 20
 	date_hierarchy = 'created_at'
@@ -117,9 +247,8 @@ class ProductoAdmin(admin.ModelAdmin):
 		('Clasificación', {
 			'fields': (
 				'categoria',
-				'estilo',
+				'coleccion',
 				'marca',
-				'material',
 			)
 		}),
 		('Venta', {

@@ -6,6 +6,7 @@
 {% block menu_product %}active{% endblock %}
 
 {% block content %}
+                    {% csrf_token %}
                     <!-- main-content -->
                     <div class="main-content">
                         <!-- main-content-wrap -->
@@ -79,12 +80,17 @@
         <!-- nombre + imagen -->
         <div class="name">
             <div class="image">
-                {# tu modelo de Imagen usa url, no ImageField #}
                 {% with img=producto.imagenes.first %}
-                    {% if img and img.url %}
-                        <img src="{{ img.url }}" alt="{{ producto.nombre }}">
+                    {% if img %}
+                        {% if img.imagen %}
+                            <img src="{{ img.imagen.url }}" alt="{{ producto.nombre }}" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% elif img.url %}
+                            <img src="{{ img.url }}" alt="{{ producto.nombre }}" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'panel_admin/images/products/product-1.jpg' %}" alt="" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% endif %}
                     {% else %}
-                        <img src="{% static 'panel_admin/images/products/product-1.jpg' %}" alt="">
+                        <img src="{% static 'panel_admin/images/products/product-1.jpg' %}" alt="" style="width: 60px; height: 60px; object-fit: cover;">
                     {% endif %}
                 {% endwith %}
             </div>
@@ -94,6 +100,11 @@
                 </a>
                 <div class="text-tiny">
                     {% if producto.categoria %}{{ producto.categoria.nombre }}{% else %}Sin categoría{% endif %}
+                    {% if producto.imagenes.count > 0 %}
+                        <span class="badge badge-info" style="background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">
+                            📷 {{ producto.imagenes.count }}
+                        </span>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -113,11 +124,12 @@
 
         <!-- STOCK (suma del stock de variantes) -->
         <div class="body-text text-main-dark mt-4">
-            {% with total=producto.variantes.all|length %}
-                {% if total > 0 %}
-                    <span class="text-success">{{ producto.variantes.all.0.stock|default:"0" }}</span>
+            {% load producto_filters %}
+            {% with total_stock=producto.variantes.all|sum_stock %}
+                {% if total_stock > 0 %}
+                    <span class="text-success fw-7">{{ total_stock }}</span>
                 {% else %}
-                    <span class="text-danger">0</span>
+                    <span class="text-danger fw-7">0</span>
                 {% endif %}
             {% endwith %}
         </div>
@@ -138,9 +150,17 @@
 
         <!-- acciones -->
         <div class="list-icon-function">
-            <div class="item eye"><i class="icon-eye"></i></div>
-            <div class="item edit"><i class="icon-edit-3"></i></div>
-            <div class="item trash"><i class="icon-trash-2"></i></div>
+            <div class="item eye">
+                <a href="{% url 'productos:admin_producto_view' producto.pk %}" title="Ver producto"><i class="icon-eye"></i></a>
+            </div>
+            <div class="item edit">
+                <a href="{% url 'productos:admin_producto_edit' producto.pk %}" title="Editar producto"><i class="icon-edit-3"></i></a>
+            </div>
+            <div class="item trash">
+                <a href="javascript:void(0);" onclick="eliminarProducto({{ producto.pk }}, '{{ producto.nombre|escapejs }}', {{ producto.variantes.count }})" title="Eliminar producto">
+                    <i class="icon-trash-2"></i>
+                </a>
+            </div>
         </div>
     </li>
     {% empty %}
@@ -208,4 +228,37 @@
 
  
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function eliminarProducto(productoId, productoNombre, cantidadVariantes) {
+    const mensaje = `¿Estás seguro de eliminar el producto "${productoNombre}"?\n\n` +
+                    `Esto también eliminará:\n` +
+                    `- Todas sus variantes (${cantidadVariantes})\n` +
+                    `- Todos los atributos de las variantes\n` +
+                    `- Todas las imágenes asociadas\n\n` +
+                    `Esta acción no se puede deshacer.`;
+    
+    if (confirm(mensaje)) {
+        // Crear formulario dinámicamente
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin-panel/products/delete/${productoId}/`;
+        
+        // Agregar CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken.value;
+            form.appendChild(csrfInput);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
 {% endblock %}

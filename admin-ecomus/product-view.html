@@ -1,0 +1,199 @@
+{% extends 'baseadmin.html' %}
+{% load static %}
+
+{% block title %}{{ producto.nombre }} - Detalles - Selena Store{% endblock %}
+
+{% block menu_product %}active{% endblock %}
+
+{% block content %}
+<!-- main-content -->
+<div class="main-content">
+    <!-- main-content-inner -->
+    <div class="main-content-inner">
+        <!-- main-content-wrap -->
+        <div class="main-content-wrap">
+            <div class="flex items-center flex-wrap justify-between gap20 mb-30">
+                <h3>Detalles del Producto</h3>
+                <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                    <li>
+                        <a href="{% url 'core:admin_index' %}">
+                            <div class="text-tiny">Dashboard</div>
+                        </a>
+                    </li>
+                    <li>
+                        <i class="icon-chevron-right"></i>
+                    </li>
+                    <li>
+                        <a href="{% url 'productos:admin_productos_list' %}">
+                            <div class="text-tiny">Productos</div>
+                        </a>
+                    </li>
+                    <li>
+                        <i class="icon-chevron-right"></i>
+                    </li>
+                    <li>
+                        <div class="text-tiny">{{ producto.nombre }}</div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="mb-30">
+                <a href="{% url 'productos:admin_producto_edit' producto.pk %}" class="tf-button style-1 w208">
+                    <i class="icon-edit-3"></i> Editar Producto
+                </a>
+                <a href="{% url 'productos:admin_productos_list' %}" class="tf-button style-2 w208" style="margin-left: 10px;">
+                    <i class="icon-arrow-left"></i> Volver al Listado
+                </a>
+            </div>
+
+            <!-- Información General -->
+            <div class="wg-box mb-30">
+                <div class="flex items-center justify-between gap10 flex-wrap">
+                    <div class="body-title">Información General</div>
+                    {% if producto.activo %}
+                        <div class="block-available bg-1 fw-7">Activo</div>
+                    {% else %}
+                        <div class="block-not-available bg-1 fw-7">Inactivo</div>
+                    {% endif %}
+                </div>
+                <div class="divider"></div>
+                <div class="flex flex-column gap-20">
+                    <div class="body-text"><strong>ID:</strong> #{{ producto.id }}</div>
+                    <div class="body-text"><strong>Nombre:</strong> {{ producto.nombre }}</div>
+                    <div class="body-text"><strong>Slug:</strong> {{ producto.slug }}</div>
+                    <div class="body-text"><strong>Categoría:</strong> {{ producto.categoria.nombre|default:"Sin categoría" }}</div>
+                    <div class="body-text"><strong>Colección:</strong> {{ producto.coleccion.nombre|default:"Sin colección" }}</div>
+                    <div class="body-text"><strong>Tipo:</strong> {{ producto.get_tipo_display }}</div>
+                    <div class="body-text"><strong>Precio Base:</strong> ${{ producto.precio_base|floatformat:2 }}</div>
+                    <div class="body-text"><strong>Tiene Tallas:</strong> {{ producto.tiene_tallas|yesno:"Sí,No" }}</div>
+                    <div class="body-text"><strong>Creado:</strong> {{ producto.created_at|date:"d/m/Y H:i" }}</div>
+                    <div class="body-text"><strong>Actualizado:</strong> {{ producto.updated_at|date:"d/m/Y H:i" }}</div>
+                </div>
+            </div>
+
+            <!-- Descripciones -->
+            <div class="wg-box mb-30">
+                <div class="body-title mb-20">Descripciones</div>
+                <div class="divider"></div>
+                <div class="flex flex-column gap-20">
+                    <div>
+                        <div class="body-text fw-7 mb-10">Descripción Corta:</div>
+                        <div class="body-text">{{ producto.descripcion_corta|default:"Sin descripción corta" }}</div>
+                    </div>
+                    <div>
+                        <div class="body-text fw-7 mb-10">Descripción Larga:</div>
+                        <div class="body-text">{{ producto.descripcion_larga|default:"Sin descripción larga"|linebreaks }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IMÁGENES DEL PRODUCTO -->
+            <div class="wg-box mb-30">
+                <div class="flex items-center justify-between gap10 flex-wrap">
+                    <div class="body-title">Imágenes del Producto</div>
+                    <div class="body-text text-main-dark">Total: {{ producto.imagenes.count }} imagen(es)</div>
+                </div>
+                <div class="divider"></div>
+                
+                {% if producto.imagenes.all %}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+                        {% for imagen in producto.imagenes.all %}
+                        <div style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; position: relative;">
+                            {% if imagen.imagen %}
+                                <img src="{{ imagen.imagen.url }}" alt="{{ producto.nombre }}" style="width: 100%; height: 200px; object-fit: cover;">
+                            {% elif imagen.url %}
+                                <img src="{{ imagen.url }}" alt="{{ producto.nombre }}" style="width: 100%; height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div style="width: 100%; height: 200px; background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
+                                    <span class="text-tiny text-secondary">Sin imagen</span>
+                                </div>
+                            {% endif %}
+                            <div style="padding: 10px; background: white;">
+                                <div class="text-tiny text-secondary">Posición: {{ imagen.posicion }}</div>
+                                {% if imagen.imagen %}
+                                    <div class="text-tiny text-secondary">Archivo: {{ imagen.imagen.name|slice:"10:" }}</div>
+                                {% endif %}
+                                <div class="text-tiny text-secondary">ID: #{{ imagen.id }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="body-text text-secondary mt-20">Este producto no tiene imágenes asociadas.</div>
+                {% endif %}
+            </div>
+
+            <!-- VARIANTES DEL PRODUCTO -->
+            <div class="wg-box mb-30">
+                <div class="flex items-center justify-between gap10 flex-wrap">
+                    <div class="body-title">Variantes del Producto</div>
+                    <div class="body-text text-main-dark">Total: {{ producto.variantes.count }} variante(s)</div>
+                </div>
+                <div class="divider"></div>
+                
+                {% if producto.variantes.all %}
+                    <div class="table-responsive mt-20">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Atributos</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for variante in producto.variantes.all %}
+                                <tr>
+                                    <td class="body-text">{{ variante.sku }}</td>
+                                    <td class="body-text">
+                                        {% for va in variante.atributos.all %}
+                                            <span class="badge" style="background: #e5e7eb; color: #1f2937; padding: 4px 8px; border-radius: 4px; margin-right: 5px;">
+                                                {{ va.valor_atributo.atributo.nombre }}: {{ va.valor_atributo.valor }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="text-secondary">Sin atributos</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="body-text">
+                                        {% if variante.stock > 10 %}
+                                            <span class="text-success fw-7">{{ variante.stock }}</span>
+                                        {% elif variante.stock > 0 %}
+                                            <span class="text-warning fw-7">{{ variante.stock }}</span>
+                                        {% else %}
+                                            <span class="text-danger fw-7">{{ variante.stock }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Activa</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Resumen de Stock -->
+                    <div class="divider mt-20"></div>
+                    <div class="flex items-center justify-between gap10 flex-wrap mt-20">
+                        <div class="body-title">Stock Total:</div>
+                        <div class="body-title text-success">
+                            {% load producto_filters %}
+                            {{ producto.variantes.all|sum_stock }} unidades
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="body-text text-secondary mt-20">Este producto no tiene variantes asociadas.</div>
+                {% endif %}
+            </div>
+
+            <!-- bottom-page -->
+            <div class="bottom-page">
+                <div class="body-text">Copyright © 2024 <a href="../index.html">Ecomus</a>. Design by
+                    Themesflat All rights reserved</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
