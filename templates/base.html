@@ -40,7 +40,7 @@
     <!-- /preload -->
     
         <!-- Header -->
-        <header id="header" class="header-default header-absolute header-white bg_light-grey-2">
+        <header id="header" class="header-default header-white bg_light-grey-2">
             <div class="px_15 lg-px_40">
                 <div class="row wrapper-header align-items-center">
                     <div class="col-md-4 col-3 tf-lg-hidden">
@@ -71,18 +71,18 @@
                                                     <div class="mega-menu-item">
                                                         <div class="menu-heading">Shop layouts</div>
                                                         <ul class="menu-list">
-                                                            <li><a href="shop-default.html"
-                                                                    class="menu-link-text link">Default</a></li>
-                                                            <li><a href="shop-left-sidebar.html"
-                                                                    class="menu-link-text link">Left sidebar</a></li>
-                                                            <li><a href="shop-right-sidebar.html"
-                                                                    class="menu-link-text link">Right sidebar</a></li>
-                                                            <li><a href="shop-fullwidth.html"
-                                                                    class="menu-link-text link">Fullwidth</a></li>
-                                                            <li><a href="shop-collection-sub.html"
-                                                                    class="menu-link-text link">Sub collection</a></li>
-                                                            <li><a href="shop-collection-list.html"
-                                                                    class="menu-link-text link">Collections list</a>
+                                                            <li><a href="{% url 'productos:producto_list' %}"
+                                                                class="menu-link-text link">Default</a></li>
+                                                            <li><a href="{% url 'productos:producto_list' %}?layout=left"
+                                                                class="menu-link-text link">Left sidebar</a></li>
+                                                            <li><a href="{% url 'productos:producto_list' %}?layout=right"
+                                                                class="menu-link-text link">Right sidebar</a></li>
+                                                            <li><a href="{% url 'productos:producto_list' %}?layout=full"
+                                                                class="menu-link-text link">Fullwidth</a></li>
+                                                            <li><a href="{% url 'core:shop-collection-sub' %}"
+                                                                class="menu-link-text link">Sub collection</a></li>
+                                                            <li><a href="{% url 'productos:producto_list' %}?view=collections"
+                                                                class="menu-link-text link">Collections list</a>
                                                             </li>
                                                         </ul>
                                                     </div>
@@ -1014,17 +1014,29 @@
 
         </div>
         <!-- Javascript -->
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <!-- Core libraries -->
     <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    <!-- UI libraries -->
     <script src="{% static 'js/swiper-bundle.min.js' %}"></script>
     <script src="{% static 'js/carousel.js' %}"></script>
     <script src="{% static 'js/bootstrap-select.min.js' %}"></script>
+    <script src="{% static 'js/nouislider.min.js' %}"></script>
+
+    <!-- Utilities -->
     <script src="{% static 'js/lazysize.min.js' %}"></script>
     <script src="{% static 'js/count-down.js' %}"></script>
+
+    <!-- Shop-specific scripts -->
+    <script src="{% static 'js/shop.js' %}"></script>
+
+    <!-- Effects & modals -->
     <script src="{% static 'js/wow.min.js' %}"></script>
     <script src="{% static 'js/multiple-modal.js' %}"></script>
+
+    <!-- Main app script -->
     <script src="{% static 'js/main.js' %}"></script>
-    
     <!-- Script para limpiar formulario de login -->
     <script>
         // Limpiar campos del formulario de login cuando se abre el modal
