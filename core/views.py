@@ -14,7 +14,7 @@ def home_05(request):
 
 def shop_collection_sub(request):
     # Aquí va la lógica de la vista
-    return render(request, 'collection_sub.html')
+    return render(request, 'shop-collection-sub.html')
 
 
 # Alias para las vistas de usuarios (para mantener compatibilidad)
