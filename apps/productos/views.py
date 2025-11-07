@@ -105,6 +105,66 @@ class ProductoListView(ListView):
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
 		
+		# Obtener categoría actual si existe
+		categoria_slug = self.request.GET.get("categoria")
+		categoria_actual = None
+		categorias_a_mostrar = []
+		
+		if categoria_slug:
+			try:
+				categoria_actual = Categoria.objects.get(slug=categoria_slug, estado=True)
+			except Categoria.DoesNotExist:
+				pass
+		
+		# Determinar qué categorías mostrar en el slider
+		if categoria_actual:
+			print(f"DEBUG ProductoListView: Categoría actual: {categoria_actual.nombre} (ID: {categoria_actual.id})")
+			print(f"DEBUG ProductoListView: Tiene padre: {categoria_actual.padre}")
+			
+			# Si la categoría tiene subcategorías, mostrarlas
+			subcategorias = Categoria.objects.filter(
+				padre=categoria_actual,
+				estado=True
+			).order_by('nombre')
+			
+			print(f"DEBUG ProductoListView: Subcategorías encontradas: {subcategorias.count()}")
+			
+			if subcategorias.exists():
+				# Tiene subcategorías, mostrarlas
+				categorias_a_mostrar = list(subcategorias)
+				print(f"DEBUG ProductoListView: Mostrando subcategorías de {categoria_actual.nombre}")
+			elif categoria_actual.padre:
+				# Es una subcategoría, mostrar sus hermanas (otras subcategorías del mismo padre)
+				categorias_a_mostrar = list(
+					Categoria.objects.filter(
+						padre=categoria_actual.padre,
+						estado=True
+					).order_by('nombre')
+				)
+				print(f"DEBUG ProductoListView: Es subcategoría, mostrando hermanas: {len(categorias_a_mostrar)}")
+			else:
+				# Es categoría principal sin subcategorías, mostrar todas las categorías principales
+				categorias_a_mostrar = list(
+					Categoria.objects.filter(
+						padre__isnull=True,
+						estado=True
+					).order_by('nombre')
+				)
+				print(f"DEBUG ProductoListView: Es categoría principal sin hijos, mostrando principales: {len(categorias_a_mostrar)}")
+		else:
+			# Si no hay categoría seleccionada, mostrar categorías principales
+			categorias_a_mostrar = list(
+				Categoria.objects.filter(
+					padre__isnull=True,
+					estado=True
+				).order_by('nombre')
+			)
+			print(f"DEBUG ProductoListView: Sin categoría, mostrando principales: {len(categorias_a_mostrar)}")
+		
+		print(f"DEBUG ProductoListView: Total categorías a mostrar: {len(categorias_a_mostrar)}")
+		for cat in categorias_a_mostrar:
+			print(f"  - {cat.nombre} (slug: {cat.slug}, imagen: {bool(cat.imagen)})")
+		
 		# Preparar cada producto con los campos que necesita el template
 		productos = ctx.get('productos', [])
 		for p in productos:
@@ -136,6 +196,8 @@ class ProductoListView(ListView):
 			total_stock = getattr(p, 'total_stock', 0) or 0
 			p.availability = 'In stock' if total_stock > 0 else 'Out of stock'
 
+		ctx["categoria_actual"] = categoria_actual
+		ctx["categorias_a_mostrar"] = categorias_a_mostrar
 		ctx["categorias"] = Categoria.objects.filter(estado=True).order_by("nombre")
 		ctx["estilos"] = Estilo.objects.filter(activo=True).order_by("posicion", "nombre")
 		return ctx
@@ -240,33 +302,70 @@ def panel_productos_list(request):
 	"""
 	Renderiza tu HTML del panel: admin-ecomus/product-list.html
 	"""
+	from django.core.paginator import Paginator
+	from django.db.models import Q
+	
+	# Búsqueda general
+	search = request.GET.get('q', '').strip()
+	
+	# Filtro de colección
+	coleccion_filtro = request.GET.get('coleccion', '')
+	
+	# Base queryset para todos los productos
 	productos = (
 		Producto.objects
-		.select_related("categoria", "estilo")
+		.select_related("categoria", "coleccion")
 		.prefetch_related("variantes", "imagenes")
-		# agregamos datos calculados:
 		.annotate(
-			total_stock=Sum("variantes__stock"),          # suma de stock de todas las variantes
-			precio_variante=Min("variantes__precio"),     # el precio más barato de las variantes
+			total_stock=Sum("variantes__stock"),
+			precio_variante=Min("variantes__precio"),
 		)
 		.order_by("-created_at")
 	)
-
-	# Calcular porcentaje de descuento (sale) para mostrar en la tabla
-	for p in productos:
+	
+	# Aplicar búsqueda si existe
+	if search:
+		productos = productos.filter(
+			Q(nombre__icontains=search) |
+			Q(descripcion_corta__icontains=search) |
+			Q(marca__icontains=search)
+		)
+	
+	# Aplicar filtro de colección si existe
+	if coleccion_filtro:
+		try:
+			coleccion_seleccionada = Coleccion.objects.get(slug=coleccion_filtro)
+			productos = productos.filter(coleccion=coleccion_seleccionada)
+		except Coleccion.DoesNotExist:
+			pass
+	
+	# Paginación
+	paginator = Paginator(productos, 20)
+	page = request.GET.get('page', 1)
+	productos_page = paginator.get_page(page)
+	
+	# Calcular porcentaje de descuento (sale)
+	for p in productos_page:
 		pv = getattr(p, 'precio_variante', None)
 		pb = getattr(p, 'precio_base', None)
 		try:
 			if pv is not None and pb is not None and pb > 0 and pv < pb:
-				# pv and pb are Decimals; calcular porcentaje entero
 				percent = int(((pb - pv) / pb) * Decimal(100))
 				p.sale_percent = percent
 			else:
 				p.sale_percent = None
 		except Exception:
 			p.sale_percent = None
+	
+	# Obtener todas las colecciones para el filtro
+	colecciones_disponibles = Coleccion.objects.filter(activo=True).order_by('nombre')
+	
 	return render(request, "product-list.html", {
-		"productos": productos
+		"productos": productos_page,
+		"total_productos": productos.count(),
+		"colecciones_disponibles": colecciones_disponibles,
+		"coleccion_filtro": coleccion_filtro,
+		"search": search,
 	})
 
 def panel_producto_crear(request):
@@ -353,26 +452,21 @@ def panel_categoria_crear(request):
 		return redirect('core:inicio')
 	
 	if request.method == 'POST':
-		nombre = request.POST.get('nombre')
-		slug = request.POST.get('slug')
-		descripcion = request.POST.get('descripcion', '')
-		coleccion_id = request.POST.get('coleccion')
-		padre_id = request.POST.get('padre')
-		estado = request.POST.get('estado') == 'true'
+		from .forms import CategoriaForm
+		form = CategoriaForm(request.POST, request.FILES)
 		
-		try:
-			categoria = Categoria.objects.create(
-				nombre=nombre,
-				slug=slug,
-				descripcion=descripcion,
-				coleccion_id=coleccion_id if coleccion_id else None,
-				padre_id=padre_id if padre_id else None,
-				estado=estado
-			)
-			messages.success(request, f'Categoría "{categoria.nombre}" creada correctamente.')
-			return redirect('productos:panel_categorias')
-		except Exception as e:
-			messages.error(request, f'Error al crear la categoría: {str(e)}')
+		if form.is_valid():
+			try:
+				categoria = form.save()
+				messages.success(request, f'Categoría "{categoria.nombre}" creada correctamente.')
+				return redirect('productos:panel_categorias')
+			except Exception as e:
+				messages.error(request, f'Error al crear la categoría: {str(e)}')
+		else:
+			messages.error(request, 'Por favor corrige los errores en el formulario.')
+	else:
+		from .forms import CategoriaForm
+		form = CategoriaForm()
 	
 	# Obtener colecciones y categorías para los selects
 	from .models import Coleccion
@@ -380,6 +474,51 @@ def panel_categoria_crear(request):
 	categorias = Categoria.objects.filter(estado=True, padre__isnull=True).order_by('nombre')
 	
 	return render(request, "new-category.html", {
+		'form': form,
+		'colecciones': colecciones,
+		'categorias': categorias,
+	})
+
+
+@login_required(login_url='/admin/login/')
+def panel_categoria_edit(request, pk):
+	"""
+	Editar una categoría con soporte para imágenes
+	"""
+	categoria = get_object_or_404(Categoria, pk=pk)
+	
+	if request.method == 'POST':
+		from .forms import CategoriaForm
+		
+		# Manejar eliminación de imagen actual
+		if request.POST.get('remove_imagen'):
+			if categoria.imagen:
+				categoria.imagen.delete()
+				categoria.save()
+		
+		form = CategoriaForm(request.POST, request.FILES, instance=categoria)
+		
+		if form.is_valid():
+			try:
+				categoria = form.save()
+				messages.success(request, f'Categoría "{categoria.nombre}" actualizada correctamente.')
+				return redirect('productos:panel_categorias')
+			except Exception as e:
+				messages.error(request, f'Error al actualizar la categoría: {str(e)}')
+		else:
+			messages.error(request, 'Por favor corrige los errores en el formulario.')
+	else:
+		from .forms import CategoriaForm
+		form = CategoriaForm(instance=categoria)
+	
+	# Obtener colecciones y categorías para los selects
+	from .models import Coleccion
+	colecciones = Coleccion.objects.filter(activo=True).order_by('nombre')
+	categorias = Categoria.objects.filter(estado=True, padre__isnull=True).exclude(pk=pk).order_by('nombre')
+	
+	return render(request, "edit-category.html", {
+		'form': form,
+		'categoria': categoria,
 		'colecciones': colecciones,
 		'categorias': categorias,
 	})
@@ -419,6 +558,15 @@ def admin_productos_list(request):
 	if categoria_id:
 		productos = productos.filter(categoria_id=categoria_id)
 	
+	# Filtro por colección
+	coleccion_filtro = request.GET.get('coleccion', '')
+	if coleccion_filtro:
+		try:
+			coleccion_seleccionada = Coleccion.objects.get(slug=coleccion_filtro)
+			productos = productos.filter(coleccion=coleccion_seleccionada)
+		except Coleccion.DoesNotExist:
+			pass
+	
 	# Filtro por estado
 	estado = request.GET.get('estado')
 	if estado:
@@ -431,10 +579,13 @@ def admin_productos_list(request):
 	
 	# Para los filtros
 	categorias = Categoria.objects.filter(estado=True).order_by('nombre')
+	colecciones_disponibles = Coleccion.objects.filter(activo=True).order_by('nombre')
 	
 	return render(request, 'product-list.html', {
 		'productos': productos_page,
 		'categorias': categorias,
+		'colecciones_disponibles': colecciones_disponibles,
+		'coleccion_filtro': coleccion_filtro,
 		'search': search,
 		'total_productos': productos.count(),
 	})
@@ -898,25 +1049,22 @@ def admin_colecciones_list(request):
 def admin_coleccion_add(request):
 	"""Agregar nueva colección"""
 	if request.method == 'POST':
-		nombre = request.POST.get('nombre')
-		descripcion = request.POST.get('descripcion', '')
-		slug = request.POST.get('slug')
-		activo = request.POST.get('activo') == 'on'
-		destacada = request.POST.get('destacada') == 'on'
+		from .forms import ColeccionForm
+		form = ColeccionForm(request.POST, request.FILES)
 		
-		# Crear colección
-		coleccion = Coleccion.objects.create(
-			nombre=nombre,
-			slug=slug,
-			descripcion=descripcion,
-			activo=activo,
-			destacada=destacada
-		)
-		
-		messages.success(request, f'Colección "{nombre}" creada exitosamente.')
-		return redirect('productos:admin_colecciones_list')
+		if form.is_valid():
+			coleccion = form.save()
+			messages.success(request, f'Colección "{coleccion.nombre}" creada exitosamente.')
+			return redirect('productos:admin_colecciones_list')
+		else:
+			messages.error(request, 'Por favor corrige los errores en el formulario.')
+	else:
+		from .forms import ColeccionForm
+		form = ColeccionForm()
 	
-	return render(request, 'collection-add.html')
+	return render(request, 'collection-add.html', {
+		'form': form,
+	})
 
 
 @login_required
@@ -925,19 +1073,27 @@ def admin_coleccion_edit(request, pk):
 	coleccion = get_object_or_404(Coleccion, pk=pk)
 	
 	if request.method == 'POST':
-		coleccion.nombre = request.POST.get('nombre')
-		coleccion.descripcion = request.POST.get('descripcion', '')
-		coleccion.slug = request.POST.get('slug')
-		coleccion.activo = request.POST.get('activo') == 'on'
-		coleccion.destacada = request.POST.get('destacada') == 'on'
+		from .forms import ColeccionForm
+		form = ColeccionForm(request.POST, request.FILES, instance=coleccion)
 		
-		coleccion.save()
+		# Verificar si se solicitó eliminar la imagen actual
+		if request.POST.get('remove_imagen') == 'true':
+			if coleccion.imagen:
+				coleccion.imagen.delete(save=False)
 		
-		messages.success(request, f'Colección "{coleccion.nombre}" actualizada.')
-		return redirect('productos:admin_colecciones_list')
+		if form.is_valid():
+			form.save()
+			messages.success(request, f'Colección "{coleccion.nombre}" actualizada.')
+			return redirect('productos:admin_colecciones_list')
+		else:
+			messages.error(request, 'Por favor corrige los errores en el formulario.')
+	else:
+		from .forms import ColeccionForm
+		form = ColeccionForm(instance=coleccion)
 	
 	return render(request, 'collection-edit.html', {
 		'coleccion': coleccion,
+		'form': form,
 	})
 
 

@@ -90,6 +90,9 @@
                                                 <div class="body-title">Categoría</div>
                                             </li>
                                             <li>
+                                                <div class="body-title">Imagen</div>
+                                            </li>
+                                            <li>
                                                 <div class="body-title">Slug</div>
                                             </li>
                                             <li>
@@ -121,6 +124,18 @@
                                                         {% endif %}
                                                     </div>
                                                 </div>
+                                                
+                                                <!-- Columna de Imagen -->
+                                                <div class="body-text text-main-dark mt-4">
+                                                    {% if categoria.imagen %}
+                                                        <img src="{{ categoria.imagen.url }}" alt="{{ categoria.nombre }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                                    {% else %}
+                                                        <div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                                            <i class="icon-image" style="color: #ccc;"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                
                                                 <div class="body-text text-main-dark mt-4">
                                                     <code>{{ categoria.slug }}</code>
                                                 </div>
@@ -155,7 +170,7 @@
                                                     </div>
                                                     {% endif %}
                                                     <div class="item edit" title="Editar">
-                                                        <a href="#">
+                                                        <a href="{% url 'productos:panel_categoria_edit' categoria.id %}">
                                                             <i class="icon-edit-3"></i>
                                                         </a>
                                                     </div>

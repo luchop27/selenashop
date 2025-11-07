@@ -62,129 +62,47 @@
                     <div class="col-xl-6 tf-md-hidden">
                         <nav class="box-navigation text-center">
                             <ul class="box-nav-ul d-flex align-items-center justify-content-center gap-30">
-                                <li class="menu-item">
+                                <li class="menu-item position-relative">
                                     <a href="#" class="item-link">Shop<i class="icon icon-arrow-down"></i></a>
-                                    <div class="sub-menu mega-menu">
-                                        <div class="container">
-                                            <div class="row">
-                                                <div class="col-lg-2">
-                                                    <div class="mega-menu-item">
-                                                        <div class="menu-heading">Categorías</div>
-                                                        <ul class="menu-list">
-                                                            {% for categoria in categorias_menu %}
-                                                                <li>
-                                                                    <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" 
-                                                                       class="menu-link-text link">{{ categoria.nombre }}</a>
-                                                                    
-                                                                    {% if categoria.subcategorias.exists %}
-                                                                    <ul class="sub-menu-list" style="margin-left: 15px; list-style: none; padding-left: 0;">
-                                                                        {% for subcategoria in categoria.subcategorias.all %}
-                                                                            {% if subcategoria.estado %}
-                                                                            <li style="margin-top: 5px;">
-                                                                                <a href="{% url 'productos:producto_list' %}?categoria={{ subcategoria.slug }}" 
-                                                                                   class="menu-link-text link" 
-                                                                                   style="font-size: 13px; color: #666;">
-                                                                                    → {{ subcategoria.nombre }}
-                                                                                </a>
-                                                                            </li>
-                                                                            {% endif %}
-                                                                        {% endfor %}
-                                                                    </ul>
+                                    <div class="sub-menu submenu-default">
+                                        <ul class="menu-list">
+                                            <div class="menu-heading">CATEGORIAS</div>
+                                            {% for categoria in categorias_menu %}
+                                                {% if categoria.subcategorias.exists %}
+                                                
+                                                    <li class="menu-item-2">
+                                                        <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" 
+                                                        class="menu-link-text link text_black-2">
+                                                            {{ categoria.nombre }}
+                                                        </a>
+                                                        <div class="sub-menu submenu-default">
+                                                            <ul class="menu-list">
+                                                                {% for subcategoria in categoria.subcategorias.all %}
+                                                                    {% if subcategoria.estado %}
+                                                                        <li>
+                                                                            <a href="{% url 'productos:producto_list' %}?categoria={{ subcategoria.slug }}" 
+                                                                            class="menu-link-text link text_black-2">
+                                                                                {{ subcategoria.nombre }}
+                                                                            </a>
+                                                                        </li>
                                                                     {% endif %}
-                                                                </li>
-                                                            {% endfor %}
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <div class="mega-menu-item">
-                                                        <div class="menu-heading">Features</div>
-                                                        <ul class="menu-list">
-                                                            <li><a href="shop-link.html"
-                                                                    class="menu-link-text link">Pagination links</a>
-                                                            </li>
-                                                            <li><a href="shop-loadmore.html"
-                                                                    class="menu-link-text link">Pagination loadmore</a>
-                                                            </li>
-                                                            <li><a href="shop-infinite-scrolling.html"
-                                                                    class="menu-link-text link">Pagination infinite
-                                                                    scrolling</a></li>
-                                                            <li><a href="shop-filter-sidebar.html"
-                                                                    class="menu-link-text link">Filter sidebar</a></li>
-                                                            <li><a href="shop-filter-hidden.html"
-                                                                    class="menu-link-text link">Filter hidden</a></li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-2">
-                                                    <div class="mega-menu-item">
-                                                        <div class="menu-heading">Product styles</div>
-                                                        <ul class="menu-list">
-
-                                                            <li><a href="product-style-01.html"
-                                                                    class="menu-link-text link">Product style 01</a>
-                                                            </li>
-                                                            <li><a href="product-style-02.html"
-                                                                    class="menu-link-text link">Product style 02</a>
-                                                            </li>
-                                                            <li><a href="product-style-03.html"
-                                                                    class="menu-link-text link">Product style 03</a>
-                                                            </li>
-                                                            <li><a href="product-style-04.html"
-                                                                    class="menu-link-text link">Product style 04</a>
-                                                            </li>
-                                                            <li><a href="product-style-05.html"
-                                                                    class="menu-link-text link">Product style 05</a>
-                                                            </li>
-                                                            <li><a href="product-style-06.html"
-                                                                    class="menu-link-text link">Product style 06</a>
-                                                            </li>
-                                                            <li><a href="product-style-07.html"
-                                                                    class="menu-link-text link">Product style 07</a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-3">
-                                                    <div class="collection-item hover-img">
-                                                        <div class="collection-inner">
-                                                            <a href="shop-men.html" class="collection-image img-style">
-                                                                <img class="lazyload"
-                                                                    data-src="{% static 'images/collections/collection-1.jpg' %}"
-                                                                    src="{% static 'images/collections/collection-1.jpg' %}"
-                                                                    alt="collection-demo-1">
-                                                            </a>
-                                                            <div class="collection-content">
-                                                                <a href="shop-men.html"
-                                                                    class="tf-btn hover-icon btn-xl collection-title fs-16"><span>Men</span><i
-                                                                        class="icon icon-arrow1-top-left"></i></a>
-
-                                                            </div>
+                                                                {% endfor %}
+                                                            </ul>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-3">
-                                                    <div class="collection-item hover-img">
-                                                        <div class="collection-inner">
-                                                                <a href="shop-women.html"
-                                                                class="collection-image img-style">
-                                                                <img class="lazyload"
-                                                                    data-src="{% static 'images/collections/collection-2.jpg' %}"
-                                                                    src="{% static 'images/collections/collection-2.jpg' %}"
-                                                                    alt="collection-demo-1">
-                                                            </a>
-                                                            <div class="collection-content">
-                                                                <a href="shop-women.html"
-                                                                    class="tf-btn btn-xl collection-title fs-16 hover-icon"><span>Women</span><i
-                                                                        class="icon icon-arrow1-top-left"></i></a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                                    </li>
+                                                {% else %}
+                                                    <li>
+                                                        <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" 
+                                                        class="menu-link-text link text_black-2">
+                                                            {{ categoria.nombre }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
                                     </div>
                                 </li>
+
                                 <li class="menu-item">
                                     <a href="#" class="item-link">Products<i class="icon icon-arrow-down"></i></a>
                                     <div class="sub-menu mega-menu">
@@ -717,88 +635,7 @@
                                                     </ul>
                                                 </div>
                                             </li>
-                                            <li class="menu-item-2">
-                                                <a href="#" class="menu-link-text link text_black-2">FAQ</a>
-                                                <div class="sub-menu submenu-default">
-                                                    <ul class="menu-list">
-                                                        <li><a href="faq-1.html"
-                                                                class="menu-link-text link text_black-2">FAQ 01</a></li>
-                                                        <li><a href="faq-2.html"
-                                                                class="menu-link-text link text_black-2">FAQ 02</a></li>
-                                                    </ul>
-                                                </div>
-                                            </li>
-                                            <li class="menu-item-2">
-                                                <a href="#" class="menu-link-text link text_black-2">Store</a>
-                                                <div class="sub-menu submenu-default">
-                                                    <ul class="menu-list">
-                                                        <li><a href="our-store.html"
-                                                                class="menu-link-text link text_black-2">Our store</a>
-                                                        </li>
-                                                        <li><a href="store-locations.html"
-                                                                class="menu-link-text link text_black-2">Store
-                                                                locator</a></li>
-                                                    </ul>
-                                                </div>
-                                            </li>
-                                            <li><a href="timeline.html"
-                                                    class="menu-link-text link text_black-2 position-relative">Timeline
-                                                    <div class="demo-label"><span class="demo-new">New</span></div>
-                                                </a>
-                                            </li>
-                                            <li><a href="view-cart.html"
-                                                    class="menu-link-text link text_black-2 position-relative">View
-                                                    cart</a></li>
-                                            <li><a href="checkout.html"
-                                                    class="menu-link-text link text_black-2 position-relative">Check
-                                                    out</a></li>
-                                            <li class="menu-item-2">
-                                                <a href="#" class="menu-link-text link text_black-2">Payment</a>
-                                                <div class="sub-menu submenu-default">
-                                                    <ul class="menu-list">
-                                                        <li><a href="payment-confirmation.html"
-                                                                class="menu-link-text link text_black-2">Payment
-                                                                Confirmation</a></li>
-                                                        <li><a href="payment-failure.html"
-                                                                class="menu-link-text link text_black-2">Payment
-                                                                Failure</a></li>
-                                                    </ul>
-                                                </div>
-                                            </li>
-                                            <li class="menu-item-2">
-                                                <a href="#" class="menu-link-text link text_black-2">My account</a>
-                                                <div class="sub-menu submenu-default">
-                                                    <ul class="menu-list">
-                                                        <li><a href="{% url 'usuarios:my_account' %}"
-                                                                class="menu-link-text link text_black-2">My account</a>
-                                                        </li>
-                                                        <li><a href="my-account-orders.html"
-                                                                class="menu-link-text link text_black-2">My order</a>
-                                                        </li>
-                                                        <li><a href="my-account-orders-details.html"
-                                                                class="menu-link-text link text_black-2">My order
-                                                                details</a></li>
-                                                        <li><a href="my-account-address.html"
-                                                                class="menu-link-text link text_black-2">My address</a>
-                                                        </li>
-                                                        <li><a href="my-account-edit.html"
-                                                                class="menu-link-text link text_black-2">My account
-                                                                details</a></li>
-                                                        <li><a href="my-account-wishlist.html"
-                                                                class="menu-link-text link text_black-2">My wishlist</a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </li>
-                                            <li><a href="invoice.html"
-                                                    class="menu-link-text link text_black-2 position-relative">Invoice</a>
-                                            </li>
-                                            <li><a href="404.html"
-                                                    class="menu-link-text link text_black-2 position-relative">404</a>
-                                            </li>
-                                            <li><a href="icons.html"
-                                                    class="menu-link-text link text_black-2 position-relative">Icons</a>
-                                            </li>
+                                            
 
                                         </ul>
                                     </div>

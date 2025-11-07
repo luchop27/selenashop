@@ -70,6 +70,25 @@
                             <div class="text-tiny text-surface-2">Breve descripción de la colección (opcional).</div>
                         </fieldset>
 
+                        <fieldset class="name">
+                            <div class="body-title mb-10">Imagen de la Colección</div>
+                            <div class="upload-image mb-16">
+                                <div class="up-load" id="upload-area-coleccion" style="min-height: 200px; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center;">
+                                    <label class="uploadfile" for="coleccionImagen" style="cursor: pointer; display: block;">
+                                        <span class="icon">
+                                            <i class="icon-upload-cloud"></i>
+                                        </span>
+                                        <div class="text-tiny">Arrastra tu imagen aquí o selecciona <span class="text-secondary">clic para examinar</span></div>
+                                        <input type="file" id="coleccionImagen" name="imagen" accept="image/*" style="display: none;">
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Preview de imagen -->
+                            <div id="imagen-preview-coleccion" style="display: none; margin-top: 16px;">
+                                <!-- La imagen seleccionada aparecerá aquí -->
+                            </div>
+                        </fieldset>
+
                         <div class="cols-lg gap22">
                             <fieldset class="name">
                                 <div class="body-title mb-10">Estado</div>
@@ -123,18 +142,80 @@ document.getElementById('id_nombre').addEventListener('input', function() {
     document.getElementById('id_slug').value = slug;
 });
 
-// Image preview
-document.getElementById('myFile').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const imgPreview = document.getElementById('imgpreview');
-            imgPreview.querySelector('img').src = event.target.result;
-            imgPreview.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
+// ========================================
+// MANEJO DE IMAGEN DE COLECCIÓN
+// ========================================
+let coleccionImageFile = null;
+const coleccionImageInput = document.getElementById('coleccionImagen');
+const coleccionImagePreview = document.getElementById('imagen-preview-coleccion');
+const uploadAreaColeccion = document.getElementById('upload-area-coleccion');
+
+// Evento de cambio en el input file
+coleccionImageInput.addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+        handleColeccionImage(e.target.files[0]);
     }
 });
+
+// Drag and Drop
+uploadAreaColeccion.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    uploadAreaColeccion.style.borderColor = '#007bff';
+    uploadAreaColeccion.style.backgroundColor = '#f0f8ff';
+});
+
+uploadAreaColeccion.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    uploadAreaColeccion.style.borderColor = '#ddd';
+    uploadAreaColeccion.style.backgroundColor = '';
+});
+
+uploadAreaColeccion.addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    uploadAreaColeccion.style.borderColor = '#ddd';
+    uploadAreaColeccion.style.backgroundColor = '';
+    
+    const files = e.dataTransfer.files;
+    if (files && files[0] && files[0].type.startsWith('image/')) {
+        handleColeccionImage(files[0]);
+    }
+});
+
+function handleColeccionImage(file) {
+    coleccionImageFile = file;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Ocultar área de upload
+        uploadAreaColeccion.style.display = 'none';
+        
+        // Mostrar preview
+        coleccionImagePreview.style.display = 'block';
+        coleccionImagePreview.innerHTML = `
+            <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; max-width: 300px;">
+                <img src="${e.target.result}" style="width: 100%; height: auto; display: block;">
+                <button type="button" onclick="removeColeccionImage()" 
+                    style="position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                    ×
+                </button>
+                <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">
+                    ${file.name} - ${(file.size / 1024).toFixed(1)} KB
+                </div>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeColeccionImage() {
+    coleccionImageFile = null;
+    coleccionImageInput.value = '';
+    coleccionImagePreview.style.display = 'none';
+    coleccionImagePreview.innerHTML = '';
+    uploadAreaColeccion.style.display = 'block';
+}
 </script>
 {% endblock %}

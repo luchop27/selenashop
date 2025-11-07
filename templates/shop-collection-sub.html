@@ -6,8 +6,20 @@
     <!-- page-title -->
     <div class="tf-page-title">
             <div class="container-full">
-                <div class="heading text-center">New Arrival</div>
-                <p class="text-center text-2 text_black-2 mt_5">Shop through our latest selection of Fashion</p>
+                <div class="heading text-center">
+                    {% if categoria_actual %}
+                        {{ categoria_actual.nombre }}
+                    {% else %}
+                        New Arrival
+                    {% endif %}
+                </div>
+                <p class="text-center text-2 text_black-2 mt_5">
+                    {% if categoria_actual and categoria_actual.descripcion %}
+                        {{ categoria_actual.descripcion }}
+                    {% else %}
+                        Shop through our latest selection of Fashion
+                    {% endif %}
+                </p>
             </div>
         </div>
         <!-- /page-title -->
@@ -18,96 +30,50 @@
                     <div dir="ltr" class="swiper tf-sw-collection" data-preview="5" data-tablet="3" data-mobile="2"
                         data-space-lg="30" data-space-md="30" data-space="15" data-loop="false" data-auto-play="false">
                         <div class="swiper-wrapper">
+                            {% for categoria in categorias_a_mostrar %}
                             <div class="swiper-slide" lazy="true">
                                 <div class="collection-item style-2 hover-img">
                                     <div class="collection-inner">
-                                        <a href="{% url 'productos:producto_list' %}" class="collection-image img-style">
+                                        <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" class="collection-image img-style" style="min-height: 320px; display: block;">
+                                            {% if categoria.imagen %}
+                                                <img class="lazyload" data-src="{{ categoria.imagen.url }}"
+                                                    src="{{ categoria.imagen.url }}" alt="{{ categoria.nombre }}" 
+                                                    style="width: 100%; height: 320px; object-fit: cover; display: block;">
+                                            {% else %}
+                                                <img class="lazyload" data-src="{% static 'images/collections/collection-14.jpg' %}"
+                                                    src="{% static 'images/collections/collection-14.jpg' %}" alt="{{ categoria.nombre }}"
+                                                    style="width: 100%; height: 320px; object-fit: cover; display: block;">
+                                            {% endif %}
+                                        </a>
+                                        <div class="collection-content">
+                                            <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}"
+                                                class="tf-btn collection-title hover-icon fs-15">
+                                                <span>{{ categoria.nombre }}</span>
+                                                <i class="icon icon-arrow1-top-left"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <!-- Fallback si no hay categorías -->
+                            <div class="swiper-slide" lazy="true">
+                                <div class="collection-item style-2 hover-img">
+                                    <div class="collection-inner">
+                                        <a href="{% url 'productos:producto_list' %}" class="collection-image img-style" style="min-height: 320px; display: block;">
                                             <img class="lazyload" data-src="{% static 'images/collections/collection-14.jpg' %}"
-                                                src="{% static 'images/collections/collection-14.jpg' %}" alt="collection-img">
+                                                src="{% static 'images/collections/collection-14.jpg' %}" alt="collection-img"
+                                                style="width: 100%; height: 320px; object-fit: cover; display: block;">
                                         </a>
                                         <div class="collection-content">
                                             <a href="{% url 'productos:producto_list' %}"
-                                                class="tf-btn collection-title hover-icon fs-15"><span>Accessories</span><i
+                                                class="tf-btn collection-title hover-icon fs-15"><span>All Products</span><i
                                                     class="icon icon-arrow1-top-left"></i></a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="swiper-slide" lazy="true">
-                                <div class="collection-item style-2 hover-img">
-                                    <div class="collection-inner">
-                                        <a href="{% url 'productos:producto_list' %}" class="collection-image img-style">
-                                            <img class="lazyload" data-src="{% static 'images/collections/collection-15.jpg' %}"
-                                                src="{% static 'images/collections/collection-15.jpg' %}" alt="collection-img">
-                                        </a>
-                                        <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}"
-                                                class="tf-btn collection-title hover-icon fs-15"><span>Men</span><i
-                                                    class="icon icon-arrow1-top-left"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide" lazy="true">
-                                <div class="collection-item style-2 hover-img">
-                                    <div class="collection-inner">
-                                        <a href="{% url 'productos:producto_list' %}" class="collection-image img-style">
-                                            <img class="lazyload" data-src="{% static 'images/collections/collection-16.jpg' %}"
-                                                src="{% static 'images/collections/collection-16.jpg' %}" alt="collection-demo-1">
-                                        </a>
-                                        <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}"
-                                                class="tf-btn collection-title hover-icon fs-15"><span>Shoes</span><i
-                                                    class="icon icon-arrow1-top-left"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide" lazy="true">
-                                <div class="collection-item style-2 hover-img">
-                                    <div class="collection-inner">
-                                        <a href="{% url 'productos:producto_list' %}" class="collection-image img-style">
-                                            <img class="lazyload" data-src="{% static 'images/collections/collection-17.jpg' %}"
-                                                src="{% static 'images/collections/collection-17.jpg' %}" alt="collection-demo-1">
-                                        </a>
-                                        <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}"
-                                                class="tf-btn collection-title hover-icon fs-15"><span>New
-                                                    Arrival</span><i class="icon icon-arrow1-top-left"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide" lazy="true">
-                                <div class="collection-item style-2 hover-img">
-                                    <div class="collection-inner">
-                                        <a href="{% url 'productos:producto_list' %}" class="collection-image img-style">
-                                            <img class="lazyload" data-src="{% static 'images/collections/collection-18.jpg' %}"
-                                                src="{% static 'images/collections/collection-18.jpg' %}" alt="collection-demo-1">
-                                        </a>
-                                        <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}"
-                                                class="tf-btn collection-title hover-icon fs-15"><span>Handbag</span><i
-                                                    class="icon icon-arrow1-top-left"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide" lazy="true">
-                                <div class="collection-item style-2 hover-img">
-                                    <div class="collection-inner">
-                                        <a href="{% url 'productos:producto_list' %}" class="collection-image img-style">
-                                            <img class="lazyload" data-src="{% static 'images/collections/collection-19.jpg' %}"
-                                                src="{% static 'images/collections/collection-19.jpg' %}" alt="collection-demo-1">
-                                        </a>
-                                        <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}"
-                                                class="tf-btn collection-title hover-icon fs-15"><span>Women</span><i
-                                                    class="icon icon-arrow1-top-left"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                     <div class="nav-sw nav-next-slider nav-next-collection box-icon w_46 round"><span
@@ -195,9 +161,11 @@
                       
                     <div class="tf-grid-layout wrapper-shop tf-col-4" id="gridLayout">
                         <!-- card product 1 -->
-                        {% comment %} Loop productos provided by the view. If no productos, show a friendly message. {% endcomment %}
-                        {% for producto in productos %}
-                        <div class="card-product grid" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'-' }}">
+                        {% comment %} Loop productos provided by the view. If the view provides `page_obj` (Paginator), use it;
+                           otherwise show the first 12 productos as a simple fallback. {% endcomment %}
+                        {% if page_obj %}
+                            {% for producto in page_obj.object_list %}
+                                <div class="card-product grid" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'-' }}">
                             <div class="card-product-wrapper">
                                 <a href="{{ producto.get_absolute_url }}" class="product-img">
                                     {% if producto.main_image_src %}
@@ -267,706 +235,121 @@
                             </div>
                         </div>
                         {% empty %}
-                        <p>No se encontraron productos.</p>
+                            <p>No se encontraron productos.</p>
                         {% endfor %}
-                        <!-- card product 2 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/brown.jpg' %}"
-                                        src="{% static 'images/products/brown.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/purple.jpg' %}"
-                                        src="{% static 'images/products/purple.jpg' %}" alt="image-product">
-                                </a>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
-                                        data-product-id="{{ producto.id }}"
-                                        data-product-name="{{ producto.nombre|escapejs }}"
-                                        data-product-price="{{ producto.display_price }}"
-                                        data-product-desc="{{ producto.short_description|escapejs }}"
-                                        data-product-main-image="{{ producto.main_image_src }}"
-                                        data-product-hover-image="{{ producto.hover_image_src }}"
-                                        data-product-url="{{ producto.get_absolute_url }}"
-                                        data-product-colors="{{ producto.colors|join:"," }}"
-                                        data-product-sizes="{{ producto.sizes|join:"," }}"
-                                        >
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
+                        {% else %}
+                            {% for producto in productos|slice:":12" %}
+                                <div class="card-product grid" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'-' }}">
+                                    <div class="card-product-wrapper">
+                                        <a href="{{ producto.get_absolute_url }}" class="product-img">
+                                            {% if producto.main_image_src %}
+                                                <img class="lazyload img-product" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}" alt="image-product">
+                                            {% else %}
+                                                <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}" src="{% static 'images/products/placeholder.jpg' %}" alt="image-product">
+                                            {% endif %}
+                                            {% if producto.hover_image_src %}
+                                                <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}" src="{{ producto.hover_image_src }}" alt="image-product">
+                                            {% endif %}
+                                        </a>
+                                        <div class="list-product-btn">
+                                            <a href="#quick_add" data-bs-toggle="modal" class="box-icon bg_white quick-add tf-btn-loading">
+                                                <span class="icon icon-bag"></span>
+                                                <span class="tooltip">Quick Add</span>
+                                            </a>
+                                            <a href="#" class="box-icon bg_white wishlist btn-icon-action">
+                                                <span class="icon icon-heart"></span>
+                                                <span class="tooltip">Add to Wishlist</span>
+                                                <span class="icon icon-delete"></span>
+                                            </a>
+                                            <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft" class="box-icon bg_white compare btn-icon-action">
+                                                <span class="icon icon-compare"></span>
+                                                <span class="tooltip">Add to Compare</span>
+                                                <span class="icon icon-check"></span>
+                                            </a>
+                                            <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
+                                                data-product-id="{{ producto.id }}"
+                                                data-product-name="{{ producto.nombre|escapejs }}"
+                                                data-product-price="{{ producto.display_price }}"
+                                                data-product-desc="{{ producto.short_description|escapejs }}"
+                                                data-product-main-image="{{ producto.main_image_src }}"
+                                                data-product-hover-image="{{ producto.hover_image_src }}"
+                                                data-product-url="{{ producto.get_absolute_url }}"
+                                                data-product-colors="{{ producto.colors|join:"," }}"
+                                                data-product-sizes="{{ producto.sizes|join:"," }}"
+                                                >
+                                                <span class="icon icon-view"></span>
+                                                <span class="tooltip">Quick View</span>
+                                            </a>
+                                        </div>
+                                        {% if producto.sizes %}
+                                            <div class="size-list">
+                                                {% for s in producto.sizes %}
+                                                    <span class="size-item">{{ s }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-product-info">
+                                        <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
+                                        <span class="price current-price">${{ producto.display_price }}</span>
+                                        {% if producto.colors %}
+                                        <ul class="list-color-product">
+                                            {% for color in producto.colors %}
+                                            <li class="list-color-item color-swatch">
+                                                <span class="tooltip">{{ color.valor }}</span>
+                                                <span class="swatch-value"></span>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% endif %}
+                                        <div style="display:none">ID: {{ producto.id }} - Categoria: {% if producto.categoria %}{{ producto.categoria.nombre }}{% endif %}</div>
+                                    </div>
                                 </div>
-                                <div class="size-list">
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="countdown-box">
-                                    <div class="js-countdown" data-timer="1007500" data-labels="d :,h :,m :,s"></div>
-                                </div>
-                                <div class="on-sale-wrap text-end">
-                                    <div class="on-sale-item">-33%</div>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Ribbed modal T-shirt</a>
-                                <span class="price current-price">$18.95</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Brown</span>
-                                        <span class="swatch-value bg_brown"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/brown.jpg' %}"
-                                            src="{% static 'images/products/brown.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Purple</span>
-                                        <span class="swatch-value bg_purple"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/purple.jpg' %}"
-                                            src="{% static 'images/products/purple.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Green</span>
-                                        <span class="swatch-value bg_light-green"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/green.jpg' %}"
-                                            src="{% static 'images/products/green.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 3 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/white-3.jpg' %}"
-                                        src="{% static 'images/products/white-3.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/white-4.jpg' %}"
-                                        src="{% static 'images/products/white-4.jpg' %}" alt="image-product">
-                                </a>
-                                <div class="list-product-btn absolute-2">
-                                    <a href="#shoppingCart" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Add to cart</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Oversized Printed T-shirt</a>
-                                <span class="price current-price">$10.00</span>
-                            </div>
-                        </div>
-                        <!-- card product 4 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/white-2.jpg' %}"
-                                        src="{% static 'images/products/white-2.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/pink-1.jpg' %}"
-                                        src="{% static 'images/products/pink-1.jpg' %}" alt="image-product">
-                                </a>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title">Oversized Printed T-shirt</a>
-                                <span class="price current-price">$16.95</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-2.jpg' %}"
-                                            src="{% static 'images/products/white-2.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Pink</span>
-                                        <span class="swatch-value bg_purple"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/pink-1.jpg' %}"
-                                            src="{% static 'images/products/pink-1.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-2.jpg' %}"
-                                            src="{% static 'images/products/black-2.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 5 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/brown-2.jpg' %}"
-                                        src="{% static 'images/products/brown-2.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/brown-3.jpg' %}"
-                                        src="{% static 'images/products/brown-3.jpg' %}" alt="image-product">
-                                </a>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">V-neck linen T-shirt</a>
-                                <span class="price current-price">$114.95</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Brown</span>
-                                        <span class="swatch-value bg_brown"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/brown-2.jpg' %}"
-                                            src="{% static 'images/products/brown-2.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-5.jpg' %}"
-                                            src="{% static 'images/products/white-5.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 6 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/light-green-1.jpg' %}"
-                                        src="{% static 'images/products/light-green-1.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/light-green-2.jpg' %}"
-                                        src="{% static 'images/products/light-green-2.jpg' %}" alt="image-product">
-                                </a>
-                                <div class="list-product-btn absolute-2">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Loose Fit Sweatshirt</a>
-                                <span class="price current-price">$10.00</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Light Green</span>
-                                        <span class="swatch-value bg_light-green"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/light-green-1.jpg' %}"
-                                            src="{% static 'images/products/light-green-1.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-3.jpg' %}"
-                                            src="{% static 'images/products/black-3.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Blue</span>
-                                        <span class="swatch-value bg_blue-2"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/blue.jpg' %}"
-                                            src="{% static 'images/products/blue.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Dark Blue</span>
-                                        <span class="swatch-value bg_dark-blue"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/dark-blue.jpg' %}"
-                                            src="{% static 'images/products/dark-blue.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-6.jpg' %}"
-                                            src="{% static 'images/products/white-6.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Grey</span>
-                                        <span class="swatch-value bg_light-grey"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/light-grey.jpg' %}"
-                                            src="{% static 'images/products/light-grey.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 7 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/black-4.jpg' %}"
-                                        src="{% static 'images/products/black-4.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/black-5.jpg' %}"
-                                        src="{% static 'images/products/black-5.jpg' %}" alt="image-product">
-                                </a>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Regular Fit Oxford Shirt</a>
-                                <span class="price current-price">$10.00</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-4.jpg' %}"
-                                            src="{% static 'images/products/black-4.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Dark Blue</span>
-                                        <span class="swatch-value bg_dark-blue"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/dark-blue-2.jpg' %}"
-                                            src="{% static 'images/products/dark-blue-2.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Beige</span>
-                                        <span class="swatch-value bg_beige"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/beige.jpg' %}"
-                                            src="{% static 'images/products/beige.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Blue</span>
-                                        <span class="swatch-value bg_light-blue"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/light-blue.jpg' %}"
-                                            src="{% static 'images/products/light-blue.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-7.jpg' %}"
-                                            src="{% static 'images/products/white-7.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 8 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="M&H">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/white-8.jpg' %}"
-                                        src="{% static 'images/products/white-8.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/black-6.jpg' %}"
-                                        src="{% static 'images/products/black-6.jpg' %}" alt="image-product">
-                                </a>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Loose Fit Hoodie</a>
-                                <span class="price current-price">$9.95</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-8.jpg' %}"
-                                            src="{% static 'images/products/white-8.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-7.jpg' %}"
-                                            src="{% static 'images/products/black-7.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Blue</span>
-                                        <span class="swatch-value bg_blue-2"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/blue-2.jpg' %}"
-                                            src="{% static 'images/products/blue-2.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 9 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="M&H">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/brown-4.jpg' %}"
-                                        src="{% static 'images/products/brown-4.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/black-8.jpg' %}"
-                                        src="{% static 'images/products/black-8.jpg' %}" alt="image-product">
-                                </a>
-                                <div class="size-list">
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Patterned scarf</a>
-                                <span class="price current-price">$14.95</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Brown</span>
-                                        <span class="swatch-value bg_brown"></span>
-                                        <img class="lazyload" data-src="images/products/brown-4.jpg"
-                                            src="images/products/brown-4.jpg" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="images/products/black-8.jpg"
-                                            src="images/products/black-8.jpg" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 10 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="M&H">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="images/products/black-9.jpg"
-                                        src="images/products/black-9.jpg" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="images/products/black-10.jpg"
-                                        src="images/products/black-10.jpg" alt="image-product">
-                                </a>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Slim Fit Fine-knit Turtleneck
-                                    Sweater</a>
-                                <span class="price current-price">$18.95</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="images/products/black-9.jpg"
-                                            src="images/products/black-9.jpg" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="images/products/white-9.jpg"
-                                            src="images/products/white-9.jpg" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 11 -->
-                        <div class="card-product grid" data-availability="Out of stock" data-brand="M&H">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="images/products/grey-2.jpg"
-                                        src="images/products/grey-2.jpg" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="images/products/grey.jpg"
-                                        src="images/products/grey.jpg" alt="image-product">
-                                </a>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Slim Fit Fine-knit Turtleneck
-                                    Sweater</a>
-                                <span class="price current-price">$18.95</span>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Grey</span>
-                                        <span class="swatch-value bg_grey"></span>
-                                        <img class="lazyload" data-src="images/products/grey-2.jpg"
-                                            src="images/products/grey-2.jpg" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Pink</span>
-                                        <span class="swatch-value bg_pink"></span>
-                                        <img class="lazyload" data-src="images/products/pink-2.jpg"
-                                            src="images/products/pink-2.jpg" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Pink</span>
-                                        <span class="swatch-value bg_light-pink"></span>
-                                        <img class="lazyload" data-src="images/products/light-pink.jpg"
-                                            src="images/products/light-pink.jpg" alt="image-product">
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- card product 12 -->
-                        <div class="card-product grid" data-availability="Out of stock" data-brand="M&H">
-                            <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="images/products/black-11.jpg"
-                                        src="images/products/black-11.jpg" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="images/products/black-12.jpg"
-                                        src="images/products/black-12.jpg" alt="image-product">
-                                </a>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
-                                    </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Slim Fit Fine-knit Turtleneck
-                                    Sweater</a>
-                                <span class="price current-price">$18.95</span>
+                            {% empty %}
+                                <p>No se encontraron productos.</p>
+                            {% endfor %}
+                        {% endif %}
 
-                            </div>
-                        </div>
                         <!-- pagination -->
+                        {% if page_obj %}
                         <ul class="wg-pagination tf-pagination-list">
-                            <li class="active">
-                                <a href="#" class="pagination-link">1</a>
-                            </li>
-                            <li>
-                                <a href="#" class="pagination-link animate-hover-btn">2</a>
-                            </li>
-                            <li>
-                                <a href="#" class="pagination-link animate-hover-btn">3</a>
-                            </li>
-                            <li>
-                                <a href="#" class="pagination-link animate-hover-btn">4</a>
-                            </li>
-                            <li>
-                                <a href="#" class="pagination-link animate-hover-btn">
-                                    <span class="icon icon-arrow-right"></span>
-                                </a>
-                            </li>
+                            {% if page_obj.has_previous %}
+                                <li>
+                                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}" class="pagination-link animate-hover-btn">
+                                        <span class="icon icon-arrow-left"></span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="disabled"><span class="pagination-link"><span class="icon icon-arrow-left"></span></span></li>
+                            {% endif %}
+
+                            {% for p in page_obj.paginator.page_range %}
+                                <li class="{% if page_obj.number == p %}active{% endif %}">
+                                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ p }}" class="pagination-link">{{ p }}</a>
+                                </li>
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li>
+                                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}" class="pagination-link animate-hover-btn">
+                                        <span class="icon icon-arrow-right"></span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="disabled"><span class="pagination-link"><span class="icon icon-arrow-right"></span></span></li>
+                            {% endif %}
                         </ul>
+                        {% else %}
+                        {% with request.GET.urlencode as qs %}
+                        <ul class="wg-pagination tf-pagination-list">
+                            <li class="active"><a href="?{% if qs %}{{ qs }}&{% endif %}page=1" class="pagination-link">1</a></li>
+                            <li><a href="?{% if qs %}{{ qs }}&{% endif %}page=2" class="pagination-link animate-hover-btn">2</a></li>
+                            <li><a href="?{% if qs %}{{ qs }}&{% endif %}page=3" class="pagination-link animate-hover-btn">3</a></li>
+                            <li><a href="?{% if qs %}{{ qs }}&{% endif %}page=4" class="pagination-link animate-hover-btn">4</a></li>
+                            <li><a href="?{% if qs %}{{ qs }}&{% endif %}page=2" class="pagination-link animate-hover-btn"><span class="icon icon-arrow-right"></span></a></li>
+                        </ul>
+                        {% endwith %}
+                        {% endif %}
                     </div>
 
                 </div>

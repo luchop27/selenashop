@@ -37,6 +37,31 @@ class ProductoForm(forms.ModelForm):
         self.fields['coleccion'].label = 'Colección'
         self.fields['categoria'].empty_label = 'Seleccionar categoría'
         self.fields['coleccion'].empty_label = 'Seleccionar colección (opcional)'
+    
+    def save(self, commit=True):
+        """
+        Si no se selecciona una colección, asignar automáticamente a la colección 'Básica'.
+        Si no existe, la crea automáticamente.
+        """
+        instance = super().save(commit=False)
+        
+        # Si no se ha seleccionado ninguna colección
+        if not instance.coleccion:
+            # Obtener o crear la colección "Básica"
+            coleccion_basica, created = Coleccion.objects.get_or_create(
+                slug='basica',
+                defaults={
+                    'nombre': 'Básica',
+                    'descripcion': 'Colección por defecto para productos sin colección específica',
+                    'activo': True,
+                    'destacada': False
+                }
+            )
+            instance.coleccion = coleccion_basica
+        
+        if commit:
+            instance.save()
+        return instance
 
 
 class VarianteForm(forms.ModelForm):
@@ -78,3 +103,65 @@ ImagenFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
 )
+
+
+# -----------------------------
+# FORMULARIOS PARA CATEGORÍA
+# -----------------------------
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ['nombre', 'slug', 'descripcion', 'imagen', 'coleccion', 'padre', 'estado']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Nombre de la categoría'}),
+            'slug': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'slug-ejemplo'}),
+            'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'tf-input', 'placeholder': 'Descripción de la categoría'}),
+            'imagen': forms.FileInput(attrs={'class': 'tf-input'}),
+            'coleccion': forms.Select(attrs={'class': 'tf-input'}),
+            'padre': forms.Select(attrs={'class': 'tf-input'}),
+            'estado': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filtrar solo colecciones activas
+        self.fields['coleccion'].queryset = Coleccion.objects.filter(activo=True).order_by('nombre')
+        self.fields['coleccion'].empty_label = 'Sin colección'
+        # Filtrar solo categorías padre (sin padre)
+        self.fields['padre'].queryset = Categoria.objects.filter(padre__isnull=True).order_by('nombre')
+        self.fields['padre'].empty_label = 'Ninguna (Categoría principal)'
+        # Etiquetas en español
+        self.fields['nombre'].label = 'Nombre'
+        self.fields['slug'].label = 'Slug'
+        self.fields['descripcion'].label = 'Descripción'
+        self.fields['imagen'].label = 'Imagen'
+        self.fields['coleccion'].label = 'Colección'
+        self.fields['padre'].label = 'Categoría padre'
+        self.fields['estado'].label = 'Activa'
+
+
+# -----------------------------
+# FORMULARIOS PARA COLECCIÓN
+# -----------------------------
+class ColeccionForm(forms.ModelForm):
+    class Meta:
+        model = Coleccion
+        fields = ['nombre', 'slug', 'descripcion', 'imagen', 'activo', 'destacada']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Nombre de la colección'}),
+            'slug': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'slug-ejemplo'}),
+            'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'tf-input', 'placeholder': 'Descripción de la colección'}),
+            'imagen': forms.FileInput(attrs={'class': 'tf-input'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
+            'destacada': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Etiquetas en español
+        self.fields['nombre'].label = 'Nombre'
+        self.fields['slug'].label = 'Slug'
+        self.fields['descripcion'].label = 'Descripción'
+        self.fields['imagen'].label = 'Imagen'
+        self.fields['activo'].label = 'Activa'
+        self.fields['destacada'].label = 'Destacada'

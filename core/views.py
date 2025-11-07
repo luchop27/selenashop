@@ -24,8 +24,13 @@ def shop_collection_sub(request):
     - Anota precio mínimo de variantes y stock total
     - Prepara campos auxiliares que la plantilla espera: display_price, main_image_src,
       hover_image_src, colors, availability
+    - Envía categorías o subcategorías según el contexto
     """
+    from apps.productos.models import Categoria
+    
     categoria_param = request.GET.get('categoria')
+    categoria_actual = None
+    categorias_a_mostrar = []
 
     qs = (
         Producto.objects
@@ -46,9 +51,60 @@ def shop_collection_sub(request):
         # aceptar id numérico o slug
         try:
             cid = int(categoria_param)
+            categoria_actual = Categoria.objects.filter(id=cid, estado=True).first()
             qs = qs.filter(categoria_id=cid)
         except Exception:
+            categoria_actual = Categoria.objects.filter(slug=categoria_param, estado=True).first()
             qs = qs.filter(categoria__slug=categoria_param)
+    
+    # Determinar qué categorías mostrar en el slider
+    if categoria_actual:
+        print(f"DEBUG: Categoría actual: {categoria_actual.nombre} (ID: {categoria_actual.id})")
+        print(f"DEBUG: Tiene padre: {categoria_actual.padre}")
+        
+        # Si la categoría tiene subcategorías, mostrarlas
+        subcategorias = Categoria.objects.filter(
+            padre=categoria_actual,
+            estado=True
+        ).order_by('nombre')
+        
+        print(f"DEBUG: Subcategorías encontradas: {subcategorias.count()}")
+        
+        if subcategorias.exists():
+            # Tiene subcategorías, mostrarlas
+            categorias_a_mostrar = list(subcategorias)
+            print(f"DEBUG: Mostrando subcategorías de {categoria_actual.nombre}")
+        elif categoria_actual.padre:
+            # Es una subcategoría, mostrar sus hermanas (otras subcategorías del mismo padre)
+            categorias_a_mostrar = list(
+                Categoria.objects.filter(
+                    padre=categoria_actual.padre,
+                    estado=True
+                ).order_by('nombre')
+            )
+            print(f"DEBUG: Es subcategoría, mostrando hermanas: {len(categorias_a_mostrar)}")
+        else:
+            # Es categoría principal sin subcategorías, mostrar todas las categorías principales
+            categorias_a_mostrar = list(
+                Categoria.objects.filter(
+                    padre__isnull=True,
+                    estado=True
+                ).order_by('nombre')
+            )
+            print(f"DEBUG: Es categoría principal sin hijos, mostrando principales: {len(categorias_a_mostrar)}")
+    else:
+        # Si no hay categoría seleccionada, mostrar categorías principales
+        categorias_a_mostrar = list(
+            Categoria.objects.filter(
+                padre__isnull=True,
+                estado=True
+            ).order_by('nombre')
+        )
+        print(f"DEBUG: Sin categoría, mostrando principales: {len(categorias_a_mostrar)}")
+    
+    print(f"DEBUG: Total categorías a mostrar: {len(categorias_a_mostrar)}")
+    for cat in categorias_a_mostrar:
+        print(f"  - {cat.nombre} (slug: {cat.slug}, imagen: {bool(cat.imagen)})")
 
     productos = list(qs)
 
@@ -104,6 +160,8 @@ def shop_collection_sub(request):
 
     return render(request, 'shop-collection-sub.html', {
         'productos': productos,
+        'categoria_actual': categoria_actual,
+        'categorias_a_mostrar': categorias_a_mostrar,
     })
 
 

@@ -1,7 +1,7 @@
 {% extends 'baseadmin.html' %}
 {% load static %}
 
-{% block title %}Agregar Categoria - Selena Store{% endblock %}
+{% block title %}Editar Categoría - Selena Store{% endblock %}
 
 {% block menu_product %}active{% endblock %}
 
@@ -14,7 +14,7 @@
                             <!-- main-content-wrap -->
                             <div class="main-content-wrap">
                                 <div class="flex items-center flex-wrap justify-between gap20 mb-30">
-                                    <h3>Nueva Categoría</h3>
+                                    <h3>Editar Categoría: {{ categoria.nombre }}</h3>
                                     <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                                         <li>
                                             <a href="{% url 'core:admin_index' %}">
@@ -33,13 +33,13 @@
                                             <i class="icon-chevron-right"></i>
                                         </li>
                                         <li>
-                                            <div class="text-tiny">Nueva Categoría</div>
+                                            <div class="text-tiny">Editar</div>
                                         </li>
                                     </ul>
                                 </div>
-                                <!-- new-category -->
+                                <!-- edit-category -->
                                 <div class="wg-box">
-                                    <form class="form-new-product form-style-1" method="post" action="{% url 'productos:panel_categoria_crear' %}" enctype="multipart/form-data">
+                                    <form class="form-new-product form-style-1" method="post" action="{% url 'productos:panel_categoria_edit' categoria.pk %}" enctype="multipart/form-data">
                                         {% csrf_token %}
                                         
                                         {% if messages %}
@@ -53,38 +53,61 @@
                                         <fieldset class="name">
                                             <div class="body-title">Nombre de la Categoría <span class="tf-color-1">*</span></div>
                                             <input class="flex-grow" type="text" placeholder="Ej: Vestidos" name="nombre"
-                                                tabindex="0" value="" aria-required="true" required>
+                                                tabindex="0" value="{{ form.nombre.value|default:'' }}" aria-required="true" required>
                                         </fieldset>
 
                                         <fieldset class="name">
                                             <div class="body-title">Slug <span class="tf-color-1">*</span></div>
                                             <input class="flex-grow" type="text" placeholder="Ej: vestidos" name="slug"
-                                                tabindex="0" value="" aria-required="true" required>
+                                                tabindex="0" value="{{ form.slug.value|default:'' }}" aria-required="true" required>
                                             <small class="text-muted">URL amigable (sin espacios ni caracteres especiales)</small>
                                         </fieldset>
 
                                         <fieldset>
                                             <div class="body-title">Descripción</div>
                                             <textarea class="flex-grow" name="descripcion" rows="4" 
-                                                placeholder="Descripción de la categoría (opcional)"></textarea>
+                                                placeholder="Descripción de la categoría (opcional)">{{ form.descripcion.value|default:'' }}</textarea>
                                         </fieldset>
 
                                         <fieldset class="name">
                                             <div class="body-title mb-10">Imagen de la Categoría</div>
-                                            <div class="upload-image mb-16">
-                                                <div class="up-load" id="upload-area-categoria" style="min-height: 200px; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center;">
-                                                    <label class="uploadfile" for="categoriaImagen" style="cursor: pointer; display: block;">
-                                                        <span class="icon">
-                                                            <i class="icon-upload-cloud"></i>
-                                                        </span>
-                                                        <div class="text-tiny">Arrastra tu imagen aquí o selecciona <span class="text-secondary">clic para examinar</span></div>
-                                                        <input type="file" id="categoriaImagen" name="imagen" accept="image/*" style="display: none;">
-                                                    </label>
+                                            
+                                            <!-- Imagen actual si existe -->
+                                            {% if categoria.imagen %}
+                                            <div id="imagen-actual" style="margin-bottom: 16px;">
+                                                <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; max-width: 300px;">
+                                                    <img src="{{ categoria.imagen.url }}" style="width: 100%; height: auto; display: block;">
+                                                    <button type="button" onclick="removeCurrentImage()" 
+                                                        style="position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                                        ×
+                                                    </button>
+                                                    <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">
+                                                        Imagen actual
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <!-- Preview de imagen -->
-                                            <div id="imagen-preview-categoria" style="display: none; margin-top: 16px;">
-                                                <!-- La imagen seleccionada aparecerá aquí -->
+                                            {% endif %}
+                                            
+                                            <!-- Input oculto para señalar eliminación de imagen actual -->
+                                            <input type="hidden" id="remove-current-image" name="remove_imagen" value="">
+                                            
+                                            <!-- Área de carga para nueva imagen -->
+                                            <div id="upload-container" {% if categoria.imagen %}style="display: none;"{% endif %}>
+                                                <div class="upload-image mb-16">
+                                                    <div class="up-load" id="upload-area-categoria" style="min-height: 200px; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center;">
+                                                        <label class="uploadfile" for="categoriaImagen" style="cursor: pointer; display: block;">
+                                                            <span class="icon">
+                                                                <i class="icon-upload-cloud"></i>
+                                                            </span>
+                                                            <div class="text-tiny">Arrastra tu imagen aquí o selecciona <span class="text-secondary">clic para examinar</span></div>
+                                                            <input type="file" id="categoriaImagen" name="imagen" accept="image/*" style="display: none;">
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <!-- Preview de nueva imagen -->
+                                                <div id="imagen-preview-nueva" style="display: none; margin-top: 16px;">
+                                                    <!-- La nueva imagen seleccionada aparecerá aquí -->
+                                                </div>
                                             </div>
                                         </fieldset>
 
@@ -94,7 +117,9 @@
                                                 <select name="coleccion" class="">
                                                     <option value="">Sin colección</option>
                                                     {% for coleccion in colecciones %}
-                                                        <option value="{{ coleccion.id }}">{{ coleccion.nombre }}</option>
+                                                        <option value="{{ coleccion.id }}" {% if form.coleccion.value == coleccion.id %}selected{% endif %}>
+                                                            {{ coleccion.nombre }}
+                                                        </option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -105,8 +130,10 @@
                                             <div class="select flex-grow">
                                                 <select name="padre" class="">
                                                     <option value="">Ninguna (categoría principal)</option>
-                                                    {% for categoria in categorias %}
-                                                        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                                                    {% for cat in categorias %}
+                                                        <option value="{{ cat.id }}" {% if form.padre.value == cat.id %}selected{% endif %}>
+                                                            {{ cat.nombre }}
+                                                        </option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -116,11 +143,11 @@
                                             <div class="body-title mb-10">Estado</div>
                                             <div class="radio-buttons">
                                                 <div class="item">
-                                                    <input type="radio" name="estado" value="true" id="estado-activo" checked>
+                                                    <input type="radio" name="estado" value="true" id="estado-activo" {% if form.estado.value %}checked{% endif %}>
                                                     <label for="estado-activo"><span class="body-title-2">Activo</span></label>
                                                 </div>
                                                 <div class="item">
-                                                    <input type="radio" name="estado" value="false" id="estado-inactivo">
+                                                    <input type="radio" name="estado" value="false" id="estado-inactivo" {% if not form.estado.value %}checked{% endif %}>
                                                     <label for="estado-inactivo"><span class="body-title-2">Inactivo</span></label>
                                                 </div>
                                             </div>
@@ -128,11 +155,11 @@
 
                                         <div class="bot">
                                             <a href="{% url 'productos:panel_categorias' %}" class="tf-button style-1 w208">Cancelar</a>
-                                            <button class="tf-button w208" type="submit">Guardar Categoría</button>
+                                            <button class="tf-button w208" type="submit">Guardar Cambios</button>
                                         </div>
                                     </form>
                                 </div>
-                                <!-- /new-category -->
+                                <!-- /edit-category -->
                             </div>
                             <!-- /main-content-wrap -->
                         </div>
@@ -151,61 +178,83 @@
 {% block extra_js %}
 <script>
 // ========================================
-// MANEJO DE IMAGEN DE CATEGORÍA
+// MANEJO DE IMAGEN DE CATEGORÍA EN EDICIÓN
 // ========================================
-let categoriaImageFile = null;
+let nuevaCategoriaImageFile = null;
 const categoriaImageInput = document.getElementById('categoriaImagen');
-const categoriaImagePreview = document.getElementById('imagen-preview-categoria');
+const categoriaImagePreviewNueva = document.getElementById('imagen-preview-nueva');
 const uploadAreaCategoria = document.getElementById('upload-area-categoria');
+const uploadContainer = document.getElementById('upload-container');
+const imagenActual = document.getElementById('imagen-actual');
 
-// Evento de cambio en el input file
-categoriaImageInput.addEventListener('change', function(e) {
-    if (e.target.files && e.target.files[0]) {
-        handleCategoriaImage(e.target.files[0]);
+// Función para eliminar imagen actual
+function removeCurrentImage() {
+    if (confirm('¿Estás seguro de eliminar la imagen actual?')) {
+        // Marcar para eliminación
+        document.getElementById('remove-current-image').value = '1';
+        
+        // Ocultar imagen actual
+        if (imagenActual) {
+            imagenActual.style.display = 'none';
+        }
+        
+        // Mostrar área de carga
+        uploadContainer.style.display = 'block';
     }
-});
+}
 
-// Drag and Drop
-uploadAreaCategoria.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    uploadAreaCategoria.style.borderColor = '#007bff';
-    uploadAreaCategoria.style.backgroundColor = '#f0f8ff';
-});
+// Evento de cambio en el input file para nueva imagen
+if (categoriaImageInput) {
+    categoriaImageInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            handleCategoriaImage(e.target.files[0]);
+        }
+    });
+}
 
-uploadAreaCategoria.addEventListener('dragleave', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    uploadAreaCategoria.style.borderColor = '#ddd';
-    uploadAreaCategoria.style.backgroundColor = '';
-});
+// Drag and Drop para nueva imagen
+if (uploadAreaCategoria) {
+    uploadAreaCategoria.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadAreaCategoria.style.borderColor = '#007bff';
+        uploadAreaCategoria.style.backgroundColor = '#f0f8ff';
+    });
 
-uploadAreaCategoria.addEventListener('drop', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    uploadAreaCategoria.style.borderColor = '#ddd';
-    uploadAreaCategoria.style.backgroundColor = '';
-    
-    const files = e.dataTransfer.files;
-    if (files && files[0] && files[0].type.startsWith('image/')) {
-        handleCategoriaImage(files[0]);
-    }
-});
+    uploadAreaCategoria.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadAreaCategoria.style.borderColor = '#ddd';
+        uploadAreaCategoria.style.backgroundColor = '';
+    });
+
+    uploadAreaCategoria.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadAreaCategoria.style.borderColor = '#ddd';
+        uploadAreaCategoria.style.backgroundColor = '';
+        
+        const files = e.dataTransfer.files;
+        if (files && files[0] && files[0].type.startsWith('image/')) {
+            handleCategoriaImage(files[0]);
+        }
+    });
+}
 
 function handleCategoriaImage(file) {
-    categoriaImageFile = file;
+    nuevaCategoriaImageFile = file;
     
     const reader = new FileReader();
     reader.onload = function(e) {
         // Ocultar área de upload
         uploadAreaCategoria.style.display = 'none';
         
-        // Mostrar preview
-        categoriaImagePreview.style.display = 'block';
-        categoriaImagePreview.innerHTML = `
+        // Mostrar preview de nueva imagen
+        categoriaImagePreviewNueva.style.display = 'block';
+        categoriaImagePreviewNueva.innerHTML = `
             <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; max-width: 300px;">
                 <img src="${e.target.result}" style="width: 100%; height: auto; display: block;">
-                <button type="button" onclick="removeCategoriaImage()" 
+                <button type="button" onclick="removeNewImage()" 
                     style="position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;">
                     ×
                 </button>
@@ -218,11 +267,11 @@ function handleCategoriaImage(file) {
     reader.readAsDataURL(file);
 }
 
-function removeCategoriaImage() {
-    categoriaImageFile = null;
+function removeNewImage() {
+    nuevaCategoriaImageFile = null;
     categoriaImageInput.value = '';
-    categoriaImagePreview.style.display = 'none';
-    categoriaImagePreview.innerHTML = '';
+    categoriaImagePreviewNueva.style.display = 'none';
+    categoriaImagePreviewNueva.innerHTML = '';
     uploadAreaCategoria.style.display = 'block';
 }
 </script>

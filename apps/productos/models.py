@@ -15,6 +15,14 @@ class Coleccion(models.Model):
     slug = models.SlugField(max_length=180, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     
+    # Imagen de la colección
+    imagen = models.ImageField(
+        upload_to='colecciones/',
+        blank=True,
+        null=True,
+        help_text="Imagen representativa de la colección"
+    )
+    
     activo = models.BooleanField(default=True)
     destacada = models.BooleanField(default=False, help_text="Mostrar en página principal")
     
@@ -45,6 +53,14 @@ class Categoria(models.Model):
     nombre = models.CharField(max_length=150)
     slug = models.SlugField(max_length=180, unique=True)
     descripcion = models.TextField(blank=True, null=True)
+    
+    # Imagen de la categoría
+    imagen = models.ImageField(
+        upload_to='categorias/',
+        blank=True,
+        null=True,
+        help_text="Imagen representativa de la categoría"
+    )
     
     # 🔗 CONEXIÓN A COLECCIÓN
     coleccion = models.ForeignKey(

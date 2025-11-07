@@ -42,4 +42,5 @@ urlpatterns = [
     path('admin-panel/productos/agregar/', views.panel_producto_crear, name='panel_producto_crear'),
     path('admin-panel/categorias/', views.panel_categorias_list, name='panel_categorias'),
     path('admin-panel/categorias/nueva/', views.panel_categoria_crear, name='panel_categoria_crear'),
+    path('admin-panel/categorias/editar/<int:pk>/', views.panel_categoria_edit, name='panel_categoria_edit'),
 ]
