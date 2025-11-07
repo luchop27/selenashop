@@ -1,7 +1,7 @@
 {% extends 'baseadmin.html' %}
 {% load static %}
 
-{% block title %}Listar Categorias - Selena Store{% endblock %}
+{% block title %}Categorías - Selena Store{% endblock %}
 
 {% block menu_product %}active{% endblock %}
 
@@ -13,10 +13,16 @@
                             <!-- main-content-wrap -->
                             <div class="main-content-wrap">
                                 <div class="flex items-center flex-wrap justify-between gap20 mb-30">
-                                    <h3>All category</h3>
+                                    <h3>
+                                        {% if categoria_padre %}
+                                            Subcategorías de: {{ categoria_padre.nombre }}
+                                        {% else %}
+                                            Categorías Principales
+                                        {% endif %}
+                                    </h3>
                                     <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                                         <li>
-                                            <a href="index.html">
+                                            <a href="{% url 'core:admin_index' %}">
                                                 <div class="text-tiny">Dashboard</div>
                                             </a>
                                         </li>
@@ -24,130 +30,160 @@
                                             <i class="icon-chevron-right"></i>
                                         </li>
                                         <li>
-                                            <a href="#">
-                                                <div class="text-tiny">Product</div>
+                                            <a href="{% url 'productos:panel_categorias' %}">
+                                                <div class="text-tiny">Categorías</div>
                                             </a>
                                         </li>
+                                        {% if categoria_padre %}
                                         <li>
                                             <i class="icon-chevron-right"></i>
                                         </li>
                                         <li>
-                                            <div class="text-tiny">All category</div>
+                                            <div class="text-tiny">{{ categoria_padre.nombre }}</div>
                                         </li>
+                                        {% endif %}
                                     </ul>
                                 </div>
+
+                                <!-- Navegación: Volver a categorías principales -->
+                                {% if categoria_padre %}
+                                <div class="mb-20">
+                                    <a href="{% url 'productos:panel_categorias' %}" class="tf-button style-2">
+                                        <i class="icon-arrow-left"></i> Volver a Categorías Principales
+                                    </a>
+                                </div>
+                                {% endif %}
+
                                 <!-- all-category -->
                                 <div class="wg-box">
                                     <div class="flex items-center justify-between gap10 flex-wrap">
                                         <div class="wg-filter flex-grow">
-                                            <div class="show">
-                                                <div class="text-tiny">Showing</div>
-                                                <div class="select">
-                                                    <select class="">
-                                                        <option>10</option>
-                                                        <option>20</option>
-                                                        <option>30</option>
-                                                    </select>
-                                                </div>
-                                                <div class="text-tiny">entries</div>
-                                            </div>
-                                            <form class="form-search">
+                                            <form class="form-search" method="get">
+                                                {% if categoria_padre %}
+                                                    <input type="hidden" name="padre" value="{{ categoria_padre.id }}">
+                                                {% endif %}
                                                 <fieldset class="name">
-                                                    <input type="text" placeholder="Search here..." class="" name="name"
-                                                        tabindex="2" value="" aria-required="true" required="">
+                                                    <input type="text" placeholder="Buscar categoría..." name="q"
+                                                        tabindex="2" value="{{ search }}" aria-required="true">
                                                 </fieldset>
                                                 <div class="button-submit">
                                                     <button class="" type="submit"><i class="icon-search"></i></button>
                                                 </div>
                                             </form>
                                         </div>
-                                        <a class="tf-button style-1 w208" href="new-category.html"><i
-                                                class="icon-plus"></i>Add new</a>
+                                        <a class="tf-button style-1 w208" href="{% url 'productos:panel_categoria_crear' %}">
+                                            <i class="icon-plus"></i>Agregar Categoría
+                                        </a>
                                     </div>
+
+                                    {% if messages %}
+                                        {% for message in messages %}
+                                            <div class="alert alert-{{ message.tags }} mb-3 mt-3">
+                                                {{ message }}
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+
                                     <div class="wg-table table-all-category">
                                         <ul class="table-title flex gap20 mb-14">
                                             <li>
-                                                <div class="body-title">Category</div>
+                                                <div class="body-title">Categoría</div>
                                             </li>
                                             <li>
-                                                <div class="body-title">Quantity</div>
+                                                <div class="body-title">Slug</div>
                                             </li>
                                             <li>
-                                                <div class="body-title">Sale</div>
+                                                <div class="body-title">Subcategorías</div>
                                             </li>
                                             <li>
-                                                <div class="body-title">Start date</div>
+                                                <div class="body-title">Productos</div>
                                             </li>
                                             <li>
-                                                <div class="body-title">Action</div>
+                                                <div class="body-title">Posición</div>
+                                            </li>
+                                            <li>
+                                                <div class="body-title">Estado</div>
+                                            </li>
+                                            <li>
+                                                <div class="body-title">Acciones</div>
                                             </li>
                                         </ul>
+
+                                        {% if categorias %}
                                         <ul class="flex flex-column">
+                                            {% for categoria in categorias %}
                                             <li class="wg-product item-row gap20">
                                                 <div class="name">
-                                                    <div class="image">
-                                                        <img src="{% static 'images/products/product-1.jpg' %}" alt="">
-                                                    </div>
-                                                    <div class="title line-clamp-2 mb-0">
-                                                        <a href="#" class="body-text">Oversized Motif T-shirt</a>
+                                                    <div class="title mb-0">
+                                                        <strong class="body-text">{{ categoria.nombre }}</strong>
+                                                        {% if categoria.coleccion %}
+                                                            <br><small class="text-muted">Colección: {{ categoria.coleccion.nombre }}</small>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
-                                                <div class="body-text text-main-dark mt-4">1,638</div>
-                                                <div class="body-text text-main-dark mt-4">20</div>
-                                                <div class="body-text text-main-dark mt-4">20 Nov 2023</div>
+                                                <div class="body-text text-main-dark mt-4">
+                                                    <code>{{ categoria.slug }}</code>
+                                                </div>
+                                                <div class="body-text text-main-dark mt-4">
+                                                    {% if categoria.num_subcategorias > 0 %}
+                                                        <a href="?padre={{ categoria.id }}" class="tf-button style-3">
+                                                            {{ categoria.num_subcategorias }} subcategoría{{ categoria.num_subcategorias|pluralize }}
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="text-muted">0</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="body-text text-main-dark mt-4">
+                                                    {{ categoria.num_productos }}
+                                                </div>
+                                                <div class="body-text text-main-dark mt-4">
+                                                    {{ categoria.posicion }}
+                                                </div>
+                                                <div class="body-text text-main-dark mt-4">
+                                                    {% if categoria.estado %}
+                                                        <span class="badge bg-success">Activo</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Inactivo</span>
+                                                    {% endif %}
+                                                </div>
                                                 <div class="list-icon-function">
-                                                    <div class="item eye">
-                                                        <i class="icon-eye"></i>
+                                                    {% if categoria.num_subcategorias > 0 %}
+                                                    <div class="item eye" title="Ver subcategorías">
+                                                        <a href="?padre={{ categoria.id }}">
+                                                            <i class="icon-eye"></i>
+                                                        </a>
                                                     </div>
-                                                    <div class="item edit">
-                                                        <i class="icon-edit-3"></i>
+                                                    {% endif %}
+                                                    <div class="item edit" title="Editar">
+                                                        <a href="#">
+                                                            <i class="icon-edit-3"></i>
+                                                        </a>
                                                     </div>
-                                                    <div class="item trash">
-                                                        <i class="icon-trash-2"></i>
+                                                    <div class="item trash" title="Eliminar">
+                                                        <a href="#" onclick="return confirm('¿Estás seguro de eliminar esta categoría?')">
+                                                            <i class="icon-trash-2"></i>
+                                                        </a>
                                                     </div>
                                                 </div>
                                             </li>
-                                            <li class="wg-product item-row gap20">
-                                                <div class="name">
-                                                    <div class="image">
-                                                        <img src="{% static 'images/products/product-2.jpg' %}" alt="">
-                                                    </div>
-                                                    <div class="title line-clamp-2 mb-0">
-                                                        <a href="#" class="body-text">Oversized Motif T-shirt</a>
-                                                    </div>
-                                                </div>
-                                                <div class="body-text text-main-dark mt-4">1,638</div>
-                                                <div class="body-text text-main-dark mt-4">20</div>
-                                                <div class="body-text text-main-dark mt-4">20 Nov 2023</div>
-                                                <div class="list-icon-function">
-                                                    <div class="item eye">
-                                                        <i class="icon-eye"></i>
-                                                    </div>
-                                                    <div class="item edit">
-                                                        <i class="icon-edit-3"></i>
-                                                    </div>
-                                                    <div class="item trash">
-                                                        <i class="icon-trash-2"></i>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li class="wg-product item-row gap20">
-                                                <div class="name">
-                                                    <div class="image">
-                                                        <img src="{% static 'images/products/product-3.jpg' %}" alt="">
-                                                    </div>
-                                                    <div class="title line-clamp-2 mb-0">
-                                                        <a href="#" class="body-text">Oversized Motif T-shirt</a>
-                                                    </div>
-                                                </div>
-                                                <div class="body-text text-main-dark mt-4">1,638</div>
-                                                <div class="body-text text-main-dark mt-4">20</div>
-                                                <div class="body-text text-main-dark mt-4">20 Nov 2023</div>
-                                                <div class="list-icon-function">
-                                                    <div class="item eye">
-                                                        <i class="icon-eye"></i>
-                                                    </div>
-                                                    <div class="item edit">
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        <div class="text-center py-5">
+                                            <p class="text-muted">
+                                                {% if search %}
+                                                    No se encontraron categorías con "{{ search }}"
+                                                {% elif categoria_padre %}
+                                                    Esta categoría no tiene subcategorías todavía.
+                                                {% else %}
+                                                    No hay categorías principales todavía. <a href="{% url 'productos:panel_categoria_crear' %}">Crear la primera</a>
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <!-- /all-category -->
                                                         <i class="icon-edit-3"></i>
                                                     </div>
                                                     <div class="item trash">

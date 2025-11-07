@@ -69,21 +69,30 @@
                                             <div class="row">
                                                 <div class="col-lg-2">
                                                     <div class="mega-menu-item">
-                                                        <div class="menu-heading">Shop layouts</div>
+                                                        <div class="menu-heading">Categorías</div>
                                                         <ul class="menu-list">
-                                                            <li><a href="{% url 'productos:producto_list' %}"
-                                                                class="menu-link-text link">Default</a></li>
-                                                            <li><a href="{% url 'productos:producto_list' %}?layout=left"
-                                                                class="menu-link-text link">Left sidebar</a></li>
-                                                            <li><a href="{% url 'productos:producto_list' %}?layout=right"
-                                                                class="menu-link-text link">Right sidebar</a></li>
-                                                            <li><a href="{% url 'productos:producto_list' %}?layout=full"
-                                                                class="menu-link-text link">Fullwidth</a></li>
-                                                            <li><a href="{% url 'core:shop-collection-sub' %}"
-                                                                class="menu-link-text link">Sub collection</a></li>
-                                                            <li><a href="{% url 'productos:producto_list' %}?view=collections"
-                                                                class="menu-link-text link">Collections list</a>
-                                                            </li>
+                                                            {% for categoria in categorias_menu %}
+                                                                <li>
+                                                                    <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" 
+                                                                       class="menu-link-text link">{{ categoria.nombre }}</a>
+                                                                    
+                                                                    {% if categoria.subcategorias.exists %}
+                                                                    <ul class="sub-menu-list" style="margin-left: 15px; list-style: none; padding-left: 0;">
+                                                                        {% for subcategoria in categoria.subcategorias.all %}
+                                                                            {% if subcategoria.estado %}
+                                                                            <li style="margin-top: 5px;">
+                                                                                <a href="{% url 'productos:producto_list' %}?categoria={{ subcategoria.slug }}" 
+                                                                                   class="menu-link-text link" 
+                                                                                   style="font-size: 13px; color: #666;">
+                                                                                    → {{ subcategoria.nombre }}
+                                                                                </a>
+                                                                            </li>
+                                                                            {% endif %}
+                                                                        {% endfor %}
+                                                                    </ul>
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endfor %}
                                                         </ul>
                                                     </div>
                                                 </div>

@@ -14,9 +14,7 @@ class Coleccion(models.Model):
     nombre = models.CharField(max_length=150)
     slug = models.SlugField(max_length=180, unique=True)
     descripcion = models.TextField(blank=True, null=True)
-    imagen = models.ImageField(upload_to='colecciones/', blank=True, null=True)
     
-    posicion = models.PositiveIntegerField(default=0, help_text="Orden de visualización")
     activo = models.BooleanField(default=True)
     destacada = models.BooleanField(default=False, help_text="Mostrar en página principal")
     
@@ -24,7 +22,7 @@ class Coleccion(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['posicion', 'nombre']
+        ordering = ['nombre']
         verbose_name = "Colección"
         verbose_name_plural = "Colecciones"
 
@@ -66,13 +64,12 @@ class Categoria(models.Model):
         related_name='subcategorias'
     )
     
-    posicion = models.PositiveIntegerField(default=0)
     estado = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['posicion']
+        ordering = ['nombre']
         verbose_name = "Categoría"
         verbose_name_plural = "Categorías"
 
@@ -157,7 +154,13 @@ class Producto(models.Model):
         return self.nombre
 
     def get_absolute_url(self):
-        return reverse('productos:detalle', args=[self.id, self.slug])
+        # URL pattern in `apps.productos.urls` uses the name 'producto_detail' and
+        # expects the product slug. Use that to build the absolute URL.
+        try:
+            return reverse('productos:producto_detail', args=[self.slug])
+        except Exception:
+            # Fallback: build a simple path if URL reversal fails
+            return f"/producto/{self.slug}/"
 
 
 # ------------------------------

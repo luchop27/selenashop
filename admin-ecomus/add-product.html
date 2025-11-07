@@ -215,19 +215,34 @@ let categoriaPrincipalActual = null;
 // Cargar datos iniciales
 async function cargarDatosIniciales() {
     try {
+        console.log('Cargando datos iniciales...');
         const [categoriasResponse, coleccionesResponse, atributosResponse] = await Promise.all([
             fetch('/admin-panel/api/categorias/'),
             fetch('/admin-panel/api/colecciones/'),
             fetch('/admin-panel/api/atributos/')
         ]);
         
+        console.log('Respuestas recibidas:', {
+            categorias: categoriasResponse.status,
+            colecciones: coleccionesResponse.status,
+            atributos: atributosResponse.status
+        });
+        
         categoriasData = await categoriasResponse.json();
         coleccionesData = await coleccionesResponse.json();
         atributosDisponibles = await atributosResponse.json();
         
+        console.log('Datos cargados:', {
+            categorias: categoriasData.length,
+            colecciones: coleccionesData.length,
+            atributos: atributosDisponibles.length
+        });
+        
         // Poblar categorías principales (sin padre)
         const selectCategoriaPrincipal = document.getElementById('id_categoria_principal');
         const categoriasPrincipales = categoriasData.filter(c => !c.padre);
+        
+        console.log('Categorías principales:', categoriasPrincipales.length);
         
         categoriasPrincipales.forEach(cat => {
             const option = document.createElement('option');
@@ -245,8 +260,11 @@ async function cargarDatosIniciales() {
             selectColeccion.appendChild(option);
         });
         
+        console.log('Datos iniciales cargados exitosamente');
+        
     } catch (error) {
         console.error('Error cargando datos:', error);
+        alert('Error cargando los datos del formulario. Por favor, recarga la página.');
     }
 }
 
@@ -256,24 +274,44 @@ document.getElementById('id_categoria_principal').addEventListener('change', fun
     categoriaPrincipalActual = categoriasData.find(c => c.id === categoriaId);
     
     if (categoriaId) {
-        document.getElementById('subcategoria-field').style.display = 'block';
-        
         const subcategorias = categoriasData.filter(c => c.padre === categoriaId);
         const selectSubcategoria = document.getElementById('id_categoria');
-        selectSubcategoria.innerHTML = '<option value="">-- Seleccionar Subcategoría --</option>';
         
-        subcategorias.forEach(sub => {
-            const option = document.createElement('option');
-            option.value = sub.id;
-            option.textContent = sub.nombre;
-            selectSubcategoria.appendChild(option);
-        });
-        
-        // Ocultar otros campos hasta que se seleccione subcategoría
-        document.getElementById('coleccion-field').style.display = 'none';
-        document.getElementById('product-fields').style.display = 'none';
-        document.getElementById('attributes-section').style.display = 'none';
-        document.getElementById('submit-buttons').style.display = 'none';
+        if (subcategorias.length > 0) {
+            // Tiene subcategorías - mostrar el select de subcategorías
+            document.getElementById('subcategoria-field').style.display = 'block';
+            selectSubcategoria.innerHTML = '<option value="">-- Seleccionar Subcategoría --</option>';
+            
+            subcategorias.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.id;
+                option.textContent = sub.nombre;
+                selectSubcategoria.appendChild(option);
+            });
+            
+            // Ocultar otros campos hasta que se seleccione subcategoría
+            document.getElementById('coleccion-field').style.display = 'none';
+            document.getElementById('product-fields').style.display = 'none';
+            document.getElementById('attributes-section').style.display = 'none';
+            document.getElementById('submit-buttons').style.display = 'none';
+        } else {
+            // NO tiene subcategorías - usar la categoría principal directamente
+            document.getElementById('subcategoria-field').style.display = 'none';
+            
+            // Asignar la categoría principal al campo oculto
+            selectSubcategoria.value = categoriaId;
+            categoriaActual = categoriaPrincipalActual;
+            
+            // Mostrar los demás campos directamente
+            document.getElementById('coleccion-field').style.display = 'block';
+            document.getElementById('product-fields').style.display = 'block';
+            document.getElementById('attributes-section').style.display = 'block';
+            document.getElementById('submit-buttons').style.display = 'block';
+            
+            // Mostrar u ocultar marca según categoría
+            const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
+            document.getElementById('marca-field').style.display = esRopa ? 'none' : 'block';
+        }
     }
 });
 
@@ -485,8 +523,17 @@ function generarVariantes() {
     variantsContainer.style.display = 'block';
     variantsList.innerHTML = '';
     
+    // Obtener el slug del producto para generar el SKU
+    const productoSlug = document.querySelector('[name="slug"]').value || 'producto';
+    
     combinaciones.forEach((combo, index) => {
         const nombre = combo.map(c => c.valorNombre).join(' / ');
+        
+        // Generar SKU automáticamente: slug + talla (si existe)
+        const tallaObj = combo.find(c => c.atributoNombre.toLowerCase() === 'talla');
+        const tallaNombre = tallaObj ? tallaObj.valorNombre.toUpperCase() : '';
+        const skuGenerado = tallaNombre ? `${productoSlug}-${tallaNombre}` : `${productoSlug}-${index + 1}`;
+        
         const variantDiv = document.createElement('div');
         variantDiv.className = 'variant-item mb-16';
         variantDiv.style.cssText = 'border: 1px solid #e5e7eb; padding: 16px; border-radius: 8px; background: white;';
@@ -495,12 +542,12 @@ function generarVariantes() {
             <div class="body-text fw-7 mb-12">${nombre}</div>
             <div class="cols-lg gap16">
                 <fieldset>
-                    <div class="body-text mb-4">SKU</div>
-                    <input type="text" name="variante_${index}_sku" class="tf-input" placeholder="SKU-${index + 1}">
+                    <div class="body-text mb-4">SKU (Generado automáticamente)</div>
+                    <input type="text" name="variante_${index}_sku" class="tf-input" value="${skuGenerado}" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
                 </fieldset>
                 <fieldset>
                     <div class="body-text mb-4">Stock</div>
-                    <input type="number" name="variante_${index}_stock" class="tf-input" placeholder="0">
+                    <input type="number" name="variante_${index}_stock" class="tf-input" placeholder="0" value="0">
                 </fieldset>
             </div>
             <input type="hidden" name="variante_${index}_atributos" value='${JSON.stringify(combo)}'>
@@ -518,6 +565,14 @@ document.querySelector('[name="nombre"]').addEventListener('input', function() {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
     document.querySelector('[name="slug"]').value = slug;
+    
+    // Regenerar variantes con el nuevo slug
+    generarVariantes();
+});
+
+// También regenerar cuando se modifique el slug manualmente
+document.querySelector('[name="slug"]').addEventListener('input', function() {
+    generarVariantes();
 });
 
 // ========================================
@@ -531,6 +586,8 @@ const uploadArea = document.getElementById('upload-area');
 // Evento de cambio en el input file
 imageFilesInput.addEventListener('change', function(e) {
     handleFiles(e.target.files);
+    // Limpiar el input para permitir seleccionar el mismo archivo de nuevo si se elimina
+    this.value = '';
 });
 
 // Drag and Drop
@@ -561,8 +618,19 @@ uploadArea.addEventListener('drop', function(e) {
 function handleFiles(files) {
     Array.from(files).forEach(file => {
         if (file.type.startsWith('image/')) {
-            imageFiles.push(file);
-            displayImage(file, imageFiles.length - 1);
+            // Verificar si ya existe para evitar duplicados
+            const existe = imageFiles.some(f => 
+                f.name === file.name && 
+                f.size === file.size && 
+                f.lastModified === file.lastModified
+            );
+            
+            if (!existe) {
+                imageFiles.push(file);
+                displayImage(file, imageFiles.length - 1);
+            } else {
+                console.log('Imagen duplicada ignorada:', file.name);
+            }
         }
     });
 }

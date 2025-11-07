@@ -32,15 +32,14 @@ class ColeccionAdmin(admin.ModelAdmin):
 		'slug',
 		'activo',
 		'destacada',
-		'posicion',
 		'num_categorias',
 		'created_at',
 	)
 	list_filter = ('activo', 'destacada', 'created_at')
 	search_fields = ('nombre', 'slug', 'descripcion')
 	prepopulated_fields = {'slug': ('nombre',)}
-	list_editable = ('activo', 'destacada', 'posicion')
-	ordering = ('posicion', 'nombre')
+	list_editable = ('activo', 'destacada')
+	ordering = ('nombre',)
 	
 	# Agregar inline de categorías
 	inlines = [CategoriaInline]
@@ -100,14 +99,13 @@ class CategoriaAdmin(admin.ModelAdmin):
 		'num_subcategorias',
 		'num_productos',
 		'estado',
-		'posicion',
 	)
 	list_filter = ('estado', 'coleccion', 'padre', 'created_at')
 	search_fields = ('nombre', 'slug', 'descripcion')
 	prepopulated_fields = {'slug': ('nombre',)}
-	list_editable = ('estado', 'posicion')
+	list_editable = ('estado',)
 	autocomplete_fields = ('padre', 'coleccion')
-	ordering = ('coleccion', 'posicion', 'nombre')
+	ordering = ('coleccion', 'nombre')
 	
 	# Agregar inline de subcategorías
 	inlines = [SubcategoriaInline]
@@ -124,7 +122,7 @@ class CategoriaAdmin(admin.ModelAdmin):
 			              '• <strong>Subcategoría:</strong> Selecciona PADRE (ej: Pantalones con padre=Ropa)<br>'
 		}),
 		('Configuración', {
-			'fields': ('estado', 'posicion')
+			'fields': ('estado',)
 		}),
 	)
 	

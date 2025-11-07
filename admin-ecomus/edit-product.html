@@ -232,25 +232,40 @@ let categoriasData = [];
 let coleccionesData = [];
 let atributosDisponibles = [];
 let atributosSeleccionados = [];
-let categoriaActual = null;
+let categoriaActualGlobal = null;
 let categoriaPrincipalActual = null;
 
 // Cargar datos iniciales
 async function cargarDatosIniciales() {
     try {
+        console.log('Cargando datos iniciales...');
         const [categoriasResponse, coleccionesResponse, atributosResponse] = await Promise.all([
             fetch('/admin-panel/api/categorias/'),
             fetch('/admin-panel/api/colecciones/'),
             fetch('/admin-panel/api/atributos/')
         ]);
         
+        console.log('Respuestas recibidas:', {
+            categorias: categoriasResponse.status,
+            colecciones: coleccionesResponse.status,
+            atributos: atributosResponse.status
+        });
+        
         categoriasData = await categoriasResponse.json();
         coleccionesData = await coleccionesResponse.json();
         atributosDisponibles = await atributosResponse.json();
         
+        console.log('Datos cargados:', {
+            categorias: categoriasData.length,
+            colecciones: coleccionesData.length,
+            atributos: atributosDisponibles.length
+        });
+        
         // Poblar categorías principales (sin padre)
         const selectCategoriaPrincipal = document.getElementById('id_categoria_principal');
         const categoriasPrincipales = categoriasData.filter(c => !c.padre);
+        
+        console.log('Categorías principales:', categoriasPrincipales.length);
         
         categoriasPrincipales.forEach(cat => {
             const option = document.createElement('option');
@@ -268,8 +283,66 @@ async function cargarDatosIniciales() {
             selectColeccion.appendChild(option);
         });
         
+        console.log('Datos iniciales cargados exitosamente');
+        
+        // Pre-seleccionar la categoría actual del producto
+        const categoriaActualId = {{ producto.categoria.id }};
+        const categoriaActual = categoriasData.find(c => c.id === categoriaActualId);
+        
+        if (categoriaActual) {
+            console.log('Categoría actual del producto:', categoriaActual);
+            
+            if (categoriaActual.padre) {
+                // Es una subcategoría
+                const categoriaPadre = categoriasData.find(c => c.id === categoriaActual.padre);
+                console.log('Tiene categoría padre:', categoriaPadre);
+                
+                // Seleccionar la categoría principal
+                selectCategoriaPrincipal.value = categoriaPadre.id;
+                categoriaPrincipalActual = categoriaPadre;
+                
+                // Mostrar y poblar subcategorías
+                document.getElementById('subcategoria-field').style.display = 'block';
+                const subcategorias = categoriasData.filter(c => c.padre === categoriaPadre.id);
+                const selectSubcategoria = document.getElementById('id_categoria');
+                selectSubcategoria.innerHTML = '<option value="">-- Seleccionar Subcategoría --</option>';
+                
+                subcategorias.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.nombre;
+                    if (sub.id === categoriaActualId) {
+                        option.selected = true;
+                    }
+                    selectSubcategoria.appendChild(option);
+                });
+                
+                categoriaActualGlobal = categoriaActual;
+            } else {
+                // Es una categoría principal sin subcategorías
+                selectCategoriaPrincipal.value = categoriaActualId;
+                categoriaPrincipalActual = categoriaActual;
+                categoriaActualGlobal = categoriaActual;
+                
+                // Asignar el valor al select de subcategoría oculto
+                document.getElementById('id_categoria').value = categoriaActualId;
+            }
+            
+            // Pre-seleccionar colección si existe
+            {% if producto.coleccion %}
+            selectColeccion.value = {{ producto.coleccion.id }};
+            {% endif %}
+            
+            // Mostrar todos los campos
+            document.getElementById('coleccion-field').style.display = 'block';
+            document.getElementById('product-fields').style.display = 'block';
+            document.getElementById('attributes-section').style.display = 'block';
+            document.getElementById('submit-buttons').style.display = 'block';
+        }
+        
     } catch (error) {
         console.error('Error cargando datos:', error);
+        alert('Error cargando los datos del formulario. Por favor, recarga la página.');
     }
 }
 
@@ -279,31 +352,52 @@ document.getElementById('id_categoria_principal').addEventListener('change', fun
     categoriaPrincipalActual = categoriasData.find(c => c.id === categoriaId);
     
     if (categoriaId) {
-        document.getElementById('subcategoria-field').style.display = 'block';
-        
         const subcategorias = categoriasData.filter(c => c.padre === categoriaId);
         const selectSubcategoria = document.getElementById('id_categoria');
-        selectSubcategoria.innerHTML = '<option value="">-- Seleccionar Subcategoría --</option>';
         
-        subcategorias.forEach(sub => {
-            const option = document.createElement('option');
-            option.value = sub.id;
-            option.textContent = sub.nombre;
-            selectSubcategoria.appendChild(option);
-        });
-        
-        // Ocultar otros campos hasta que se seleccione subcategoría
-        document.getElementById('coleccion-field').style.display = 'none';
-        document.getElementById('product-fields').style.display = 'none';
-        document.getElementById('attributes-section').style.display = 'none';
-        document.getElementById('submit-buttons').style.display = 'none';
+        if (subcategorias.length > 0) {
+            // Tiene subcategorías - mostrar el select de subcategorías
+            document.getElementById('subcategoria-field').style.display = 'block';
+            selectSubcategoria.innerHTML = '<option value="">-- Seleccionar Subcategoría --</option>';
+            
+            subcategorias.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub.id;
+                option.textContent = sub.nombre;
+                selectSubcategoria.appendChild(option);
+            });
+            
+            // Ocultar otros campos hasta que se seleccione subcategoría
+            document.getElementById('coleccion-field').style.display = 'none';
+            document.getElementById('product-fields').style.display = 'none';
+            document.getElementById('attributes-section').style.display = 'none';
+            document.getElementById('submit-buttons').style.display = 'none';
+        } else {
+            // NO tiene subcategorías - usar la categoría principal directamente
+            document.getElementById('subcategoria-field').style.display = 'none';
+            
+            // Asignar la categoría principal al campo oculto
+            selectSubcategoria.value = categoriaId;
+            categoriaActualGlobal = categoriaPrincipalActual;
+            
+            // Mostrar los demás campos directamente
+            document.getElementById('coleccion-field').style.display = 'block';
+            document.getElementById('product-fields').style.display = 'block';
+            document.getElementById('attributes-section').style.display = 'block';
+            document.getElementById('submit-buttons').style.display = 'block';
+            
+            // Mostrar u ocultar marca según categoría
+            const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
+            const marcaField = document.getElementById('marca-field');
+            if (marcaField) marcaField.style.display = esRopa ? 'none' : 'block';
+        }
     }
 });
 
 // Cuando se selecciona subcategoría
 document.getElementById('id_categoria').addEventListener('change', function() {
     const subcategoriaId = parseInt(this.value);
-    categoriaActual = categoriasData.find(c => c.id === subcategoriaId);
+    categoriaActualGlobal = categoriasData.find(c => c.id === subcategoriaId);
     
     if (subcategoriaId) {
         document.getElementById('coleccion-field').style.display = 'block';
@@ -313,7 +407,8 @@ document.getElementById('id_categoria').addEventListener('change', function() {
         
         // Mostrar u ocultar marca según categoría
         const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
-        document.getElementById('marca-field').style.display = esRopa ? 'none' : 'block';
+        const marcaField = document.getElementById('marca-field');
+        if (marcaField) marcaField.style.display = esRopa ? 'none' : 'block';
     }
 });
 

@@ -30,28 +30,66 @@ class ProductoListView(ListView):
 	/productos/?categoria=slug&estilo=slug&q=texto
 	"""
 	model = Producto
-	template_name = "catalogo/producto_list.html"  # usa siempre el mismo nombre
+	template_name = "shop-collection-sub.html"
 	context_object_name = "productos"
 	paginate_by = 12
 
 	def get_queryset(self):
+		from django.db.models import Min, Sum, Q
+		
 		qs = (
 			Producto.objects
 			.filter(activo=True)
-			.select_related("categoria", "estilo")
-			.prefetch_related("imagenes", "variantes")
+			.select_related("categoria", "coleccion")
+			.prefetch_related(
+				"imagenes",
+				"variantes",
+				"variantes__talla",
+				"variantes__atributos__valor_atributo__atributo",
+			)
+			.annotate(precio_variante=Min('variantes__precio'), total_stock=Sum('variantes__stock'))
 			.order_by("-created_at")
 		)
 
 		# ?categoria=vestidos
 		categoria_slug = self.request.GET.get("categoria")
 		if categoria_slug:
-			qs = qs.filter(categoria__slug=categoria_slug, categoria__estado=True)
+			# Buscar la categoría por slug
+			try:
+				categoria = Categoria.objects.get(slug=categoria_slug, estado=True)
+				# Si es una categoría principal (tiene subcategorías), incluir productos de todas sus subcategorías
+				if categoria.subcategorias.exists():
+					# Obtener IDs de la categoría y todas sus subcategorías
+					categoria_ids = [categoria.id]
+					categoria_ids.extend(categoria.subcategorias.filter(estado=True).values_list('id', flat=True))
+					qs = qs.filter(categoria_id__in=categoria_ids)
+				else:
+					# Si es una subcategoría o categoría sin hijos, filtrar solo por ella
+					qs = qs.filter(categoria=categoria)
+			except Categoria.DoesNotExist:
+				# Si no existe la categoría, no filtrar
+				pass
 
-		# ?estilo=gala
-		estilo_slug = self.request.GET.get("estilo")
-		if estilo_slug:
-			qs = qs.filter(estilo__slug=estilo_slug, estilo__activo=True)
+		# Filtrado por stock/disponibilidad
+		stock_filter = self.request.GET.get("stock")
+		if stock_filter == "en-stock":
+			qs = qs.filter(total_stock__gt=0)
+		elif stock_filter == "agotado":
+			qs = qs.filter(Q(total_stock=0) | Q(total_stock__isnull=True))
+
+		# Filtrado por precio
+		precio_min = self.request.GET.get("precio_min")
+		precio_max = self.request.GET.get("precio_max")
+		if precio_min:
+			try:
+				qs = qs.filter(precio_variante__gte=float(precio_min))
+			except (ValueError, TypeError):
+				pass
+		if precio_max:
+			try:
+				qs = qs.filter(precio_variante__lte=float(precio_max))
+			except (ValueError, TypeError):
+				pass
 
 		# ?q=blusa
 		q = self.request.GET.get("q")
@@ -59,10 +97,46 @@ class ProductoListView(ListView):
 			qs = qs.filter(nombre__icontains=q)
 
 		return qs
+		if q:
+			qs = qs.filter(nombre__icontains=q)
+
+		return qs
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
-		ctx["categorias"] = Categoria.objects.filter(estado=True).order_by("posicion", "nombre")
+		
+		# Preparar cada producto con los campos que necesita el template
+		productos = ctx.get('productos', [])
+		for p in productos:
+			# Precio a mostrar: variante (mín) o precio_base
+			p.display_price = getattr(p, 'precio_variante', None) or p.precio_base
+
+			# Imágenes
+			imgs = list(p.imagenes.all().order_by('posicion', 'created_at'))
+			p.main_image_src = imgs[0].imagen.url if imgs and imgs[0].imagen else ''
+			p.hover_image_src = imgs[1].imagen.url if len(imgs) > 1 and imgs[1].imagen else p.main_image_src
+
+			# Colores únicos desde variantes
+			color_values = []
+			for v in p.variantes.all():
+				if v.color and v.color not in color_values:
+					color_values.append(v.color)
+			p.colors = [{'valor': c} for c in color_values]
+
+			# Tallas únicas desde variantes
+			size_values = []
+			for v in p.variantes.all():
+				if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
+					code = v.talla.codigo
+					if code and code not in size_values:
+						size_values.append(code)
+			p.sizes = size_values
+
+			# Disponibilidad
+			total_stock = getattr(p, 'total_stock', 0) or 0
+			p.availability = 'In stock' if total_stock > 0 else 'Out of stock'
+
+		ctx["categorias"] = Categoria.objects.filter(estado=True).order_by("nombre")
 		ctx["estilos"] = Estilo.objects.filter(activo=True).order_by("posicion", "nombre")
 		return ctx
 
@@ -229,15 +303,86 @@ def panel_producto_crear(request):
 	})
 
 
+@login_required(login_url='/admin/login/')
 def panel_categorias_list(request):
-	categorias = Categoria.objects.filter(estado=True).order_by("posicion", "nombre")
+	"""Lista categorías con jerarquía (principales y subcategorías)"""
+	if request.user.rol != 'admin_tienda' and not request.user.is_staff:
+		messages.error(request, 'No tienes permiso para acceder.')
+		return redirect('core:inicio')
+	
+	# Obtener el ID de la categoría padre si se está navegando por subcategorías
+	padre_id = request.GET.get('padre')
+	
+	if padre_id:
+		# Mostrar subcategorías de una categoría específica
+		try:
+			categoria_padre = Categoria.objects.get(id=padre_id)
+			categorias = Categoria.objects.filter(padre_id=padre_id).order_by('nombre')
+		except Categoria.DoesNotExist:
+			categoria_padre = None
+			categorias = Categoria.objects.filter(padre__isnull=True).order_by('nombre')
+	else:
+		# Mostrar solo categorías principales (sin padre)
+		categoria_padre = None
+		categorias = Categoria.objects.filter(padre__isnull=True).order_by('nombre')
+	
+	# Búsqueda
+	search = request.GET.get('q', '')
+	if search:
+		categorias = categorias.filter(nombre__icontains=search)
+	
+	# Anotar cada categoría con el conteo de subcategorías
+	from django.db.models import Count
+	categorias = categorias.annotate(
+		num_subcategorias=Count('subcategorias'),
+		num_productos=Count('productos')
+	)
+	
 	return render(request, "category-list.html", {
-		"categorias": categorias
+		"categorias": categorias,
+		"categoria_padre": categoria_padre,
+		"search": search,
 	})
 
 
+@login_required(login_url='/admin/login/')
 def panel_categoria_crear(request):
-	return render(request, "new-category.html")
+	"""Crear nueva categoría"""
+	if request.user.rol != 'admin_tienda' and not request.user.is_staff:
+		messages.error(request, 'No tienes permiso para acceder.')
+		return redirect('core:inicio')
+	
+	if request.method == 'POST':
+		nombre = request.POST.get('nombre')
+		slug = request.POST.get('slug')
+		descripcion = request.POST.get('descripcion', '')
+		coleccion_id = request.POST.get('coleccion')
+		padre_id = request.POST.get('padre')
+		estado = request.POST.get('estado') == 'true'
+		
+		try:
+			categoria = Categoria.objects.create(
+				nombre=nombre,
+				slug=slug,
+				descripcion=descripcion,
+				coleccion_id=coleccion_id if coleccion_id else None,
+				padre_id=padre_id if padre_id else None,
+				estado=estado
+			)
+			messages.success(request, f'Categoría "{categoria.nombre}" creada correctamente.')
+			return redirect('productos:panel_categorias')
+		except Exception as e:
+			messages.error(request, f'Error al crear la categoría: {str(e)}')
+	
+	# Obtener colecciones y categorías para los selects
+	from .models import Coleccion
+	colecciones = Coleccion.objects.filter(activo=True).order_by('nombre')
+	categorias = Categoria.objects.filter(estado=True, padre__isnull=True).order_by('nombre')
+	
+	return render(request, "new-category.html", {
+		'colecciones': colecciones,
+		'categorias': categorias,
+	})
 
 
 # =========================
@@ -685,7 +830,7 @@ def api_atributos_list(request):
 def api_categorias_list(request):
 	"""API para obtener todas las categorías con su jerarquía"""
 	from django.http import JsonResponse
-	categorias = Categoria.objects.filter(estado=True).order_by('posicion', 'nombre')
+	categorias = Categoria.objects.filter(estado=True).order_by('nombre')
 	
 	data = []
 	for categoria in categorias:
@@ -701,11 +846,12 @@ def api_categorias_list(request):
 
 
 @login_required
+@login_required
 def api_colecciones_list(request):
 	"""API para obtener todas las colecciones activas"""
 	from django.http import JsonResponse
 	from .models import Coleccion
-	colecciones = Coleccion.objects.filter(activo=True).order_by('posicion', 'nombre')
+	colecciones = Coleccion.objects.filter(activo=True).order_by('nombre')
 	
 	data = []
 	for coleccion in colecciones:
@@ -728,7 +874,7 @@ def admin_colecciones_list(request):
 	"""Lista de colecciones con paginación y búsqueda"""
 	search = request.GET.get('search', '')
 	
-	colecciones = Coleccion.objects.all().order_by('posicion', 'nombre')
+	colecciones = Coleccion.objects.all().order_by('nombre')
 	
 	if search:
 		colecciones = colecciones.filter(
@@ -757,8 +903,6 @@ def admin_coleccion_add(request):
 		slug = request.POST.get('slug')
 		activo = request.POST.get('activo') == 'on'
 		destacada = request.POST.get('destacada') == 'on'
-		posicion = int(request.POST.get('posicion', 0))
-		imagen = request.FILES.get('imagen')
 		
 		# Crear colección
 		coleccion = Coleccion.objects.create(
@@ -766,9 +910,7 @@ def admin_coleccion_add(request):
 			slug=slug,
 			descripcion=descripcion,
 			activo=activo,
-			destacada=destacada,
-			posicion=posicion,
-			imagen=imagen
+			destacada=destacada
 		)
 		
 		messages.success(request, f'Colección "{nombre}" creada exitosamente.')
@@ -788,10 +930,6 @@ def admin_coleccion_edit(request, pk):
 		coleccion.slug = request.POST.get('slug')
 		coleccion.activo = request.POST.get('activo') == 'on'
 		coleccion.destacada = request.POST.get('destacada') == 'on'
-		coleccion.posicion = int(request.POST.get('posicion', 0))
-		
-		if request.FILES.get('imagen'):
-			coleccion.imagen = request.FILES.get('imagen')
 		
 		coleccion.save()
 		

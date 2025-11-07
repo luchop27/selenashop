@@ -191,483 +191,26 @@
                         <button id="remove-all" class="remove-all-filters" style="display: none;">Remove All <i
                                 class="icon icon-close"></i></button>
                     </div>
-                    <div class="tf-list-layout wrapper-shop" id="listLayout">
-                        <!-- card product 1 -->
-                        <div class="card-product list-layout" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <a href="#" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/orange-1.jpg' %}"
-                                        src="{% static 'images/products/orange-1.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/white-1.jpg' %}"
-                                        src="{% static 'images/products/white-1.jpg' %}" alt="image-product">
-                                </a>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="#" class="title link">Ribbed Tank Top</a>
-                                <span class="price current-price">$16.95</span>
-                                <p class="description">Button-up shirt sleeves and a relaxed silhouette. It’s tailored
-                                    with drapey, crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                    responsibly sourced wood-based fibres produced through a process that reduces...</p>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item hover-tooltip color-swatch active">
-                                        <span class="tooltip tooltip-bottom">Orange</span>
-                                        <span class="swatch-value bg_orange-3"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/orange-1.jpg' %}"
-                                            src="{% static 'images/products/orange-1.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-1.jpg' %}"
-                                            src="{% static 'images/products/black-1.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-1.jpg' %}"
-                                            src="{% static 'images/products/white-1.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon quick-add style-3 hover-tooltip"><span
-                                            class="icon icon-bag"></span><span class="tooltip">Quick add</span></a>
-                                    <a href="#" class="box-icon wishlist style-3 hover-tooltip"><span
-                                            class="icon icon-heart"></span> <span class="tooltip">Add to
-                                            Wishlist</span></a>
-                                    <a href="#compare" data-bs-toggle="offcanvas"
-                                        class="box-icon compare style-3 hover-tooltip"><span
-                                            class="icon icon-compare"></span> <span class="tooltip">Add to
-                                            Compare</span></a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon quickview style-3 hover-tooltip"><span
-                                            class="icon icon-view"></span><span class="tooltip">Quick view</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- card product 2 -->
-                        <div class="card-product list-layout" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <div class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/brown.jpg' %}"
-                                        src="{% static 'images/products/brown.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/purple.jpg' %}"
-                                        src="{% static 'images/products/purple.jpg' %}" alt="image-product">
-                                </div>
-                                <div class="countdown-box">
-                                    <div class="js-countdown" data-timer="1007500" data-labels="d :,h :,m :,s"></div>
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="#" class="title link">Ribbed modal T-shirte</a>
-                                <span class="price current-price">$18.95</span>
-                                <p class="description">Button-up shirt sleeves and a relaxed silhouette. It’s tailored
-                                    with drapey, crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                    responsibly sourced wood-based fibres produced through a process that reduces...</p>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Brown</span>
-                                        <span class="swatch-value bg_brown"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/brown.jpg' %}"
-                                            src="{% static 'images/products/brown.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Purple</span>
-                                        <span class="swatch-value bg_purple"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/purple.jpg' %}"
-                                            src="{% static 'images/products/purple.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Green</span>
-                                        <span class="swatch-value bg_light-green"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/green.jpg' %}"
-                                            src="{% static 'images/products/green.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon quick-add style-3"><span
-                                            class="icon icon-bag"></span><span class="tooltip">Quick add</span></a>
-                                    <a href="#" class="box-icon wishlist style-3"><span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span></a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" class="box-icon compare style-3"><span
-                                            class="icon icon-compare"></span> <span class="tooltip">Add to
-                                            Compare</span></a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon quickview style-3"><span class="icon icon-view"></span><span
-                                            class="tooltip">Quick view</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- card product 3 -->
-                        <div class="card-product list-layout" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <div class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/white-3.jpg' %}"
-                                        src="{% static 'images/products/white-3.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/white-4.jpg' %}"
-                                        src="{% static 'images/products/white-4.jpg' %}" alt="image-product">
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="#" class="title link">Oversized Printed T-shirt</a>
-                                <span class="price current-price">$10.00</span>
-                                <p class="description">Button-up shirt sleeves and a relaxed silhouette. It’s tailored
-                                    with drapey, crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                    responsibly sourced wood-based fibres produced through a process that reduces...</p>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon quick-add style-3"><span
-                                            class="icon icon-bag"></span><span class="tooltip">Quick add</span></a>
-                                    <a href="#" class="box-icon wishlist style-3"><span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span></a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" class="box-icon compare style-3"><span
-                                            class="icon icon-compare"></span> <span class="tooltip">Add to
-                                            Compare</span></a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon quickview style-3"><span class="icon icon-view"></span><span
-                                            class="tooltip">Quick view</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- card product 4 -->
-                        <div class="card-product list-layout" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <div class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/white-2.jpg' %}"
-                                        src="{% static 'images/products/white-2.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/pink-1.jpg' %}"
-                                        src="{% static 'images/products/pink-1.jpg' %}" alt="image-product">
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="#" class="title link">Oversized Printed T-shirt</a>
-                                <span class="price current-price">$16.95</span>
-                                <p class="description">Button-up shirt sleeves and a relaxed silhouette. It’s tailored
-                                    with drapey, crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                    responsibly sourced wood-based fibres produced through a process that reduces...</p>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                        <img class="lazyload" data-src="{% static 'images/products/white-2.jpg' %}"
-                            src="{% static 'images/products/white-2.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Pink</span>
-                                        <span class="swatch-value bg_purple"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/pink-1.jpg' %}"
-                                            src="{% static 'images/products/pink-1.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-2.jpg' %}"
-                                            src="{% static 'images/products/black-2.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon quick-add style-3"><span
-                                            class="icon icon-bag"></span><span class="tooltip">Quick add</span></a>
-                                    <a href="#" class="box-icon wishlist style-3"><span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span></a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" class="box-icon compare style-3"><span
-                                            class="icon icon-compare"></span> <span class="tooltip">Add to
-                                            Compare</span></a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon quickview style-3"><span class="icon icon-view"></span><span
-                                            class="tooltip">Quick view</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- card product 5 -->
-                        <div class="card-product list-layout" data-availability="In stock" data-brand="Ecomus">
-                            <div class="card-product-wrapper">
-                                <div class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/brown-2.jpg' %}"
-                                        src="{% static 'images/products/brown-2.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/brown-3.jpg' %}"
-                                        src="{% static 'images/products/brown-3.jpg' %}" alt="image-product">
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="#" class="title link">V-neck linen T-shirt</a>
-                                <span class="price current-price">$114.95</span>
-                                <p class="description">Button-up shirt sleeves and a relaxed silhouette. It’s tailored
-                                    with drapey, crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                    responsibly sourced wood-based fibres produced through a process that reduces...</p>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Brown</span>
-                                        <span class="swatch-value bg_brown"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/brown-2.jpg' %}"
-                                            src="{% static 'images/products/brown-2.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                        <img class="lazyload" data-src="{% static 'images/products/white-5.jpg' %}"
-                            src="{% static 'images/products/white-5.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon quick-add style-3"><span
-                                            class="icon icon-bag"></span><span class="tooltip">Quick add</span></a>
-                                    <a href="#" class="box-icon wishlist style-3"><span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span></a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" class="box-icon compare style-3"><span
-                                            class="icon icon-compare"></span> <span class="tooltip">Add to
-                                            Compare</span></a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon quickview style-3"><span class="icon icon-view"></span><span
-                                            class="tooltip">Quick view</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- card product 6 -->
-                        <div class="card-product list-layout" data-availability="In stock" data-brand="M&H">
-                            <div class="card-product-wrapper">
-                                <div class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/light-green-1.jpg' %}"
-                                        src="{% static 'images/products/light-green-1.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/light-green-2.jpg' %}"
-                                        src="{% static 'images/products/light-green-2.jpg' %}" alt="image-product">
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="#" class="title link">Loose Fit Sweatshirt</a>
-                                <span class="price current-price">$10.00</span>
-                                <p class="description">Button-up shirt sleeves and a relaxed silhouette. It’s tailored
-                                    with drapey, crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                    responsibly sourced wood-based fibres produced through a process that reduces...</p>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Light Green</span>
-                                        <span class="swatch-value bg_light-green"></span>
-                        <img class="lazyload" data-src="{% static 'images/products/light-green-1.jpg' %}"
-                            src="{% static 'images/products/light-green-1.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-3.jpg' %}"
-                                            src="{% static 'images/products/black-3.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Blue</span>
-                                        <span class="swatch-value bg_blue-2"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/blue.jpg' %}"
-                                            src="{% static 'images/products/blue.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Dark Blue</span>
-                                        <span class="swatch-value bg_dark-blue"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/dark-blue.jpg' %}"
-                                            src="{% static 'images/products/dark-blue.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-6.jpg' %}"
-                                            src="{% static 'images/products/white-6.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Grey</span>
-                                        <span class="swatch-value bg_light-grey"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/light-grey.jpg' %}"
-                                            src="{% static 'images/products/light-grey.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon quick-add style-3"><span
-                                            class="icon icon-bag"></span><span class="tooltip">Quick add</span></a>
-                                    <a href="#" class="box-icon wishlist style-3"><span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span></a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" class="box-icon compare style-3"><span
-                                            class="icon icon-compare"></span> <span class="tooltip">Add to
-                                            Compare</span></a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon quickview style-3"><span class="icon icon-view"></span><span
-                                            class="tooltip">Quick view</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- card product 7 -->
-                        <div class="card-product list-layout" data-availability="Out of stock" data-brand="M&H">
-                            <div class="card-product-wrapper">
-                                <div class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/black-4.jpg' %}"
-                                        src="{% static 'images/products/black-4.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/black-5.jpg' %}"
-                                        src="{% static 'images/products/black-5.jpg' %}" alt="image-product">
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="#" class="title link">Regular Fit Oxford Shirt</a>
-                                <span class="price current-price">$10.00</span>
-                                <p class="description">Button-up shirt sleeves and a relaxed silhouette. It’s tailored
-                                    with drapey, crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                    responsibly sourced wood-based fibres produced through a process that reduces...</p>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-4.jpg' %}"
-                                            src="{% static 'images/products/black-4.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Dark Blue</span>
-                                        <span class="swatch-value bg_dark-blue"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/dark-blue-2.jpg' %}"
-                                            src="{% static 'images/products/dark-blue-2.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Beige</span>
-                                        <span class="swatch-value bg_beige"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/beige.jpg' %}"
-                                            src="{% static 'images/products/beige.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Light Blue</span>
-                                        <span class="swatch-value bg_light-blue"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/light-blue.jpg' %}"
-                                            src="{% static 'images/products/light-blue.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-7.jpg' %}"
-                                            src="{% static 'images/products/white-7.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon quick-add style-3"><span
-                                            class="icon icon-bag"></span><span class="tooltip">Quick add</span></a>
-                                    <a href="#" class="box-icon wishlist style-3"><span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span></a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" class="box-icon compare style-3"><span
-                                            class="icon icon-compare"></span> <span class="tooltip">Add to
-                                            Compare</span></a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon quickview style-3"><span class="icon icon-view"></span><span
-                                            class="tooltip">Quick view</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- card product 8 -->
-                        <div class="card-product list-layout" data-availability="Out of stock" data-brand="M&H">
-                            <div class="card-product-wrapper">
-                                <div class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/white-8.jpg' %}"
-                                        src="{% static 'images/products/white-8.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/black-6.jpg' %}"
-                                        src="{% static 'images/products/black-6.jpg' %}" alt="image-product">
-                                </div>
-                            </div>
-                            <div class="card-product-info">
-                                <a href="#" class="title link">Loose Fit Hoodie</a>
-                                <span class="price current-price">$9.95</span>
-                                <p class="description">Button-up shirt sleeves and a relaxed silhouette. It’s tailored
-                                    with drapey, crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                    responsibly sourced wood-based fibres produced through a process that reduces...</p>
-                                <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-8.jpg' %}"
-                                            src="{% static 'images/products/white-8.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-7.jpg' %}"
-                                            src="{% static 'images/products/black-7.jpg' %}" alt="image-product">
-                                    </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Blue</span>
-                                        <span class="swatch-value bg_blue-2"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/blue-2.jpg' %}"
-                                            src="{% static 'images/products/blue-2.jpg' %}" alt="image-product">
-                                    </li>
-                                </ul>
-                                <div class="size-list">
-                                    <span class="size-item">S</span>
-                                    <span class="size-item">M</span>
-                                    <span class="size-item">L</span>
-                                    <span class="size-item">XL</span>
-                                </div>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon quick-add style-3"><span
-                                            class="icon icon-bag"></span><span class="tooltip">Quick add</span></a>
-                                    <a href="#" class="box-icon wishlist style-3"><span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span></a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" class="box-icon compare style-3"><span
-                                            class="icon icon-compare"></span> <span class="tooltip">Add to
-                                            Compare</span></a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon quickview style-3"><span class="icon icon-view"></span><span
-                                            class="tooltip">Quick view</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- pagination -->
-                        <ul class="wg-pagination tf-pagination-list justify-content-start">
-                            <li class="active">
-                                <a href="#" class="pagination-link">1</a>
-                            </li>
-                            <li>
-                                <a href="#" class="pagination-link animate-hover-btn">2</a>
-                            </li>
-                            <li>
-                                <a href="#" class="pagination-link animate-hover-btn">3</a>
-                            </li>
-                            <li>
-                                <a href="#" class="pagination-link animate-hover-btn">
-                                    <span class="icon icon-arrow-right"></span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                    
+                      
                     <div class="tf-grid-layout wrapper-shop tf-col-4" id="gridLayout">
                         <!-- card product 1 -->
-                        <div class="card-product grid" data-availability="In stock" data-brand="Ecomus">
+                        {% comment %} Loop productos provided by the view. If no productos, show a friendly message. {% endcomment %}
+                        {% for producto in productos %}
+                        <div class="card-product grid" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'-' }}">
                             <div class="card-product-wrapper">
-                                <a href="product-detail.html" class="product-img">
-                                    <img class="lazyload img-product" data-src="{% static 'images/products/orange-1.jpg' %}"
-                                        src="{% static 'images/products/orange-1.jpg' %}" alt="image-product">
-                                    <img class="lazyload img-hover" data-src="{% static 'images/products/white-1.jpg' %}"
-                                        src="{% static 'images/products/white-1.jpg' %}" alt="image-product">
+                                <a href="{{ producto.get_absolute_url }}" class="product-img">
+                                    {% if producto.main_image_src %}
+                                        <img class="lazyload img-product" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}" alt="image-product">
+                                    {% else %}
+                                        <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}" src="{% static 'images/products/placeholder.jpg' %}" alt="image-product">
+                                    {% endif %}
+                                    {% if producto.hover_image_src %}
+                                        <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}" src="{{ producto.hover_image_src }}" alt="image-product">
+                                    {% endif %}
                                 </a>
-                                <div class="list-product-btn absolute-2">
-                                    <a href="#quick_add" data-bs-toggle="modal"
-                                        class="box-icon bg_white quick-add tf-btn-loading">
+                                <div class="list-product-btn">
+                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon bg_white quick-add tf-btn-loading">
                                         <span class="icon icon-bag"></span>
                                         <span class="tooltip">Quick Add</span>
                                     </a>
@@ -676,44 +219,56 @@
                                         <span class="tooltip">Add to Wishlist</span>
                                         <span class="icon icon-delete"></span>
                                     </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="box-icon bg_white compare btn-icon-action">
+                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft" class="box-icon bg_white compare btn-icon-action">
                                         <span class="icon icon-compare"></span>
                                         <span class="tooltip">Add to Compare</span>
                                         <span class="icon icon-check"></span>
                                     </a>
-                                    <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
+                                    <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
+                                        data-product-id="{{ producto.id }}"
+                                        data-product-name="{{ producto.nombre|escapejs }}"
+                                        data-product-price="{{ producto.display_price }}"
+                                        data-product-desc="{{ producto.short_description|escapejs }}"
+                                        data-product-main-image="{{ producto.main_image_src }}"
+                                        data-product-hover-image="{{ producto.hover_image_src }}"
+                                        data-product-url="{{ producto.get_absolute_url }}"
+                                        data-product-colors="{{ producto.colors|join:"," }}"
+                                        data-product-sizes="{{ producto.sizes|join:"," }}"
+                                        >
                                         <span class="icon icon-view"></span>
                                         <span class="tooltip">Quick View</span>
+                                        
                                     </a>
+                                    
                                 </div>
+                                {% if producto.sizes %}
+                                    <div class="size-list">
+                                        {% for s in producto.sizes %}
+                                            <span class="size-item">{{ s }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
+                            
                             <div class="card-product-info">
-                                <a href="product-detail.html" class="title link">Ribbed Tank Top</a>
-                                <span class="price current-price">$16.95</span>
+                                <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
+                                <span class="price current-price">${{ producto.display_price }}</span>
+                                {% if producto.colors %}
                                 <ul class="list-color-product">
-                                    <li class="list-color-item color-swatch active">
-                                        <span class="tooltip">Orange</span>
-                                        <span class="swatch-value bg_orange-3"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/orange-1.jpg' %}"
-                                            src="{% static 'images/products/orange-1.jpg' %}" alt="image-product">
-                                    </li>
+                                    {% for color in producto.colors %}
                                     <li class="list-color-item color-swatch">
-                                        <span class="tooltip">Black</span>
-                                        <span class="swatch-value bg_dark"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/black-1.jpg' %}"
-                                            src="{% static 'images/products/black-1.jpg' %}" alt="image-product">
+                                        <span class="tooltip">{{ color.valor }}</span>
+                                        <span class="swatch-value"></span>
                                     </li>
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">White</span>
-                                        <span class="swatch-value bg_white"></span>
-                                        <img class="lazyload" data-src="{% static 'images/products/white-1.jpg' %}"
-                                            src="{% static 'images/products/white-1.jpg' %}" alt="image-product">
-                                    </li>
+                                    {% endfor %}
                                 </ul>
+                                {% endif %}
+                                <div style="display:none">ID: {{ producto.id }} - Categoria: {% if producto.categoria %}{{ producto.categoria.nombre }}{% endif %}</div>
                             </div>
                         </div>
+                        {% empty %}
+                        <p>No se encontraron productos.</p>
+                        {% endfor %}
                         <!-- card product 2 -->
                         <div class="card-product grid" data-availability="In stock" data-brand="Ecomus">
                             <div class="card-product-wrapper">
@@ -741,7 +296,17 @@
                                         <span class="icon icon-check"></span>
                                     </a>
                                     <a href="#quick_view" data-bs-toggle="modal"
-                                        class="box-icon bg_white quickview tf-btn-loading">
+                                        class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
+                                        data-product-id="{{ producto.id }}"
+                                        data-product-name="{{ producto.nombre|escapejs }}"
+                                        data-product-price="{{ producto.display_price }}"
+                                        data-product-desc="{{ producto.short_description|escapejs }}"
+                                        data-product-main-image="{{ producto.main_image_src }}"
+                                        data-product-hover-image="{{ producto.hover_image_src }}"
+                                        data-product-url="{{ producto.get_absolute_url }}"
+                                        data-product-colors="{{ producto.colors|join:"," }}"
+                                        data-product-sizes="{{ producto.sizes|join:"," }}"
+                                        >
                                         <span class="icon icon-view"></span>
                                         <span class="tooltip">Quick View</span>
                                     </a>
@@ -1897,233 +1462,93 @@
                 <div class="widget-facet wd-categories">
                     <div class="facet-title" data-bs-target="#categories" data-bs-toggle="collapse" aria-expanded="true"
                         aria-controls="categories">
-                        <span>Product categories</span>
+                        <span>Categorías</span>
                         <span class="icon icon-arrow-up"></span>
                     </div>
                     <div id="categories" class="collapse show">
-                            <ul class="list-categoris current-scrollbar mb_36">
-                            <li class="cate-item current"><a href="{% url 'productos:producto_list' %}"><span>Fashion</span></a></li>
-                            <li class="cate-item"><a href="{% url 'productos:producto_list' %}"><span>Men</span></a></li>
-                            <li class="cate-item"><a href="{% url 'productos:producto_list' %}"><span>Women</span></a></li>
-                            <li class="cate-item"><a href="{% url 'productos:producto_list' %}"><span>Denim</span></a></li>
-                            <li class="cate-item"><a href="{% url 'productos:producto_list' %}"><span>Dress</span></a></li>
+                        <ul class="list-categoris current-scrollbar mb_36">
+                            {% for categoria in categorias_menu %}
+                                <li class="cate-item {% if request.GET.categoria == categoria.slug %}current{% endif %}">
+                                    <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}">
+                                        <span>{{ categoria.nombre }}</span>
+                                    </a>
+                                    
+                                    {% if categoria.subcategorias.exists %}
+                                        <ul class="sub-menu" style="padding-left: 20px; margin-top: 5px;">
+                                            {% for subcategoria in categoria.subcategorias.all %}
+                                                {% if subcategoria.estado %}
+                                                    <li class="cate-item {% if request.GET.categoria == subcategoria.slug %}current{% endif %}" style="font-size: 13px;">
+                                                        <a href="{% url 'productos:producto_list' %}?categoria={{ subcategoria.slug }}">
+                                                            <span>→ {{ subcategoria.nombre }}</span>
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
                         </ul>
                     </div>
                 </div>
-                <form action="#" id="facet-filter-form" class="facet-filter-form">
+                <form action="{% url 'productos:producto_list' %}" method="get" id="facet-filter-form" class="facet-filter-form">
+                    <input type="hidden" name="categoria" value="{{ request.GET.categoria }}">
+                    
+                    <div class="widget-facet">
+                        <div class="facet-title" data-bs-target="#price" data-bs-toggle="collapse" aria-expanded="true"
+                            aria-controls="price">
+                            <span>Precio</span>
+                            <span class="icon icon-arrow-up"></span>
+                        </div>
+                        <div id="price" class="collapse show">
+                            <div class="widget-price filter-price">
+                                <div class="tg-range-slider">
+                                    <input type="range" name="precio_min" min="0" max="500" value="0" step="10">
+                                    <input type="range" name="precio_max" min="0" max="500" value="500" step="10">
+                                </div>
+                                <div class="box-title-price mt-3">
+                                    <span class="title-price">Precio:</span>
+                                    <div class="caption-price">
+                                        <span>$<span id="min-price">0</span></span>
+                                        <span> - </span>
+                                        <span>$<span id="max-price">500</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="widget-facet">
                         <div class="facet-title" data-bs-target="#availability" data-bs-toggle="collapse"
                             aria-expanded="true" aria-controls="availability">
-                            <span>Availability</span>
+                            <span>Disponibilidad</span>
                             <span class="icon icon-arrow-up"></span>
                         </div>
                         <div id="availability" class="collapse show">
                             <ul class="tf-filter-group current-scrollbar mb_36">
                                 <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="availability" class="tf-check" id="inStock">
-                                    <label for="inStock" class="label"><span>In
-                                            stock</span>&nbsp;<span>(14)</span></label>
+                                    <input type="radio" name="stock" value="en-stock" class="tf-check" id="inStock">
+                                    <label for="inStock" class="label"><span>En stock</span></label>
                                 </li>
                                 <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="availability" class="tf-check" id="outStock">
-                                    <label for="outStock" class="label"><span>Out of
-                                            stock</span>&nbsp;<span>(2)</span></label>
+                                    <input type="radio" name="stock" value="agotado" class="tf-check" id="outStock">
+                                    <label for="outStock" class="label"><span>Agotado</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="stock" value="" class="tf-check" id="allStock" checked>
+                                    <label for="allStock" class="label"><span>Todos</span></label>
                                 </li>
                             </ul>
                         </div>
                     </div>
-                    <div class="widget-facet">
-                        <div class="facet-title" data-bs-target="#price" data-bs-toggle="collapse" aria-expanded="true"
-                            aria-controls="price">
-                            <span>Price</span>
-                            <span class="icon icon-arrow-up"></span>
-                        </div>
-                        <div id="price" class="collapse show">
-                            <div class="widget-price filter-price">
-                                <div class="price-val-range" id="price-value-range" data-min="0" data-max="500"></div>
-                                <div class="box-title-price">
-                                    <span class="title-price">Price :</span>
-                                    <div class="caption-price">
-                                        <div class="price-val" id="price-min-value" data-currency="$"></div>
-                                        <span>-</span>
-                                        <div class="price-val" id="price-max-value" data-currency="$"></div>
-                                    </div>
-                                </div>
-                            </div>
 
-                        </div>
-                    </div>
-                    <div class="widget-facet">
-                        <div class="facet-title" data-bs-target="#brand" data-bs-toggle="collapse" aria-expanded="true"
-                            aria-controls="brand">
-                            <span>Brand</span>
-                            <span class="icon icon-arrow-up"></span>
-                        </div>
-                        <div id="brand" class="collapse show">
-                            <ul class="tf-filter-group current-scrollbar mb_36">
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="brand" class="tf-check" id="Ecomus">
-                                    <label for="Ecomus" class="label"><span>Ecomus</span>&nbsp;<span>(8)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="brand" class="tf-check" id="M&H">
-                                    <label for="M&H" class="label"><span>M&H</span>&nbsp;<span>(8)</span></label>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="widget-facet">
-                        <div class="facet-title" data-bs-target="#color" data-bs-toggle="collapse" aria-expanded="true"
-                            aria-controls="color">
-                            <span>Color</span>
-                            <span class="icon icon-arrow-up"></span>
-                        </div>
-                        <div id="color" class="collapse show">
-                            <ul class="tf-filter-group filter-color current-scrollbar mb_36">
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_beige" id="Beige"
-                                        value="Beige">
-                                    <label for="Beige" class="label"><span>Beige</span>&nbsp;<span>(3)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_dark" id="Black"
-                                        value="Black">
-                                    <label for="Black" class="label"><span>Black</span>&nbsp;<span>(18)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_blue-2" id="Blue"
-                                        value="Blue">
-                                    <label for="Blue" class="label"><span>Blue</span>&nbsp;<span>(3)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_brown" id="Brown"
-                                        value="Brown">
-                                    <label for="Brown" class="label"><span>Brown</span>&nbsp;<span>(3)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_cream" id="Cream"
-                                        value="Cream">
-                                    <label for="Cream" class="label"><span>Cream</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_dark-beige"
-                                        id="Dark Beige" value="Dark Beige">
-                                    <label for="Dark Beige" class="label"><span>Dark
-                                            Beige</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_dark-blue" id="Dark Blue"
-                                        value="Dark Blue">
-                                    <label for="Dark Blue" class="label"><span>Dark
-                                            Blue</span>&nbsp;<span>(3)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_dark-green"
-                                        id="Dark Green" value="Dark Green">
-                                    <label for="Dark Green" class="label"><span>Dark
-                                            Green</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_dark-grey" id="Dark Grey"
-                                        value="Dark Grey">
-                                    <label for="Dark Grey" class="label"><span>Dark
-                                            Grey</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_grey" id="Grey"
-                                        value="Grey">
-                                    <label for="Grey" class="label"><span>Grey</span>&nbsp;<span>(2)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_light-blue"
-                                        id="Light Blue" value="Light Blue">
-                                    <label for="Light Blue" class="label"><span>Light
-                                            Blue</span>&nbsp;<span>(5)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_light-green"
-                                        id="Light Green" value="Light Green">
-                                    <label for="Light Green" class="label"><span>Light
-                                            Green</span>&nbsp;<span>(3)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_light-grey"
-                                        id="Light Grey" value="Light Grey">
-                                    <label for="Light Grey" class="label"><span>Light
-                                            Grey</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_light-pink"
-                                        id="Light Pink" value="Light Pink">
-                                    <label for="Light Pink" class="label"><span>Light
-                                            Pink</span>&nbsp;<span>(2)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_purple" id="Light Purple"
-                                        value="Light Purple">
-                                    <label for="Light Purple" class="label"><span>Light
-                                            Purple</span>&nbsp;<span>(2)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_light-yellow"
-                                        id="Light Yellow" value="Light Yellow">
-                                    <label for="Light Yellow" class="label"><span>Light
-                                            Yellow</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_orange" id="Orange"
-                                        value="Orange">
-                                    <label for="Orange" class="label"><span>Orange</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_pink" id="Pink"
-                                        value="Pink">
-                                    <label for="Pink" class="label"><span>Pink</span>&nbsp;<span>(2)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_taupe" id="Taupe"
-                                        value="Taupe">
-                                    <label for="Taupe" class="label"><span>Taupe</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_white" id="White"
-                                        value="White">
-                                    <label for="White" class="label"><span>White</span>&nbsp;<span>(14)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="color" class="tf-check-color bg_yellow" id="Yellow"
-                                        value="Yellow">
-                                    <label for="Yellow" class="label"><span>Yellow</span>&nbsp;<span>(1)</span></label>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="widget-facet">
-                        <div class="facet-title" data-bs-target="#size" data-bs-toggle="collapse" aria-expanded="true"
-                            aria-controls="size">
-                            <span>Size</span>
-                            <span class="icon icon-arrow-up"></span>
-                        </div>
-                        <div id="size" class="collapse show">
-                            <ul class="tf-filter-group current-scrollbar">
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="size" class="tf-check tf-check-size" value="S" id="S">
-                                    <label for="S" class="label"><span>S</span>&nbsp;<span>(7)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="size" class="tf-check tf-check-size" value="M" id="M">
-                                    <label for="M" class="label"><span>M</span>&nbsp;<span>(8)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="size" class="tf-check tf-check-size" value="L" id="L">
-                                    <label for="L" class="label"><span>L</span>&nbsp;<span>(8)</span></label>
-                                </li>
-                                <li class="list-item d-flex gap-12 align-items-center">
-                                    <input type="radio" name="size" class="tf-check tf-check-size" value="XL" id="XL">
-                                    <label for="XL" class="label"><span>XL</span>&nbsp;<span>(6)</span></label>
-                                </li>
-                            </ul>
-                        </div>
+                    <div class="tf-btn-apply-filter">
+                        <button type="submit" class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center">
+                            <span>Aplicar filtros</span>
+                        </button>
+                        <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-outline radius-3 w-100 justify-content-center mt-2">
+                            <span>Limpiar filtros</span>
+                        </a>
                     </div>
                 </form>
             </div>
@@ -2432,13 +1857,25 @@
                     <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
                 </div>
                 <div class="tf-login-form">
-                    <form class="" action="my-account.html" accept-charset="utf-8">
+                    <form method="POST" action="{% url 'usuarios:login' %}">
+                        {% csrf_token %}
+                        
+                        {% if messages %}
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                {% for message in messages %}
+                                    <span>{{ message }}</span>
+                                    {% if not forloop.last %}<br>{% endif %}
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                        
                         <div class="tf-field style-1">
-                            <input class="tf-field-input tf-input" placeholder=" " type="email" name="">
+                            <input class="tf-field-input tf-input" placeholder=" " type="email" name="email" required>
                             <label class="tf-field-label" for="">Email *</label>
                         </div>
                         <div class="tf-field style-1">
-                            <input class="tf-field-input tf-input" placeholder=" " type="password" name="">
+                            <input class="tf-field-input tf-input" placeholder=" " type="password" name="password" required>
                             <label class="tf-field-label" for="">Password *</label>
                         </div>
                         <div>
@@ -3261,6 +2698,110 @@
     <!-- /modal find_size -->
 
     <!-- Javascript -->
+    <script>
+    // Rellena el modal #quick_view con los datos del producto cuando se hace clic en Quick View
+    (function(){
+        function clearSlides(swiperWrapper){
+            while(swiperWrapper.firstChild){ swiperWrapper.removeChild(swiperWrapper.firstChild); }
+        }
+
+        function createSlide(imgSrc){
+            var slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            var item = document.createElement('div');
+            item.className = 'item';
+            var img = document.createElement('img');
+            img.src = imgSrc || '';
+            item.appendChild(img);
+            slide.appendChild(item);
+            return slide;
+        }
+
+        document.addEventListener('click', function(e){
+            var el = e.target.closest && e.target.closest('.btn-open-quickview');
+            if(!el) return;
+
+            var modal = document.getElementById('quick_view');
+            if(!modal) return;
+
+            var name = el.getAttribute('data-product-name') || '';
+            var price = el.getAttribute('data-product-price') || '';
+            var desc = el.getAttribute('data-product-desc') || '';
+            var mainImg = el.getAttribute('data-product-main-image') || '';
+            var hoverImg = el.getAttribute('data-product-hover-image') || '';
+            var url = el.getAttribute('data-product-url') || '#';
+            var colors = (el.getAttribute('data-product-colors') || '').split(',').filter(Boolean);
+            var sizes = (el.getAttribute('data-product-sizes') || '').split(',').filter(Boolean);
+
+            // title/link
+            var titleLink = modal.querySelector('.tf-product-info-title a.link');
+            if(titleLink){ titleLink.textContent = name; titleLink.href = url; }
+
+            // price
+            var priceEl = modal.querySelector('.tf-product-info-price .price');
+            if(priceEl){ priceEl.textContent = '$' + price; }
+
+            // description
+            var descEl = modal.querySelector('.tf-product-description p');
+            if(descEl){ descEl.textContent = desc; }
+
+            // images in swiper wrapper
+            var swiperWrapper = modal.querySelector('.tf-product-media-wrap .swiper-wrapper');
+            if(swiperWrapper){
+                clearSlides(swiperWrapper);
+                if(mainImg) swiperWrapper.appendChild(createSlide(mainImg));
+                if(hoverImg && hoverImg !== mainImg) swiperWrapper.appendChild(createSlide(hoverImg));
+            }
+
+            // colors
+            var colorContainer = modal.querySelector('.variant-picker-item .variant-picker-values');
+            if(colorContainer){
+                // clear existing
+                colorContainer.innerHTML = '';
+                colors.forEach(function(c, idx){
+                    var id = 'quick_color_' + (el.getAttribute('data-product-id')||'') + '_' + idx;
+                    var input = document.createElement('input');
+                    input.type = 'radio'; input.name = 'quick_color_' + el.getAttribute('data-product-id'); input.id = id;
+                    if(idx===0) input.checked = true;
+                    var label = document.createElement('label');
+                    label.className = 'hover-tooltip radius-60';
+                    label.setAttribute('for', id);
+                    label.setAttribute('data-value', c);
+                    var span = document.createElement('span'); span.className = 'btn-checkbox';
+                    label.appendChild(span);
+                    var tip = document.createElement('span'); tip.className = 'tooltip'; tip.textContent = c;
+                    label.appendChild(tip);
+                    colorContainer.appendChild(input);
+                    colorContainer.appendChild(label);
+                });
+            }
+
+            // sizes
+            var sizeContainer = modal.querySelectorAll('.variant-picker-item .variant-picker-values')[1];
+            if(sizeContainer){
+                sizeContainer.innerHTML = '';
+                sizes.forEach(function(s, idx){
+                    var id = 'quick_size_' + (el.getAttribute('data-product-id')||'') + '_' + idx;
+                    var input = document.createElement('input');
+                    input.type = 'radio'; input.name = 'quick_size_' + el.getAttribute('data-product-id'); input.id = id;
+                    if(idx===0) input.checked = true;
+                    var label = document.createElement('label');
+                    label.className = 'style-text';
+                    label.setAttribute('for', id);
+                    label.setAttribute('data-value', s);
+                    var p = document.createElement('p'); p.textContent = s; label.appendChild(p);
+                    sizeContainer.appendChild(input);
+                    sizeContainer.appendChild(label);
+                });
+            }
+
+            // update add-to-cart button price inside modal if present
+            var addBtnPrice = modal.querySelector('.btn-add-to-cart .tf-qty-price');
+            if(addBtnPrice) addBtnPrice.textContent = '$' + price;
+
+        }, false);
+    })();
+    </script>
     {% endblock %}
 </body>
 

@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Producto, Variante, Imagen
+from .models import Producto, Variante, Imagen, Categoria, Coleccion
 
 
 class ProductoForm(forms.ModelForm):
@@ -25,6 +25,18 @@ class ProductoForm(forms.ModelForm):
             'tiene_tallas': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
             'activo': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filtrar solo categorías activas y ordenar por nombre
+        self.fields['categoria'].queryset = Categoria.objects.filter(estado=True).order_by('nombre')
+        # Filtrar solo colecciones activas y ordenar por nombre
+        self.fields['coleccion'].queryset = Coleccion.objects.filter(activo=True).order_by('nombre')
+        # Hacer que los campos tengan etiquetas en español
+        self.fields['categoria'].label = 'Categoría'
+        self.fields['coleccion'].label = 'Colección'
+        self.fields['categoria'].empty_label = 'Seleccionar categoría'
+        self.fields['coleccion'].empty_label = 'Seleccionar colección (opcional)'
 
 
 class VarianteForm(forms.ModelForm):
