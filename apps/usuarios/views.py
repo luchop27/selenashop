@@ -23,12 +23,13 @@ def login_usuario(request):
             print(f"DEBUG: Rol del usuario: {getattr(user, 'rol', None)}, is_staff: {user.is_staff}")
 
         if user is not None:
-            # Si es admin_tienda o staff -> ir al panel admin
+            # Si es admin_tienda o staff -> ir al panel admin (archivo estático)
             if getattr(user, 'rol', None) == 'admin_tienda' or user.is_staff:
                 login(request, user)
                 print(f"DEBUG: Usuario {email} autenticado y redirigido al panel admin")
-                # Redirigir al panel de administración usando el nombre de la URL
-                return redirect('core:admin_index')
+                # Redirigir al prefijo que está mapeado en urls.py -> path('admin-ecomus/', admin_index)
+                # Usar '/admin-ecomus/' en lugar de '/admin-ecomus/pindex.html' para evitar 404
+                return redirect('/admin-ecomus/')
 
             # Si es cliente u otro usuario autenticado -> volver a la página de origen si es segura
             login(request, user)
