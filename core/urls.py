@@ -8,8 +8,6 @@ app_name = 'core'
 urlpatterns = [
     path('', views.inicio, name='inicio'),
     path('collections/', views.shop_collection_sub, name='shop-collection-sub'),
-    path('login/', views.login_usuario, name='login'),
-    path('logout/', views.logout_usuario, name='logout'),
     path('dashboard/', views.dashboard_redirect, name='dashboard'),
     path('admin-panel/', views.admin_index, name='admin_index'),
 ]

@@ -40,12 +40,11 @@
     <!-- /preload -->
     
         <!-- Header -->
-        <header id="header" class="header-default header-white bg_light-grey-2">
+        <header id="header" class="header-default">
             <div class="px_15 lg-px_40">
                 <div class="row wrapper-header align-items-center">
                     <div class="col-md-4 col-3 tf-lg-hidden">
-                        <a href="#mobileMenu" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                            class="btn-mobile">
+                        <a href="#mobileMenu" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="16" viewBox="0 0 24 16"
                                 fill="none">
                                 <path
@@ -668,8 +667,34 @@
                             <li class="nav-search"><a href="#canvasSearch" data-bs-toggle="offcanvas"
                                     aria-controls="offcanvasLeft" class="nav-icon-item"><i
                                         class="icon icon-search"></i></a></li>
-                            <li class="nav-account"><a href="#login" data-bs-toggle="modal" class="nav-icon-item"><i
-                                        class="icon icon-account"></i></a></li>
+                            <li class="nav-account">
+                                {% if user.is_authenticated %}
+                                    {% if user.rol == 'admin_tienda' or user.is_staff %}
+                                        <a href="{% url 'core:admin_index' %}" class="nav-icon-item" title="Admin Panel">
+                                            <i class="icon icon-account"></i>
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'usuarios:my_account' %}" class="nav-icon-item" title="My Account">
+                                            <i class="icon icon-account"></i>
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="#login" data-bs-toggle="modal" class="nav-icon-item" title="Login">
+                                        <i class="icon icon-account"></i>
+                                    </a>
+                                {% endif %}
+                            </li>
+                            {% if user.is_authenticated %}
+                            <li class="nav-logout">
+                                <a href="{% url 'usuarios:logout' %}" class="nav-icon-item" title="Logout">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                </a>
+                            </li>
+                            {% endif %}
                             <li class="nav-wishlist"><a href="wishlist.html" class="nav-icon-item"><i
                                         class="icon icon-heart"></i><span class="count-box">0</span></a></li>
                             <li class="nav-cart"><a href="#shoppingCart" data-bs-toggle="modal" class="nav-icon-item"><i
@@ -774,9 +799,18 @@
                                     <li>
                                         <a href="contact-1.html" class="footer-menu_item">Contact Us</a>
                                     </li>
-                                    <li>
-                                        <a href="{% url 'usuarios:login' %}" class="footer-menu_item">Account</a>
-                                    </li>
+                                    {% if user.is_authenticated %}
+                                        <li>
+                                            <a href="{% url 'usuarios:my_account' %}" class="footer-menu_item">My Account</a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'usuarios:logout' %}" class="footer-menu_item">Logout</a>
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            <a href="#login" data-bs-toggle="modal" class="footer-menu_item">Login</a>
+                                        </li>
+                                    {% endif %}
                                 </ul>
                             </div>
                             <div class="col-xl-3 col-md-6 col-12">
@@ -857,6 +891,140 @@
             </div>
         </footer>
         <!-- /Footer -->
+
+        <!-- modal login -->
+        <div class="modal modalCentered fade form-sign-in modal-part-content" id="login">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="header">
+                        <div class="demo-title">Log in</div>
+                        <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
+                    </div>
+                    <div class="tf-login-form">
+                        <form method="POST" action="{% url 'usuarios:login' %}">
+                            {% csrf_token %}
+                            
+                            {% if messages %}
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    {% for message in messages %}
+                                        <span>{{ message }}</span>
+                                        {% if not forloop.last %}<br>{% endif %}
+                                    {% endfor %}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="tf-field style-1">
+                                <input class="tf-field-input tf-input" placeholder=" " type="email" name="email" required>
+                                <label class="tf-field-label" for="">Email *</label>
+                            </div>
+                            <div class="tf-field style-1">
+                                <input class="tf-field-input tf-input" placeholder=" " type="password" name="password" required>
+                                <label class="tf-field-label" for="">Password *</label>
+                            </div>
+                            <div>
+                                <a href="#forgotPassword" data-bs-toggle="modal" class="btn-link link">Forgot your
+                                    password?</a>
+                            </div>
+                            <div class="bottom">
+                                <div class="w-100">
+                                    <button type="submit"
+                                        class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Log
+                                            in</span></button>
+                                </div>
+                                <div class="w-100">
+                                    <a href="#register" data-bs-toggle="modal" class="btn-link fw-6 w-100 link">
+                                        New customer? Create your account
+                                        <i class="icon icon-arrow1-top-left"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /modal login -->
+
+        <!-- modal forgot password -->
+        <div class="modal modalCentered fade form-sign-in modal-part-content" id="forgotPassword">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="header">
+                        <div class="demo-title">Reset your password</div>
+                        <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
+                    </div>
+                    <div class="tf-login-form">
+                        <form class="">
+                            <div>
+                                <p>Sign up for early Sale access plus tailored new arrivals, trends and promotions. To opt
+                                    out, click unsubscribe in our emails</p>
+                            </div>
+                            <div class="tf-field style-1">
+                                <input class="tf-field-input tf-input" placeholder=" " type="email" name="">
+                                <label class="tf-field-label" for="">Email *</label>
+                            </div>
+                            <div>
+                                <a href="#login" data-bs-toggle="modal" class="btn-link link">Cancel</a>
+                            </div>
+                            <div class="bottom">
+                                <div class="w-100">
+                                    <button type="submit"
+                                        class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Reset
+                                            password</span></button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /modal forgot password -->
+
+        <!-- modal register -->
+        <div class="modal modalCentered fade form-sign-in modal-part-content" id="register">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="header">
+                        <div class="demo-title">Register</div>
+                        <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
+                    </div>
+                    <div class="tf-login-form">
+                        <form class="">
+                            <div class="tf-field style-1">
+                                <input class="tf-field-input tf-input" placeholder=" " type="text" name="">
+                                <label class="tf-field-label" for="">First name</label>
+                            </div>
+                            <div class="tf-field style-1">
+                                <input class="tf-field-input tf-input" placeholder=" " type="text" name="">
+                                <label class="tf-field-label" for="">Last name</label>
+                            </div>
+                            <div class="tf-field style-1">
+                                <input class="tf-field-input tf-input" placeholder=" " type="email" name="">
+                                <label class="tf-field-label" for="">Email *</label>
+                            </div>
+                            <div class="tf-field style-1">
+                                <input class="tf-field-input tf-input" placeholder=" " type="password" name="">
+                                <label class="tf-field-label" for="">Password *</label>
+                            </div>
+                            <div class="bottom">
+                                <div class="w-100">
+                                    <a href="register.html"
+                                        class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Register</span></a>
+                                </div>
+                                <div class="w-100">
+                                    <a href="#login" data-bs-toggle="modal" class="btn-link fw-6 w-100 link">
+                                        Already have an account? Log in here
+                                        <i class="icon icon-arrow1-top-left"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /modal register -->
 
         </div>
         <!-- Javascript -->
