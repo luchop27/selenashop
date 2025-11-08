@@ -1098,7 +1098,7 @@ video {
 }
 
 .text_black-2 {
-  color: var(--text) !important;
+  color: #ada48c !important;
 }
 
 .text_black-3 {
@@ -11847,7 +11847,7 @@ blockquote .text {
 
 .tf-page-title {
   padding: 69px 0 65px;
-  background-image: url(../images/shop/file/page-title-blog.png);
+  background-image: url(../images/shop/file/page-title-blog2.png);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -21528,3 +21528,20 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
 }
 
 /*# sourceMappingURL=styles.css.map */
+/* Aplica el color a todo el texto del menú principal y submenús */
+.box-navigation .item-link,
+.box-navigation .menu-link-text,
+.box-navigation .menu-heading {
+  color: #918567 !important;
+}
+
+/* También aplica el color al ícono de flecha ▼ */
+.box-navigation .icon {
+  color: #918567 !important;
+}
+.nav-mb-item a,
+.nav-mb-item span,
+.sub-nav-link {
+  color: #918567 !important;
+}
+

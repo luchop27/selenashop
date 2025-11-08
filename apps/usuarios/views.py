@@ -23,13 +23,12 @@ def login_usuario(request):
             print(f"DEBUG: Rol del usuario: {getattr(user, 'rol', None)}, is_staff: {user.is_staff}")
 
         if user is not None:
-            # Si es admin_tienda o staff -> ir al panel admin (archivo estático)
+            # Si es admin_tienda o staff -> ir al panel admin
             if getattr(user, 'rol', None) == 'admin_tienda' or user.is_staff:
                 login(request, user)
                 print(f"DEBUG: Usuario {email} autenticado y redirigido al panel admin")
-                # Redirigir al prefijo que está mapeado en urls.py -> path('admin-ecomus/', admin_index)
-                # Usar '/admin-ecomus/' en lugar de '/admin-ecomus/pindex.html' para evitar 404
-                return redirect('/admin-ecomus/')
+                # Redirigir al panel de administración
+                return redirect('core:admin_index')
 
             # Si es cliente u otro usuario autenticado -> volver a la página de origen si es segura
             login(request, user)
@@ -62,13 +61,11 @@ def logout_usuario(request):
     """Vista de logout para usuarios"""
     logout(request)
     messages.success(request, 'Sesión cerrada correctamente.')
-    return redirect('inicio')
+    return redirect('core:inicio')
 
 
+@login_required(login_url='/')
 def my_account(request):
     """Renderiza la plantilla my-account.html"""
-    if not request.user.is_authenticated:
-        return redirect('usuarios:login')
-    # El archivo my-account.html está en la raíz del proyecto, no en templates/
-    # Por lo que necesitamos renderizarlo desde la raíz
-    return render(request, '../my-account.html')
+    # El archivo my-account.html está en htmls/
+    return render(request, '../htmls/my-account.html')
