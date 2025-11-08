@@ -178,6 +178,38 @@
 {% block extra_js %}
 <script>
 // ========================================
+// GENERACIÓN AUTOMÁTICA DE SLUG
+// ========================================
+function generateSlug(text) {
+    return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+// Auto-generar slug desde el nombre (solo en creación, en edición el usuario decide)
+const nombreInput = document.querySelector('input[name="nombre"]');
+const slugInput = document.querySelector('input[name="slug"]');
+
+if (nombreInput && slugInput) {
+    nombreInput.addEventListener('input', function() {
+        if (!slugInput.dataset.manuallyEdited) {
+            slugInput.value = generateSlug(this.value);
+        }
+    });
+    
+    slugInput.addEventListener('input', function() {
+        this.dataset.manuallyEdited = 'true';
+    });
+}
+
+// ========================================
 // MANEJO DE IMAGEN DE CATEGORÍA EN EDICIÓN
 // ========================================
 let nuevaCategoriaImageFile = null;

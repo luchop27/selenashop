@@ -143,8 +143,38 @@ class CategoriaAdmin(admin.ModelAdmin):
 				instance.coleccion = formset.parent_coleccion
 			instance.save()
 		
+		# Eliminar instancias marcadas para borrar
+		for obj in formset.deleted_objects:
+			obj.delete()
+		
 		formset.save_m2m()
 	
+	def delete_model(self, request, obj):
+		"""Eliminar categoría correctamente"""
+		# Verificar si tiene subcategorías
+		if obj.subcategorias.exists():
+			from django.contrib import messages
+			messages.warning(
+				request, 
+				f'La categoría "{obj.nombre}" tiene {obj.subcategorias.count()} subcategorías. '
+				'Elimina primero las subcategorías o estas quedarán huérfanas.'
+			)
+		obj.delete()
+	
+	def delete_queryset(self, request, queryset):
+		"""Eliminar múltiples categorías correctamente"""
+		for obj in queryset:
+			if obj.subcategorias.exists():
+				from django.contrib import messages
+				messages.warning(
+					request,
+					f'La categoría "{obj.nombre}" tiene subcategorías que quedarán huérfanas.'
+				)
+		queryset.delete()
+	
+	def has_delete_permission(self, request, obj=None):
+		"""Permitir eliminación de categorías"""
+		return True
 	
 	def num_subcategorias(self, obj):
 		"""Mostrar número de subcategorías"""

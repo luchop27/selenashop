@@ -9,7 +9,98 @@ from apps.productos.models import Producto
 
 def inicio(request):
     """Renderiza la plantilla home-05.html (nuevo index)"""
-    return render(request, 'home-05.html')
+    from apps.productos.models import Coleccion, Categoria, Producto
+    from django.db.models import Count, Min
+    
+    # Obtener colecciones activas para el slider superior (excluyendo "básica")
+    from django.db.models import Q
+    colecciones = (
+        Coleccion.objects
+        .filter(activo=True)
+        .exclude(Q(nombre__iexact='basica') | Q(nombre__iexact='básica'))  # Excluir colección básica (con o sin tilde)
+        .annotate(num_productos=Count('productos'))
+        .order_by('-destacada', '-created_at')[:5]  # Máximo 5 para el slider
+    )
+    
+    # Obtener categorías principales (sin padre) para la sección Featured Collections
+    categorias_principales = (
+        Categoria.objects
+        .filter(estado=True, padre__isnull=True)
+        .annotate(num_productos=Count('productos'))
+        .order_by('nombre')[:10]
+    )
+    
+    # Obtener productos destacados para Editor's Picks
+    productos_destacados = (
+        Producto.objects
+        .filter(activo=True)
+        .select_related('categoria', 'coleccion')
+        .prefetch_related(
+            'imagenes',
+            'variantes',
+            'variantes__talla',
+            'variantes__atributos__valor_atributo__atributo',  # Sistema de atributos
+        )
+        .annotate(precio_minimo=Min('variantes__precio'))
+        .order_by('-created_at')[:12]  # Últimos 12 productos
+    )
+    
+    # Preparar datos auxiliares para cada producto (igual que en shop_collection_sub)
+    for producto in productos_destacados:
+        # Precio a mostrar
+        if producto.precio_minimo:
+            producto.display_price = f"{producto.precio_minimo:.2f}"
+        else:
+            producto.display_price = f"{producto.precio_base:.2f}"
+        
+        # Imagen principal
+        imagenes = list(producto.imagenes.all()[:2])
+        if imagenes:
+            producto.main_image_src = imagenes[0].imagen.url
+            producto.hover_image_src = imagenes[1].imagen.url if len(imagenes) > 1 else None
+        else:
+            producto.main_image_src = None
+            producto.hover_image_src = None
+        
+        # Colores disponibles
+        colores_list = list(producto.variantes.values_list('color', flat=True).distinct())
+        producto.colors = [{'valor': c} for c in colores_list if c]
+        
+        # Tallas disponibles - USAR LA MISMA LÓGICA QUE shop_collection_sub
+        size_values = []
+        for v in producto.variantes.all():
+            # 1. Primero intentar desde FK talla directa
+            if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
+                code = v.talla.codigo
+                if code and code not in size_values:
+                    size_values.append(code)
+                continue
+            
+            # 2. Fallback: buscar en sistema de atributos (VarianteAtributo)
+            for va in getattr(v, 'atributos', []).all() if hasattr(getattr(v, 'atributos', None), 'all') else []:
+                val = getattr(va, 'valor_atributo', None)
+                if not val:
+                    continue
+                atributo = getattr(val, 'atributo', None)
+                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
+                if 'talla' in nombre_at or 'size' in nombre_at:
+                    valor = getattr(val, 'valor', None)
+                    if valor and valor not in size_values:
+                        size_values.append(valor)
+        
+        producto.sizes = size_values
+        print(f"DEBUG - Producto: {producto.nombre}, Tallas: {producto.sizes}")  # DEBUG
+        
+        # Disponibilidad
+        total_stock = sum(v.stock for v in producto.variantes.all())
+        producto.availability = 'in-stock' if total_stock > 0 else 'out-of-stock'
+    
+    context = {
+        'colecciones': colecciones,
+        'categorias_principales': categorias_principales,
+        'productos_destacados': productos_destacados,
+    }
+    return render(request, 'home-05.html', context)
 
 
 def home_05(request):

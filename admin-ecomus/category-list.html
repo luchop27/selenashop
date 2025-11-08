@@ -175,9 +175,12 @@
                                                         </a>
                                                     </div>
                                                     <div class="item trash" title="Eliminar">
-                                                        <a href="#" onclick="return confirm('¿Estás seguro de eliminar esta categoría?')">
-                                                            <i class="icon-trash-2"></i>
-                                                        </a>
+                                                        <form method="post" action="{% url 'productos:panel_categoria_delete' categoria.id %}" style="display: inline;">
+                                                            {% csrf_token %}
+                                                            <button type="submit" onclick="return confirm('¿Estás seguro de eliminar esta categoría?')" style="background: none; border: none; cursor: pointer; padding: 0;">
+                                                                <i class="icon-trash-2"></i>
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                 </div>
                                             </li>

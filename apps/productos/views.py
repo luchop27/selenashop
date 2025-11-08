@@ -183,13 +183,28 @@ class ProductoListView(ListView):
 					color_values.append(v.color)
 			p.colors = [{'valor': c} for c in color_values]
 
-			# Tallas únicas desde variantes
+			# Tallas únicas desde variantes (sistema dual: FK talla + VarianteAtributo)
 			size_values = []
 			for v in p.variantes.all():
+				# 1. Prioridad: FK directo a talla.codigo
 				if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
 					code = v.talla.codigo
 					if code and code not in size_values:
 						size_values.append(code)
+					continue
+
+				# 2. Fallback: buscar en atributos de variante (ValorAtributo)
+				for va in getattr(v, 'atributos', []).all() if hasattr(getattr(v, 'atributos', None), 'all') else []:
+					val = getattr(va, 'valor_atributo', None)
+					if not val:
+						continue
+					atributo = getattr(val, 'atributo', None)
+					nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
+					if 'talla' in nombre_at or 'size' in nombre_at:
+						valor = getattr(val, 'valor', None)
+						if valor and valor not in size_values:
+							size_values.append(valor)
+
 			p.sizes = size_values
 
 			# Disponibilidad
@@ -457,12 +472,22 @@ def panel_categoria_crear(request):
 		
 		if form.is_valid():
 			try:
-				categoria = form.save()
+				categoria = form.save(commit=False)
+				# Asegurar que posicion tenga un valor por defecto
+				if not hasattr(categoria, 'posicion') or categoria.posicion is None:
+					categoria.posicion = 0
+				categoria.save()
 				messages.success(request, f'Categoría "{categoria.nombre}" creada correctamente.')
 				return redirect('productos:panel_categorias')
 			except Exception as e:
 				messages.error(request, f'Error al crear la categoría: {str(e)}')
+				import traceback
+				print(traceback.format_exc())  # Para debug en consola
 		else:
+			# Mostrar errores específicos del formulario
+			for field, errors in form.errors.items():
+				for error in errors:
+					messages.error(request, f'{field}: {error}')
 			messages.error(request, 'Por favor corrige los errores en el formulario.')
 	else:
 		from .forms import CategoriaForm
@@ -522,6 +547,44 @@ def panel_categoria_edit(request, pk):
 		'colecciones': colecciones,
 		'categorias': categorias,
 	})
+
+
+def panel_categoria_delete(request, pk):
+	"""
+	Eliminar una categoría
+	"""
+	try:
+		categoria = Categoria.objects.get(pk=pk)
+	except Categoria.DoesNotExist:
+		messages.error(request, 'La categoría no existe.')
+		return redirect('productos:panel_categorias')
+	
+	if request.method == 'POST':
+		nombre_categoria = categoria.nombre
+		# Verificar si tiene subcategorías
+		if categoria.subcategorias.exists():
+			messages.warning(
+				request, 
+				f'La categoría "{nombre_categoria}" tiene {categoria.subcategorias.count()} subcategorías. '
+				'Las subcategorías quedarán sin categoría padre.'
+			)
+		
+		# Obtener el ID del padre antes de eliminar (si es subcategoría)
+		padre_id = categoria.padre.id if categoria.padre else None
+		
+		# Eliminar la categoría
+		categoria.delete()
+		messages.success(request, f'Categoría "{nombre_categoria}" eliminada exitosamente.')
+		
+		# Redirigir a la lista correcta
+		if padre_id:
+			return redirect(f'/admin-panel/categorias/?padre={padre_id}')
+		else:
+			return redirect('productos:panel_categorias')
+	
+	# Si no es POST, redirigir a la lista
+	messages.error(request, 'Método no permitido.')
+	return redirect('productos:panel_categorias')
 
 
 # =========================

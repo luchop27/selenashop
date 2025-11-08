@@ -157,201 +157,240 @@
                         <button id="remove-all" class="remove-all-filters" style="display: none;">Remove All <i
                                 class="icon icon-close"></i></button>
                     </div>
-                    
-                      
-                    <div class="tf-grid-layout wrapper-shop tf-col-4" id="gridLayout">
-                        <!-- card product 1 -->
-                        {% comment %} Loop productos provided by the view. If the view provides `page_obj` (Paginator), use it;
-                           otherwise show the first 12 productos as a simple fallback. {% endcomment %}
-                        {% if page_obj %}
-                            {% for producto in page_obj.object_list %}
-                                <div class="card-product grid" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'-' }}">
-                            <div class="card-product-wrapper">
-                                <a href="{{ producto.get_absolute_url }}" class="product-img">
-                                    {% if producto.main_image_src %}
-                                        <img class="lazyload img-product" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}" alt="image-product">
-                                    {% else %}
-                                        <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}" src="{% static 'images/products/placeholder.jpg' %}" alt="image-product">
-                                    {% endif %}
-                                    {% if producto.hover_image_src %}
-                                        <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}" src="{{ producto.hover_image_src }}" alt="image-product">
-                                    {% endif %}
-                                </a>
-                                <div class="list-product-btn">
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon bg_white quick-add tf-btn-loading">
-                                        <span class="icon icon-bag"></span>
-                                        <span class="tooltip">Quick Add</span>
+                    <div class="tf-list-layout wrapper-shop" id="listLayout">
+                        {% comment %} LIST LAYOUT - Loop productos {% endcomment %}
+                        {% for producto in productos %}
+                            <div class="card-product list-layout" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'Ecomus' }}">
+                                <div class="card-product-wrapper">
+                                    <a href="{{ producto.get_absolute_url }}" class="product-img">
+                                        {% if producto.main_image_src %}
+                                            <img class="lazyload img-product" data-src="{{ producto.main_image_src }}"
+                                                src="{{ producto.main_image_src }}" alt="image-product">
+                                        {% else %}
+                                            <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}"
+                                                src="{% static 'images/products/placeholder.jpg' %}" alt="image-product">
+                                        {% endif %}
+                                        {% if producto.hover_image_src %}
+                                            <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}"
+                                                src="{{ producto.hover_image_src }}" alt="image-product">
+                                        {% endif %}
                                     </a>
-                                    <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft" class="box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
-                                        data-product-id="{{ producto.id }}"
-                                        data-product-name="{{ producto.nombre|escapejs }}"
-                                        data-product-price="{{ producto.display_price }}"
-                                        data-product-desc="{{ producto.short_description|escapejs }}"
-                                        data-product-main-image="{{ producto.main_image_src }}"
-                                        data-product-hover-image="{{ producto.hover_image_src }}"
-                                        data-product-url="{{ producto.get_absolute_url }}"
-                                        data-product-colors="{{ producto.colors|join:"," }}"
-                                        data-product-sizes="{{ producto.sizes|join:"," }}"
-                                        >
-                                        <span class="icon icon-view"></span>
-                                        <span class="tooltip">Quick View</span>
-                                        
-                                    </a>
-                                    
                                 </div>
-                                {% if producto.sizes %}
-                                    <div class="size-list">
-                                        {% for s in producto.sizes %}
-                                            <span class="size-item">{{ s }}</span>
-                                        {% endfor %}
+                                <div class="card-product-info">
+                                    <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
+                                    <span class="price current-price">${{ producto.display_price }}</span>
+                                    {% if producto.short_description %}
+                                        <p class="description">{{ producto.short_description }}</p>
+                                    {% endif %}
+                                    {% if producto.colors %}
+                                        <ul class="list-color-product">
+                                            {% for color in producto.colors %}
+                                                <li class="list-color-item {% if forloop.first %}hover-tooltip {% endif %}color-swatch{% if forloop.first %} active{% endif %}">
+                                                    <span class="tooltip{% if forloop.first %} tooltip-bottom{% endif %}">{{ color.valor }}</span>
+                                                    <span class="swatch-value"></span>
+                                                    {% if producto.main_image_src %}
+                                                        <img class="lazyload" data-src="{{ producto.main_image_src }}"
+                                                            src="{{ producto.main_image_src }}" alt="image-product">
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                    <div class="list-product-btn">
+                                        <a href="#quick_add" data-bs-toggle="modal" 
+                                            class="box-icon bg_white quick-add tf-btn-loading">
+                                            <span class="icon icon-bag"></span>
+                                            <span class="tooltip">Quick Add</span>
+                                        </a>
+                                        <a href="#" class="box-icon bg_white wishlist btn-icon-action">
+                                            <span class="icon icon-heart"></span>
+                                            <span class="tooltip">Add to Wishlist</span>
+                                            <span class="icon icon-delete"></span>
+                                        </a>
+                                        <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
+                                            class="box-icon bg_white compare btn-icon-action">
+                                            <span class="icon icon-compare"></span>
+                                            <span class="tooltip">Add to Compare</span>
+                                            <span class="icon icon-check"></span>
+                                        </a>
+                                        <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
+                                            class="box-icon bg_white quickview tf-btn-loading"
+                                            data-product-id="{{ producto.id }}"
+                                            data-product-name="{{ producto.nombre|escapejs }}"
+                                            data-product-price="{{ producto.display_price }}"
+                                            data-product-desc="{{ producto.short_description|escapejs }}"
+                                            data-product-main-image="{{ producto.main_image_src }}"
+                                            data-product-hover-image="{{ producto.hover_image_src }}"
+                                            data-product-url="{{ producto.get_absolute_url }}"
+                                            data-product-colors="{{ producto.colors|join:',' }}"
+                                            data-product-sizes="{{ producto.sizes|join:',' }}">
+                                            <span class="icon icon-view"></span>
+                                            <span class="tooltip">Quick View</span>
+                                        </a>
                                     </div>
-                                {% endif %}
+                                    {% if producto.sizes %}
+                                        <div class="size-list">
+                                            {% for s in producto.sizes %}
+                                                <span class="size-item">{{ s }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                            
-                            <div class="card-product-info">
-                                <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
-                                <span class="price current-price">${{ producto.display_price }}</span>
-                                {% if producto.colors %}
-                                <ul class="list-color-product">
-                                    {% for color in producto.colors %}
-                                    <li class="list-color-item color-swatch">
-                                        <span class="tooltip">{{ color.valor }}</span>
-                                        <span class="swatch-value"></span>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                                {% endif %}
-                                <div style="display:none">ID: {{ producto.id }} - Categoria: {% if producto.categoria %}{{ producto.categoria.nombre }}{% endif %}</div>
-                            </div>
-                        </div>
                         {% empty %}
                             <p>No se encontraron productos.</p>
                         {% endfor %}
-                        {% else %}
-                            {% for producto in productos|slice:":12" %}
-                                <div class="card-product grid" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'-' }}">
-                                    <div class="card-product-wrapper">
-                                        <a href="{{ producto.get_absolute_url }}" class="product-img">
-                                            {% if producto.main_image_src %}
-                                                <img class="lazyload img-product" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}" alt="image-product">
-                                            {% else %}
-                                                <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}" src="{% static 'images/products/placeholder.jpg' %}" alt="image-product">
-                                            {% endif %}
-                                            {% if producto.hover_image_src %}
-                                                <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}" src="{{ producto.hover_image_src }}" alt="image-product">
-                                            {% endif %}
-                                        </a>
-                                        <div class="list-product-btn">
-                                            <a href="#quick_add" data-bs-toggle="modal" class="box-icon bg_white quick-add tf-btn-loading">
-                                                <span class="icon icon-bag"></span>
-                                                <span class="tooltip">Quick Add</span>
-                                            </a>
-                                            <a href="#" class="box-icon bg_white wishlist btn-icon-action">
-                                                <span class="icon icon-heart"></span>
-                                                <span class="tooltip">Add to Wishlist</span>
-                                                <span class="icon icon-delete"></span>
-                                            </a>
-                                            <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft" class="box-icon bg_white compare btn-icon-action">
-                                                <span class="icon icon-compare"></span>
-                                                <span class="tooltip">Add to Compare</span>
-                                                <span class="icon icon-check"></span>
-                                            </a>
-                                            <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
-                                                data-product-id="{{ producto.id }}"
-                                                data-product-name="{{ producto.nombre|escapejs }}"
-                                                data-product-price="{{ producto.display_price }}"
-                                                data-product-desc="{{ producto.short_description|escapejs }}"
-                                                data-product-main-image="{{ producto.main_image_src }}"
-                                                data-product-hover-image="{{ producto.hover_image_src }}"
-                                                data-product-url="{{ producto.get_absolute_url }}"
-                                                data-product-colors="{{ producto.colors|join:"," }}"
-                                                data-product-sizes="{{ producto.sizes|join:"," }}"
-                                                >
-                                                <span class="icon icon-view"></span>
-                                                <span class="tooltip">Quick View</span>
-                                            </a>
-                                        </div>
-                                        {% if producto.sizes %}
-                                            <div class="size-list">
-                                                {% for s in producto.sizes %}
-                                                    <span class="size-item">{{ s }}</span>
-                                                {% endfor %}
-                                            </div>
+                        
+                       <!-- pagination -->
+{% if page_obj %}
+    {% if page_obj.paginator.num_pages > 1 %}
+    <ul class="wg-pagination tf-pagination-list">
+        {% if page_obj.has_previous %}
+            <li>
+                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="pagination-link animate-hover-btn">
+                    <span class="icon icon-arrow-left"></span>
+                </a>
+            </li>
+        {% else %}
+            <li class="disabled"><span class="pagination-link"><span class="icon icon-arrow-left"></span></span></li>
+        {% endif %}
+
+        {% for p in page_obj.paginator.page_range %}
+            <li class="{% if page_obj.number == p %}active{% endif %}">
+                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ p }}" class="pagination-link">{{ p }}</a>
+            </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li>
+                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="pagination-link animate-hover-btn">
+                    <span class="icon icon-arrow-right"></span>
+                </a>
+            </li>
+        {% else %}
+            <li class="disabled"><span class="pagination-link"><span class="icon icon-arrow-right"></span></span></li>
+        {% endif %}
+    </ul>
+    {% endif %}
+{% endif %}
+
+                    </div>
+                    
+                    <div class="tf-grid-layout wrapper-shop tf-col-4" id="gridLayout">
+                        {% comment %} GRID LAYOUT - Loop productos {% endcomment %}
+                        {% for producto in productos %}
+                            <div class="card-product grid" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'Ecomus' }}">
+                                <div class="card-product-wrapper">
+                                    <a href="{{ producto.get_absolute_url }}" class="product-img">
+                                        {% if producto.main_image_src %}
+                                            <img class="lazyload img-product" data-src="{{ producto.main_image_src }}"
+                                                src="{{ producto.main_image_src }}" alt="image-product">
+                                        {% else %}
+                                            <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}"
+                                                src="{% static 'images/products/placeholder.jpg' %}" alt="image-product">
                                         {% endif %}
+                                        {% if producto.hover_image_src %}
+                                            <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}"
+                                                src="{{ producto.hover_image_src }}" alt="image-product">
+                                        {% endif %}
+                                    </a>
+                                    <div class="list-product-btn">
+                                        <a href="#quick_add" data-bs-toggle="modal" 
+                                            class="box-icon bg_white quick-add tf-btn-loading">
+                                            <span class="icon icon-bag"></span>
+                                            <span class="tooltip">Quick Add</span>
+                                        </a>
+                                        <a href="#" class="box-icon bg_white wishlist btn-icon-action">
+                                            <span class="icon icon-heart"></span>
+                                            <span class="tooltip">Add to Wishlist</span>
+                                            <span class="icon icon-delete"></span>
+                                        </a>
+                                        <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
+                                            class="box-icon bg_white compare btn-icon-action">
+                                            <span class="icon icon-compare"></span>
+                                            <span class="tooltip">Add to Compare</span>
+                                            <span class="icon icon-check"></span>
+                                        </a>
+                                        <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
+                                            class="box-icon bg_white quickview tf-btn-loading"
+                                            data-product-id="{{ producto.id }}"
+                                            data-product-name="{{ producto.nombre|escapejs }}"
+                                            data-product-price="{{ producto.display_price }}"
+                                            data-product-desc="{{ producto.short_description|escapejs }}"
+                                            data-product-main-image="{{ producto.main_image_src }}"
+                                            data-product-hover-image="{{ producto.hover_image_src }}"
+                                            data-product-url="{{ producto.get_absolute_url }}"
+                                            data-product-colors="{{ producto.colors|join:',' }}"
+                                            data-product-sizes="{{ producto.sizes|join:',' }}">
+                                            <span class="icon icon-view"></span>
+                                            <span class="tooltip">Quick View</span>
+                                        </a>
                                     </div>
-                                    <div class="card-product-info">
-                                        <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
-                                        <span class="price current-price">${{ producto.display_price }}</span>
-                                        {% if producto.colors %}
+                                    {% if producto.sizes %}
+                                        <div class="size-list">
+                                            {% for s in producto.sizes %}
+                                                <span class="size-item">{{ s }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="card-product-info">
+                                    <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
+                                    <span class="price current-price">${{ producto.display_price }}</span>
+                                    {% if producto.colors %}
                                         <ul class="list-color-product">
                                             {% for color in producto.colors %}
-                                            <li class="list-color-item color-swatch">
-                                                <span class="tooltip">{{ color.valor }}</span>
-                                                <span class="swatch-value"></span>
-                                            </li>
+                                                <li class="list-color-item color-swatch{% if forloop.first %} active{% endif %}">
+                                                    <span class="tooltip">{{ color.valor }}</span>
+                                                    <span class="swatch-value"></span>
+                                                    {% if producto.main_image_src %}
+                                                        <img class="lazyload" data-src="{{ producto.main_image_src }}"
+                                                            src="{{ producto.main_image_src }}" alt="image-product">
+                                                    {% endif %}
+                                                </li>
                                             {% endfor %}
                                         </ul>
-                                        {% endif %}
-                                        <div style="display:none">ID: {{ producto.id }} - Categoria: {% if producto.categoria %}{{ producto.categoria.nombre }}{% endif %}</div>
-                                    </div>
+                                    {% endif %}
                                 </div>
-                            {% empty %}
-                                <p>No se encontraron productos.</p>
-                            {% endfor %}
-                        {% endif %}
-
+                            </div>
+                        {% empty %}
+                            <p>No se encontraron productos.</p>
+                        {% endfor %}
+                        
                         <!-- pagination -->
-                        {% if page_obj %}
-                        <ul class="wg-pagination tf-pagination-list">
-                            {% if page_obj.has_previous %}
-                                <li>
-                                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}" class="pagination-link animate-hover-btn">
-                                        <span class="icon icon-arrow-left"></span>
-                                    </a>
-                                </li>
-                            {% else %}
-                                <li class="disabled"><span class="pagination-link"><span class="icon icon-arrow-left"></span></span></li>
-                            {% endif %}
+{% if page_obj %}
+    {% if page_obj.paginator.num_pages > 1 %}
+    <ul class="wg-pagination tf-pagination-list">
+        {% if page_obj.has_previous %}
+            <li>
+                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="pagination-link animate-hover-btn">
+                    <span class="icon icon-arrow-left"></span>
+                </a>
+            </li>
+        {% else %}
+            <li class="disabled"><span class="pagination-link"><span class="icon icon-arrow-left"></span></span></li>
+        {% endif %}
 
-                            {% for p in page_obj.paginator.page_range %}
-                                <li class="{% if page_obj.number == p %}active{% endif %}">
-                                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ p }}" class="pagination-link">{{ p }}</a>
-                                </li>
-                            {% endfor %}
+        {% for p in page_obj.paginator.page_range %}
+            <li class="{% if page_obj.number == p %}active{% endif %}">
+                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ p }}" class="pagination-link">{{ p }}</a>
+            </li>
+        {% endfor %}
 
-                            {% if page_obj.has_next %}
-                                <li>
-                                    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}" class="pagination-link animate-hover-btn">
-                                        <span class="icon icon-arrow-right"></span>
-                                    </a>
-                                </li>
-                            {% else %}
-                                <li class="disabled"><span class="pagination-link"><span class="icon icon-arrow-right"></span></span></li>
-                            {% endif %}
-                        </ul>
-                        {% else %}
-                        {% with request.GET.urlencode as qs %}
-                        <ul class="wg-pagination tf-pagination-list">
-                            <li class="active"><a href="?{% if qs %}{{ qs }}&{% endif %}page=1" class="pagination-link">1</a></li>
-                            <li><a href="?{% if qs %}{{ qs }}&{% endif %}page=2" class="pagination-link animate-hover-btn">2</a></li>
-                            <li><a href="?{% if qs %}{{ qs }}&{% endif %}page=3" class="pagination-link animate-hover-btn">3</a></li>
-                            <li><a href="?{% if qs %}{{ qs }}&{% endif %}page=4" class="pagination-link animate-hover-btn">4</a></li>
-                            <li><a href="?{% if qs %}{{ qs }}&{% endif %}page=2" class="pagination-link animate-hover-btn"><span class="icon icon-arrow-right"></span></a></li>
-                        </ul>
-                        {% endwith %}
-                        {% endif %}
+        {% if page_obj.has_next %}
+            <li>
+                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="pagination-link animate-hover-btn">
+                    <span class="icon icon-arrow-right"></span>
+                </a>
+            </li>
+        {% else %}
+            <li class="disabled"><span class="pagination-link"><span class="icon icon-arrow-right"></span></span></li>
+        {% endif %}
+    </ul>
+    {% endif %}
+{% endif %}
+
                     </div>
-
                 </div>
             </div>
         </section>
@@ -505,72 +544,42 @@
                         </a>
                         <div id="dropdown-menu-two" class="collapse">
                             <ul class="sub-nav-menu" id="sub-menu-navigation">
-                                <li><a href="#sub-shop-one" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-shop-one">
-                                        <span>Shop layouts</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-shop-one" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="{% url 'productos:producto_list' %}" class="sub-nav-link">Default</a></li>
-                                            <li><a href="shop-left-sidebar.html" class="sub-nav-link">Left sidebar</a>
+                                {% if categorias_menu %}
+                                    {% for categoria in categorias_menu %}
+                                        {% if categoria.subcategorias.exists %}
+                                            <li>
+                                                <a href="#sub-cat-{{ categoria.id }}" class="sub-nav-link collapsed" data-bs-toggle="collapse"
+                                                    aria-expanded="true" aria-controls="sub-cat-{{ categoria.id }}">
+                                                    <span>{{ categoria.nombre }}</span>
+                                                    <span class="btn-open-sub"></span>
+                                                </a>
+                                                <div id="sub-cat-{{ categoria.id }}" class="collapse">
+                                                    <ul class="sub-nav-menu sub-menu-level-2">
+                                                        {% for subcategoria in categoria.subcategorias.all %}
+                                                            {% if subcategoria.estado %}
+                                                                <li>
+                                                                    <a href="{% url 'productos:producto_list' %}?categoria={{ subcategoria.slug }}" class="sub-nav-link">
+                                                                        {{ subcategoria.nombre }}
+                                                                    </a>
+                                                                </li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
                                             </li>
-                                            <li><a href="shop-right-sidebar.html" class="sub-nav-link">Right sidebar</a>
+                                        {% else %}
+                                            <li>
+                                                <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" class="sub-nav-link">
+                                                    {{ categoria.nombre }}
+                                                </a>
                                             </li>
-                                            <li><a href="shop-fullwidth.html" class="sub-nav-link">Fullwidth</a></li>
-                        <li><a href="{% url 'core:shop-collection-sub' %}" class="sub-nav-link">Sub
-                            collection</a></li>
-                                            <li><a href="shop-collection-list.html" class="sub-nav-link">Collections
-                                                    list</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li>
-                                    <a href="#sub-shop-two" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-shop-two">
-                                        <span>Features</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-shop-two" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="shop-link.html" class="sub-nav-link">Pagination links</a></li>
-                                            <li><a href="shop-loadmore.html" class="sub-nav-link">Pagination
-                                                    loadmore</a></li>
-                                            <li><a href="shop-infinite-scrolling.html" class="sub-nav-link">Pagination
-                                                    infinite scrolling</a></li>
-                                            <li><a href="shop-filter-sidebar.html" class="sub-nav-link">Filter
-                                                    sidebar</a></li>
-                                            <li><a href="shop-filter-hidden.html" class="sub-nav-link">Filter hidden</a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li>
-                                    <a href="#sub-shop-three" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-shop-three">
-                                        <span>Product styles</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-shop-three" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-
-                                            <li><a href="product-style-01.html" class="sub-nav-link">Product style
-                                                    01</a></li>
-                                            <li><a href="product-style-02.html" class="sub-nav-link">Product style
-                                                    02</a></li>
-                                            <li><a href="product-style-03.html" class="sub-nav-link">Product style
-                                                    03</a></li>
-                                            <li><a href="product-style-04.html" class="sub-nav-link">Product style
-                                                    04</a></li>
-                                            <li><a href="product-style-05.html" class="sub-nav-link">Product style
-                                                    05</a></li>
-                                            <li><a href="product-style-06.html" class="sub-nav-link">Product style
-                                                    06</a></li>
-                                            <li><a href="product-style-07.html" class="sub-nav-link">Product style
-                                                    07</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <li>
+                                        <a href="{% url 'productos:producto_list' %}" class="sub-nav-link">Ver todos los productos</a>
+                                    </li>
+                                {% endif %}
                             </ul>
                         </div>
                     </li>
@@ -878,30 +887,6 @@
                     <input type="hidden" name="categoria" value="{{ request.GET.categoria }}">
                     
                     <div class="widget-facet">
-                        <div class="facet-title" data-bs-target="#price" data-bs-toggle="collapse" aria-expanded="true"
-                            aria-controls="price">
-                            <span>Precio</span>
-                            <span class="icon icon-arrow-up"></span>
-                        </div>
-                        <div id="price" class="collapse show">
-                            <div class="widget-price filter-price">
-                                <div class="tg-range-slider">
-                                    <input type="range" name="precio_min" min="0" max="500" value="0" step="10">
-                                    <input type="range" name="precio_max" min="0" max="500" value="500" step="10">
-                                </div>
-                                <div class="box-title-price mt-3">
-                                    <span class="title-price">Precio:</span>
-                                    <div class="caption-price">
-                                        <span>$<span id="min-price">0</span></span>
-                                        <span> - </span>
-                                        <span>$<span id="max-price">500</span></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="widget-facet">
                         <div class="facet-title" data-bs-target="#availability" data-bs-toggle="collapse"
                             aria-expanded="true" aria-controls="availability">
                             <span>Disponibilidad</span>
@@ -924,14 +909,188 @@
                             </ul>
                         </div>
                     </div>
+                    <div class="widget-facet">
+                        <div class="facet-title" data-bs-target="#price" data-bs-toggle="collapse" aria-expanded="true"
+                            aria-controls="price">
+                            <span>Precio</span>
+                            <span class="icon icon-arrow-up"></span>
+                        </div>
+                        <div id="price" class="collapse show">
+                            <div class="widget-price filter-price">
+                                <div class="price-val-range" id="price-value-range" data-min="0" data-max="500"></div>
+                                <div class="box-title-price">
+                                    <span class="title-price">Precio :</span>
+                                    <div class="caption-price">
+                                        <div class="price-val" id="price-min-value" data-currency="$"></div>
+                                        <span>-</span>
+                                        <div class="price-val" id="price-max-value" data-currency="$"></div>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div class="tf-btn-apply-filter">
-                        <button type="submit" class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center">
-                            <span>Aplicar filtros</span>
-                        </button>
-                        <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-outline radius-3 w-100 justify-content-center mt-2">
-                            <span>Limpiar filtros</span>
-                        </a>
+                        </div>
+                    </div>
+                    <div class="widget-facet">
+                        <div class="facet-title" data-bs-target="#brand" data-bs-toggle="collapse" aria-expanded="true"
+                            aria-controls="brand">
+                            <span>Marca</span>
+                            <span class="icon icon-arrow-up"></span>
+                        </div>
+                        <div id="brand" class="collapse show">
+                            <ul class="tf-filter-group current-scrollbar mb_36">
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="brand" class="tf-check" id="Ecomus">
+                                    <label for="Ecomus" class="label"><span>Ecomus</span>&nbsp;<span>(8)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="brand" class="tf-check" id="M&H">
+                                    <label for="M&H" class="label"><span>M&H</span>&nbsp;<span>(8)</span></label>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="widget-facet">
+                        <div class="facet-title" data-bs-target="#color" data-bs-toggle="collapse" aria-expanded="true"
+                            aria-controls="color">
+                            <span>Color</span>
+                            <span class="icon icon-arrow-up"></span>
+                        </div>
+                        <div id="color" class="collapse show">
+                            <ul class="tf-filter-group filter-color current-scrollbar mb_36">
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_beige" id="Beige"
+                                        value="Beige">
+                                    <label for="Beige" class="label"><span>Beige</span>&nbsp;<span>(3)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_dark" id="Black"
+                                        value="Black">
+                                    <label for="Black" class="label"><span>Negro</span>&nbsp;<span>(18)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_blue-2" id="Blue"
+                                        value="Blue">
+                                    <label for="Blue" class="label"><span>Azul</span>&nbsp;<span>(3)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_brown" id="Brown"
+                                        value="Brown">
+                                    <label for="Brown" class="label"><span>Marrón</span>&nbsp;<span>(3)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_cream" id="Cream"
+                                        value="Cream">
+                                    <label for="Cream" class="label"><span>Crema</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_dark-beige"
+                                        id="Dark Beige" value="Dark Beige">
+                                    <label for="Dark Beige" class="label"><span>Beige Oscuro</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_dark-blue" id="Dark Blue"
+                                        value="Dark Blue">
+                                    <label for="Dark Blue" class="label"><span>Azul Oscuro</span>&nbsp;<span>(3)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_dark-green"
+                                        id="Dark Green" value="Dark Green">
+                                    <label for="Dark Green" class="label"><span>Verde Oscuro</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_dark-grey" id="Dark Grey"
+                                        value="Dark Grey">
+                                    <label for="Dark Grey" class="label"><span>Gris Oscuro</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_grey" id="Grey"
+                                        value="Grey">
+                                    <label for="Grey" class="label"><span>Gris</span>&nbsp;<span>(2)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_light-blue"
+                                        id="Light Blue" value="Light Blue">
+                                    <label for="Light Blue" class="label"><span>Azul Claro</span>&nbsp;<span>(5)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_light-green"
+                                        id="Light Green" value="Light Green">
+                                    <label for="Light Green" class="label"><span>Verde Claro</span>&nbsp;<span>(3)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_light-grey"
+                                        id="Light Grey" value="Light Grey">
+                                    <label for="Light Grey" class="label"><span>Gris Claro</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_light-pink"
+                                        id="Light Pink" value="Light Pink">
+                                    <label for="Light Pink" class="label"><span>Rosa Claro</span>&nbsp;<span>(2)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_purple" id="Light Purple"
+                                        value="Light Purple">
+                                    <label for="Light Purple" class="label"><span>Morado Claro</span>&nbsp;<span>(2)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_light-yellow"
+                                        id="Light Yellow" value="Light Yellow">
+                                    <label for="Light Yellow" class="label"><span>Amarillo Claro</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_orange" id="Orange"
+                                        value="Orange">
+                                    <label for="Orange" class="label"><span>Naranja</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_pink" id="Pink"
+                                        value="Pink">
+                                    <label for="Pink" class="label"><span>Rosa</span>&nbsp;<span>(2)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_taupe" id="Taupe"
+                                        value="Taupe">
+                                    <label for="Taupe" class="label"><span>Taupe</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_white" id="White"
+                                        value="White">
+                                    <label for="White" class="label"><span>Blanco</span>&nbsp;<span>(14)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="color" class="tf-check-color bg_yellow" id="Yellow"
+                                        value="Yellow">
+                                    <label for="Yellow" class="label"><span>Amarillo</span>&nbsp;<span>(1)</span></label>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="widget-facet">
+                        <div class="facet-title" data-bs-target="#size" data-bs-toggle="collapse" aria-expanded="true"
+                            aria-controls="size">
+                            <span>Talla</span>
+                            <span class="icon icon-arrow-up"></span>
+                        </div>
+                        <div id="size" class="collapse show">
+                            <ul class="tf-filter-group current-scrollbar">
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="size" class="tf-check tf-check-size" value="S" id="S">
+                                    <label for="S" class="label"><span>S</span>&nbsp;<span>(7)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="size" class="tf-check tf-check-size" value="M" id="M">
+                                    <label for="M" class="label"><span>M</span>&nbsp;<span>(8)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="size" class="tf-check tf-check-size" value="L" id="L">
+                                    <label for="L" class="label"><span>L</span>&nbsp;<span>(8)</span></label>
+                                </li>
+                                <li class="list-item d-flex gap-12 align-items-center">
+                                    <input type="radio" name="size" class="tf-check tf-check-size" value="XL" id="XL">
+                                    <label for="XL" class="label"><span>XL</span>&nbsp;<span>(6)</span></label>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </form>
             </div>
