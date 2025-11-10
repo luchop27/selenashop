@@ -16,6 +16,24 @@
         object-position: center;
         display: block;
     }
+    
+    /* Forzar altura consistente para Featured Collections */
+    .collection-item-v3 .collection-image.img-style {
+        display: block;
+        overflow: hidden;
+        position: relative;
+        padding-bottom: 133.33%; /* Proporción 3:4 (altura/ancho * 100) */
+    }
+    
+    .collection-item-v3 .collection-image.img-style img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
 </style>
 
 <!-- Slider -->
@@ -134,30 +152,21 @@
                             {% for categoria in categorias_principales %}
                                 <div class="swiper-slide" lazy="true">
                                     <div class="collection-item-v3 hover-img">
-                                        <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" 
-                                           class="collection-image img-style" 
-                                           style="min-height: 320px; display: block;">
+                                        <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" class="collection-image img-style">
                                             {% if categoria.imagen %}
-                                                <img class="lazyload" 
-                                                     data-src="{{ categoria.imagen.url }}"
-                                                     src="{{ categoria.imagen.url }}" 
-                                                     alt="{{ categoria.nombre }}"
-                                                     style="width: 100%; height: 320px; object-fit: cover; display: block;">
+                                                <img class="lazyload" data-src="{{ categoria.imagen.url }}"
+                                                    src="{{ categoria.imagen.url }}" alt="{{ categoria.nombre }}">
                                             {% else %}
-                                                <img class="lazyload" 
-                                                     data-src="{% static 'images/collections/collection-32.jpg' %}"
-                                                     src="{% static 'images/collections/collection-32.jpg' %}" 
-                                                     alt="{{ categoria.nombre }}"
-                                                     style="width: 100%; height: 320px; object-fit: cover; display: block;">
+                                                <img class="lazyload" data-src="{% static 'images/collections/collection-32.jpg' %}"
+                                                    src="{% static 'images/collections/collection-32.jpg' %}" alt="{{ categoria.nombre }}">
                                             {% endif %}
                                             <span class="box-icon">
                                                 <i class="icon-icon icon-arrow1-top-left"></i>
                                             </span>
                                         </a>
                                         <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" 
-                                               class="link title fw-5">{{ categoria.nombre }}</a>
-                                           
+                                            <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" class="link title fw-5">{{ categoria.nombre }}</a>
+                                            <div class="count">{{ categoria.num_productos|default:"0" }} items </div>
                                         </div>
                                     </div>
                                 </div>

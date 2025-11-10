@@ -22,13 +22,23 @@ def inicio(request):
         .order_by('-destacada', '-created_at')[:5]  # Máximo 5 para el slider
     )
     
-    # Obtener categorías principales (sin padre) para la sección Featured Collections
-    categorias_principales = (
-        Categoria.objects
-        .filter(estado=True, padre__isnull=True)
-        .annotate(num_productos=Count('productos'))
-        .order_by('nombre')[:10]
-    )
+    # Obtener subcategorías de "Ropa" para la sección Featured Collections
+    try:
+        categoria_ropa = Categoria.objects.get(nombre__iexact='Ropa', estado=True)
+        categorias_principales = (
+            Categoria.objects
+            .filter(estado=True, padre=categoria_ropa)
+            .annotate(num_productos=Count('productos'))
+            .order_by('nombre')[:10]
+        )
+    except Categoria.DoesNotExist:
+        # Si no existe la categoría Ropa, mostrar categorías principales
+        categorias_principales = (
+            Categoria.objects
+            .filter(estado=True, padre__isnull=True)
+            .annotate(num_productos=Count('productos'))
+            .order_by('nombre')[:10]
+        )
     
     # Obtener productos destacados para Editor's Picks
     productos_destacados = (
@@ -95,10 +105,19 @@ def inicio(request):
         total_stock = sum(v.stock for v in producto.variantes.all())
         producto.availability = 'in-stock' if total_stock > 0 else 'out-of-stock'
     
+    # Obtener categorías con subcategorías para el menú de navegación
+    categorias_menu = (
+        Categoria.objects
+        .filter(estado=True, padre__isnull=True)
+        .prefetch_related('subcategorias')
+        .order_by('nombre')
+    )
+    
     context = {
         'colecciones': colecciones,
         'categorias_principales': categorias_principales,
         'productos_destacados': productos_destacados,
+        'categorias_menu': categorias_menu,
     }
     return render(request, 'home-05.html', context)
 

@@ -1028,40 +1028,49 @@
 
         </div>
         <!-- Javascript -->
-    <!-- Core libraries -->
-    <script src="{% static 'js/jquery.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+  <!-- Core libraries (PRIMERO) -->
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
 
-    <!-- UI libraries -->
-    <script src="{% static 'js/swiper-bundle.min.js' %}"></script>
-    <script src="{% static 'js/carousel.js' %}"></script>
-    <script src="{% static 'js/bootstrap-select.min.js' %}"></script>
-    <script src="{% static 'js/nouislider.min.js' %}"></script>
+<!-- Swiper ANTES de lazysize -->
+<script src="{% static 'js/swiper-bundle.min.js' %}"></script>
 
-    <!-- Utilities -->
-    <script src="{% static 'js/lazysize.min.js' %}"></script>
-    <script src="{% static 'js/count-down.js' %}"></script>
+<!-- Lazyload -->
+<script src="{% static 'js/lazysize.min.js' %}"></script>
 
-    <!-- Shop-specific scripts -->
-    <script src="{% static 'js/shop.js' %}"></script>
+<!-- UI libraries opcionales -->
+<script src="{% static 'js/bootstrap-select.min.js' %}"></script>
+<script src="{% static 'js/nouislider.min.js' %}"></script>
 
-    <!-- Effects & modals -->
-    <script src="{% static 'js/wow.min.js' %}"></script>
-    <script src="{% static 'js/multiple-modal.js' %}"></script>
+<!-- Utilities -->
+<script src="{% static 'js/count-down.js' %}"></script>
 
-    <!-- Main app script -->
-    <script src="{% static 'js/main.js' %}"></script>
-    <!-- Script para limpiar formulario de login -->
-    <script>
-        // Limpiar campos del formulario de login cuando se abre el modal
-        const loginModal = document.getElementById('login');
-        if (loginModal) {
-            loginModal.addEventListener('show.bs.modal', function () {
-                // Limpiar los campos de email y password
-                const form = loginModal.querySelector('form');
-                if (form) {
-                    form.reset();
-                }
-            });
-        }
-    </script>
+<!-- Effects -->
+<script src="{% static 'js/wow.min.js' %}"></script>
+
+<!-- Modals -->
+<script src="{% static 'js/multiple-modal.js' %}"></script>
+
+<!-- COMENTA TEMPORALMENTE shop.js para verificar si es el problema -->
+<!-- <script src="{% static 'js/shop.js' %}"></script> -->
+
+<!-- Carousel (si lo necesitas) -->
+<script src="{% static 'js/carousel.js' %}"></script>
+
+<!-- Main script SIEMPRE AL FINAL -->
+<script src="{% static 'js/main.js' %}"></script>
+
+<!-- Script para limpiar formulario de login -->
+<script>
+    // Limpiar campos del formulario de login cuando se abre el modal
+    const loginModal = document.getElementById('login');
+    if (loginModal) {
+        loginModal.addEventListener('show.bs.modal', function () {
+            // Limpiar los campos de email y password
+            const form = loginModal.querySelector('form');
+            if (form) {
+                form.reset();
+            }
+        });
+    }
+</script>
