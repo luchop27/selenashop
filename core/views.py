@@ -305,3 +305,113 @@ def admin_index(request):
     # Render the original admin HTML (pindex.html) which is located in the
     # project folder `admin-ecomus/` and is included in TEMPLATES['DIRS'].
     return render(request, 'pindex.html')
+
+
+def product_detail(request, producto_id=None):
+    """Vista para mostrar los detalles de un producto"""
+    from django.shortcuts import get_object_or_404
+    from apps.productos.models import Producto
+    
+    if producto_id:
+        # Obtener el producto con todas sus relaciones
+        producto = get_object_or_404(
+            Producto.objects
+            .select_related('categoria', 'coleccion')
+            .prefetch_related(
+                'imagenes',
+                'variantes',
+                'variantes__talla',
+                'variantes__atributos__valor_atributo__atributo',
+            ),
+            id=producto_id,
+            activo=True
+        )
+        
+        # Obtener todas las imágenes del producto
+        imagenes = list(producto.imagenes.all())
+        
+        # Obtener todas las variantes
+        variantes = list(producto.variantes.all())
+        
+        # Extraer colores únicos
+        colores_disponibles = []
+        colores_vistos = set()
+        for variante in variantes:
+            if variante.color and variante.color not in colores_vistos:
+                colores_disponibles.append({
+                    'nombre': variante.color,
+                    'valor': variante.color
+                })
+                colores_vistos.add(variante.color)
+        
+        # Extraer tallas únicas
+        tallas_disponibles = []
+        tallas_vistas = set()
+        for variante in variantes:
+            # Primero intentar desde FK talla directa
+            if hasattr(variante, 'talla') and variante.talla and hasattr(variante.talla, 'codigo'):
+                codigo = variante.talla.codigo
+                if codigo and codigo not in tallas_vistas:
+                    tallas_disponibles.append({
+                        'codigo': codigo,
+                        'nombre': getattr(variante.talla, 'nombre', codigo)
+                    })
+                    tallas_vistas.add(codigo)
+            else:
+                # Fallback: buscar en sistema de atributos
+                for va in variante.atributos.all():
+                    val = va.valor_atributo
+                    if val and val.atributo:
+                        nombre_attr = (val.atributo.slug or val.atributo.nombre).lower()
+                        if 'talla' in nombre_attr or 'size' in nombre_attr:
+                            valor = val.valor
+                            if valor and valor not in tallas_vistas:
+                                tallas_disponibles.append({
+                                    'codigo': valor,
+                                    'nombre': valor
+                                })
+                                tallas_vistas.add(valor)
+        
+        # Calcular precio mínimo y máximo
+        precios = [v.precio for v in variantes if v.precio]
+        precio_min = min(precios) if precios else producto.precio_base
+        precio_max = max(precios) if precios else producto.precio_base
+        
+        # Verificar si hay descuento (comparando con precio base del producto)
+        tiene_descuento = precio_min < producto.precio_base if precio_min and producto.precio_base else False
+        
+        # Productos relacionados (misma categoría)
+        productos_relacionados = (
+            Producto.objects
+            .filter(activo=True, categoria=producto.categoria)
+            .exclude(id=producto.id)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            [:8]
+        )
+        
+        # Preparar productos relacionados para el template
+        for prod in productos_relacionados:
+            imagenes_rel = list(prod.imagenes.all()[:2])
+            if imagenes_rel:
+                prod.main_image = imagenes_rel[0]
+                prod.hover_image = imagenes_rel[1] if len(imagenes_rel) > 1 else None
+            prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
+        
+        context = {
+            'producto': producto,
+            'imagenes': imagenes,
+            'variantes': variantes,
+            'colores_disponibles': colores_disponibles,
+            'tallas_disponibles': tallas_disponibles,
+            'precio_min': precio_min,
+            'precio_max': precio_max,
+            'tiene_descuento': tiene_descuento,
+            'productos_relacionados': productos_relacionados,
+        }
+    else:
+        # Sin ID, mostrar template demo
+        context = {}
+    
+    return render(request, 'product-detail.html', context)

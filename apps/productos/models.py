@@ -170,13 +170,13 @@ class Producto(models.Model):
         return self.nombre
 
     def get_absolute_url(self):
-        # URL pattern in `apps.productos.urls` uses the name 'producto_detail' and
-        # expects the product slug. Use that to build the absolute URL.
+        """Retorna la URL absoluta del producto"""
+        from django.urls import reverse
         try:
-            return reverse('productos:producto_detail', args=[self.slug])
+            return reverse('core:product_detail', args=[self.id])
         except Exception:
             # Fallback: build a simple path if URL reversal fails
-            return f"/producto/{self.slug}/"
+            return f"/product/{self.id}/"
 
 
 # ------------------------------
