@@ -117,8 +117,61 @@ def inicio(request):
         'colecciones': colecciones,
         'categorias_principales': categorias_principales,
         'productos_destacados': productos_destacados,
+        # Productos nuevos: los últimos añadidos (8 iniciales)
+        'productos_nuevos': None,
         'categorias_menu': categorias_menu,
     }
+    # Preparar 'productos_nuevos' (últimos 8 productos activos)
+    from django.db.models import Min
+    productos_nuevos_qs = (
+        Producto.objects
+        .filter(activo=True)
+        .select_related('categoria', 'coleccion')
+        .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
+        .annotate(precio_minimo=Min('variantes__precio'))
+        .order_by('-created_at')[:8]
+    )
+
+    productos_nuevos = list(productos_nuevos_qs)
+    # Preparar campos auxiliares para la plantilla (mismo esquema que productos_destacados)
+    for producto in productos_nuevos:
+        if getattr(producto, 'precio_minimo', None):
+            producto.display_price = f"{producto.precio_minimo:.2f}"
+        else:
+            producto.display_price = f"{producto.precio_base:.2f}"
+
+        imagenes = list(producto.imagenes.all()[:2])
+        if imagenes:
+            producto.main_image_src = imagenes[0].imagen.url
+            producto.hover_image_src = imagenes[1].imagen.url if len(imagenes) > 1 else producto.main_image_src
+        else:
+            producto.main_image_src = ''
+            producto.hover_image_src = ''
+
+        colores_list = list(producto.variantes.values_list('color', flat=True).distinct())
+        producto.colors = [{'valor': c} for c in colores_list if c]
+
+        # tallas
+        size_values = []
+        for v in producto.variantes.all():
+            if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
+                code = v.talla.codigo
+                if code and code not in size_values:
+                    size_values.append(code)
+                continue
+            for va in getattr(v, 'atributos', []).all() if hasattr(getattr(v, 'atributos', None), 'all') else []:
+                val = getattr(va, 'valor_atributo', None)
+                if not val:
+                    continue
+                atributo = getattr(val, 'atributo', None)
+                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
+                if 'talla' in nombre_at or 'size' in nombre_at:
+                    valor = getattr(val, 'valor', None)
+                    if valor and valor not in size_values:
+                        size_values.append(valor)
+        producto.sizes = size_values
+
+    context['productos_nuevos'] = productos_nuevos
     return render(request, 'home-05.html', context)
 
 
@@ -380,7 +433,7 @@ def product_detail(request, producto_id=None):
         # Verificar si hay descuento (comparando con precio base del producto)
         tiene_descuento = precio_min < producto.precio_base if precio_min and producto.precio_base else False
         
-        # Productos relacionados (misma categoría)
+        # Productos relacionados (misma categoría/subcategoría)
         productos_relacionados = (
             Producto.objects
             .filter(activo=True, categoria=producto.categoria)
@@ -388,6 +441,7 @@ def product_detail(request, producto_id=None):
             .select_related('categoria', 'coleccion')
             .prefetch_related('imagenes', 'variantes')
             .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('-created_at')  # Más recientes primero
             [:8]
         )
         
@@ -396,8 +450,113 @@ def product_detail(request, producto_id=None):
             imagenes_rel = list(prod.imagenes.all()[:2])
             if imagenes_rel:
                 prod.main_image = imagenes_rel[0]
+                prod.main_image_src = imagenes_rel[0].imagen.url if imagenes_rel[0].imagen else None
                 prod.hover_image = imagenes_rel[1] if len(imagenes_rel) > 1 else None
+                prod.hover_image_src = imagenes_rel[1].imagen.url if len(imagenes_rel) > 1 and imagenes_rel[1].imagen else None
+            else:
+                prod.main_image_src = None
+                prod.hover_image_src = None
+            
             prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
+            
+            # Obtener colores y tallas del producto relacionado
+            prod_variantes = list(prod.variantes.all())
+            
+            # Colores
+            colores_prod = []
+            colores_vistos_prod = set()
+            for var in prod_variantes:
+                if var.color and var.color not in colores_vistos_prod:
+                    colores_prod.append({'valor': var.color, 'nombre': var.color})
+                    colores_vistos_prod.add(var.color)
+            prod.colors = colores_prod
+            
+            # Tallas
+            tallas_prod = []
+            tallas_vistas_prod = set()
+            for var in prod_variantes:
+                if hasattr(var, 'talla') and var.talla and hasattr(var.talla, 'codigo'):
+                    codigo = var.talla.codigo
+                    if codigo and codigo not in tallas_vistas_prod:
+                        tallas_prod.append(codigo)
+                        tallas_vistas_prod.add(codigo)
+            prod.sizes = tallas_prod
+        
+        # Productos recientes de cualquier subcategoría de ropa
+        from apps.productos.models import Categoria
+        
+        # Buscar la categoría "Ropa" o cualquier categoría principal
+        try:
+            categoria_ropa = Categoria.objects.get(nombre__icontains='Ropa', padre__isnull=True)
+            # Obtener todas las subcategorías de Ropa
+            subcategorias_ropa = categoria_ropa.subcategorias.filter(estado=True)
+            subcategorias_ids = list(subcategorias_ropa.values_list('id', flat=True))
+            
+            # Agregar la categoría principal también
+            subcategorias_ids.append(categoria_ropa.id)
+            
+            # Obtener productos de todas estas categorías
+            productos_recientes = Producto.objects.filter(
+                activo=True,
+                categoria_id__in=subcategorias_ids
+            ).exclude(
+                id=producto.id
+            ).select_related(
+                'categoria', 'coleccion'
+            ).prefetch_related(
+                'imagenes', 'variantes', 'variantes__talla'
+            ).annotate(
+                precio_minimo=Min('variantes__precio')
+            ).order_by('-created_at')[:6]
+            
+        except Categoria.DoesNotExist:
+            # Si no existe la categoría "Ropa", mostrar productos de cualquier categoría
+            productos_recientes = Producto.objects.filter(
+                activo=True
+            ).exclude(
+                id=producto.id
+            ).select_related(
+                'categoria', 'coleccion'
+            ).prefetch_related(
+                'imagenes', 'variantes', 'variantes__talla'
+            ).annotate(
+                precio_minimo=Min('variantes__precio')
+            ).order_by('-created_at')[:6]
+        
+        # Preparar datos de productos recientes
+        for prod in productos_recientes:
+            imagenes_rec = list(prod.imagenes.all()[:2])
+            if imagenes_rec:
+                prod.main_image_src = imagenes_rec[0].imagen.url if imagenes_rec[0].imagen else None
+                prod.hover_image_src = imagenes_rec[1].imagen.url if len(imagenes_rec) > 1 and imagenes_rec[1].imagen else None
+            else:
+                prod.main_image_src = None
+                prod.hover_image_src = None
+            
+            prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
+            
+            # Colores
+            prod_variantes_rec = list(prod.variantes.all())
+            colores_rec = []
+            colores_vistos_rec = set()
+            for var in prod_variantes_rec:
+                if hasattr(var, 'color') and var.color:
+                    color = var.color
+                    if color not in colores_vistos_rec:
+                        colores_rec.append({'valor': color, 'nombre': color})
+                        colores_vistos_rec.add(color)
+            prod.colors = colores_rec
+            
+            # Tallas
+            tallas_rec = []
+            tallas_vistas_rec = set()
+            for var in prod_variantes_rec:
+                if hasattr(var, 'talla') and var.talla and hasattr(var.talla, 'codigo'):
+                    codigo = var.talla.codigo
+                    if codigo and codigo not in tallas_vistas_rec:
+                        tallas_rec.append(codigo)
+                        tallas_vistas_rec.add(codigo)
+            prod.sizes = tallas_rec
         
         context = {
             'producto': producto,
@@ -409,9 +568,278 @@ def product_detail(request, producto_id=None):
             'precio_max': precio_max,
             'tiene_descuento': tiene_descuento,
             'productos_relacionados': productos_relacionados,
+            'productos_recientes': productos_recientes,
         }
     else:
         # Sin ID, mostrar template demo
         context = {}
     
     return render(request, 'product-detail.html', context)
+
+
+# ==================== CART VIEWS ====================
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .cart import Cart
+from apps.productos.models import Variante
+
+@require_POST
+def cart_add(request):
+    """
+    Vista para agregar productos al carrito via AJAX
+    """
+    cart = Cart(request)
+    producto_id = request.POST.get('producto_id')
+    variante_id = request.POST.get('variante_id')
+    quantity = int(request.POST.get('quantity', 1))
+    
+    try:
+        producto = Producto.objects.get(id=producto_id, activo=True)
+        cart.add(producto=producto, variante_id=variante_id, quantity=quantity)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Producto agregado al carrito',
+            'cart_count': len(cart),
+            'cart_total': str(cart.get_total_price())
+        })
+    except Producto.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Producto no encontrado'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@require_POST
+def cart_remove(request):
+    """
+    Vista para eliminar productos del carrito via AJAX
+    """
+    cart = Cart(request)
+    product_id = request.POST.get('product_id')
+    
+    cart.remove(product_id)
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Producto eliminado del carrito',
+        'cart_count': len(cart),
+        'cart_total': str(cart.get_total_price())
+    })
+
+
+@require_POST
+def cart_update(request):
+    """
+    Vista para actualizar la cantidad de productos en el carrito via AJAX
+    """
+    cart = Cart(request)
+    product_id = request.POST.get('product_id')
+    quantity = int(request.POST.get('quantity', 1))
+    
+    cart.update_quantity(product_id, quantity)
+    
+    # Calcular el total del item
+    item_total = None
+    for item in cart:
+        if f"{item['producto_id']}_{item['variante_id']}" == product_id or str(item['producto_id']) == product_id:
+            item_total = str(item['total_precio'])
+            break
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Carrito actualizado',
+        'cart_count': len(cart),
+        'cart_total': str(cart.get_total_price()),
+        'item_total': item_total
+    })
+
+
+def cart_detail(request):
+    """
+    Vista para obtener los detalles completos del carrito via AJAX
+    """
+    cart = Cart(request)
+    
+    items = []
+    for item in cart:
+        items.append({
+            'product_id': f"{item['producto_id']}_{item['variante_id']}" if item['variante_id'] else str(item['producto_id']),
+            'producto_id': item['producto_id'],
+            'variante_id': item['variante_id'],
+            'nombre': item['nombre'],
+            'precio': str(item['precio_decimal']),
+            'quantity': item['quantity'],
+            'total': str(item['total_precio']),
+            'imagen': item['imagen'],
+            'color': item.get('color'),
+            'talla': item.get('talla'),
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'items': items,
+        'cart_count': len(cart),
+        'cart_total': str(cart.get_total_price())
+    })
+
+
+def cart_clear(request):
+    """
+    Vista para limpiar todo el carrito
+    """
+    cart = Cart(request)
+    cart.clear()
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Carrito vaciado',
+        'cart_count': 0,
+        'cart_total': '0.00'
+    })
+
+
+def api_productos_nuevos(request):
+    """Endpoint AJAX: devuelve el HTML de los siguientes productos nuevos.
+
+    Parámetros GET:
+    - offset: desde qué índice (int)
+    - limit: cuántos devolver (int)
+    """
+    from django.template.loader import render_to_string
+    from django.db.models import Min
+
+    try:
+        offset = int(request.GET.get('offset', 0))
+    except Exception:
+        offset = 0
+
+    try:
+        limit = int(request.GET.get('limit', 4))
+    except Exception:
+        limit = 4
+
+    qs = (
+        Producto.objects
+        .filter(activo=True)
+        .select_related('categoria', 'coleccion')
+        .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
+        .annotate(precio_minimo=Min('variantes__precio'))
+        .order_by('-created_at')
+    )
+
+    productos_slice = list(qs[offset:offset + limit])
+
+    # Preparar campos auxiliares (misma lógica que en inicio)
+    for producto in productos_slice:
+        if getattr(producto, 'precio_minimo', None):
+            producto.display_price = f"{producto.precio_minimo:.2f}"
+        else:
+            producto.display_price = f"{producto.precio_base:.2f}"
+
+        imagenes = list(producto.imagenes.all()[:2])
+        if imagenes:
+            producto.main_image_src = imagenes[0].imagen.url
+            producto.hover_image_src = imagenes[1].imagen.url if len(imagenes) > 1 else producto.main_image_src
+        else:
+            producto.main_image_src = ''
+            producto.hover_image_src = ''
+
+        colores_list = list(producto.variantes.values_list('color', flat=True).distinct())
+        producto.colors = [{'valor': c} for c in colores_list if c]
+
+        size_values = []
+        for v in producto.variantes.all():
+            if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
+                code = v.talla.codigo
+                if code and code not in size_values:
+                    size_values.append(code)
+                continue
+            for va in getattr(v, 'atributos', []).all() if hasattr(getattr(v, 'atributos', None), 'all') else []:
+                val = getattr(va, 'valor_atributo', None)
+                if not val:
+                    continue
+                atributo = getattr(val, 'atributo', None)
+                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
+                if 'talla' in nombre_at or 'size' in nombre_at:
+                    valor = getattr(val, 'valor', None)
+                    if valor and valor not in size_values:
+                        size_values.append(valor)
+        producto.sizes = size_values
+
+    # Renderizar fragmento HTML con los productos (plantilla parcial)
+    html = render_to_string('includes/product_cards.html', {'productos': productos_slice}, request=request)
+
+    return JsonResponse({
+        'html': html,
+        'count': len(productos_slice),
+    })
+
+
+def cart_recommendations(request):
+    """
+    Vista para obtener productos recomendados basados en el carrito
+    Muestra productos de las mismas categorías que los productos en el carrito
+    """
+    cart = Cart(request)
+    
+    # Obtener IDs de productos en el carrito
+    cart_product_ids = [int(item['producto_id']) for item in cart]
+    
+    if not cart_product_ids:
+        # Si el carrito está vacío, mostrar productos destacados o recientes
+        productos_recomendados = Producto.objects.filter(
+            activo=True
+        ).select_related(
+            'categoria', 'coleccion'
+        ).prefetch_related(
+            'imagenes'
+        ).annotate(
+            precio_minimo=Min('variantes__precio')
+        ).order_by('-created_at')[:6]
+    else:
+        # Obtener categorías de productos en el carrito
+        from apps.productos.models import Categoria
+        productos_en_carrito = Producto.objects.filter(id__in=cart_product_ids).select_related('categoria')
+        categorias_ids = list(set([p.categoria_id for p in productos_en_carrito if p.categoria_id]))
+        
+        # Buscar productos de las mismas categorías que no están en el carrito
+        productos_recomendados = Producto.objects.filter(
+            activo=True,
+            categoria_id__in=categorias_ids
+        ).exclude(
+            id__in=cart_product_ids
+        ).select_related(
+            'categoria', 'coleccion'
+        ).prefetch_related(
+            'imagenes'
+        ).annotate(
+            precio_minimo=Min('variantes__precio')
+        ).order_by('-created_at')[:6]
+    
+    # Preparar datos de productos
+    recommendations = []
+    for producto in productos_recomendados:
+        primera_imagen = producto.imagenes.first()
+        imagen_url = primera_imagen.imagen.url if primera_imagen and primera_imagen.imagen else None
+        
+        precio = producto.precio_minimo if producto.precio_minimo else producto.precio_base
+        
+        recommendations.append({
+            'id': producto.id,
+            'nombre': producto.nombre,
+            'precio': str(precio),
+            'imagen': imagen_url,
+            'url': f'/product/{producto.id}/'
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'recommendations': recommendations
+    })

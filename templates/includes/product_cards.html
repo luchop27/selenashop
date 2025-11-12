@@ -1,0 +1,4 @@
+{% comment %} Renderiza una lista de tarjetas de producto (utilizada por el endpoint AJAX) {% endcomment %}
+{% for producto in productos %}
+    {% include 'includes/product_card.html' %}
+{% endfor %}

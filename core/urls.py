@@ -12,4 +12,14 @@ urlpatterns = [
     path('product/', views.product_detail, name='product_detail_demo'),  # Sin ID para ver demo
     path('dashboard/', views.dashboard_redirect, name='dashboard'),
     path('admin-panel/', views.admin_index, name='admin_index'),
+    
+    # Cart URLs
+    path('cart/add/', views.cart_add, name='cart_add'),
+    path('cart/remove/', views.cart_remove, name='cart_remove'),
+    path('cart/update/', views.cart_update, name='cart_update'),
+    path('cart/detail/', views.cart_detail, name='cart_detail'),
+    path('cart/clear/', views.cart_clear, name='cart_clear'),
+    path('cart/recommendations/', views.cart_recommendations, name='cart_recommendations'),
+    # Endpoint AJAX para cargar más productos nuevos
+    path('api/productos-nuevos/', views.api_productos_nuevos, name='api_productos_nuevos'),
 ]

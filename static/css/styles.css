@@ -21546,3 +21546,19 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
   color: #918567 !important;
 }
 
+.collection-image.img-style {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding-bottom: 125%; /* Esto crea un aspect ratio de 4:5 (alto) */
+  overflow: hidden;
+}
+
+.collection-image.img-style img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

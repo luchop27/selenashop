@@ -36,6 +36,7 @@
     }
 </style>
 
+
 <!-- Slider -->
 <section class="tf-slideshow slider-effect-fade slider-home-5 position-relative">
     <div dir="ltr" class="swiper tf-sw-slideshow" data-preview="1" data-tablet="1" data-mobile="1"
@@ -132,27 +133,22 @@
     </div>
 </section>
 <!-- /Slider -->
-        <!-- Collection -->
-        <section class="flat-spacing-15">
-            <div class="container-full">
-                <div class="flat-title flex-row justify-content-between px-0">
-                    <span class="title wow fadeInUp" data-wow-delay="0s">Featured Collections</span>
-                    <div class="box-sw-navigation">
-                        <div class="nav-sw nav-next-slider nav-next-collection"><span
-                                class="icon icon-arrow-left"></span></div>
-                        <div class="nav-sw nav-prev-slider nav-prev-collection"><span
-                                class="icon icon-arrow-right"></span></div>
-                    </div>
-                </div>
-                <div dir="ltr" class="swiper tf-sw-collection sw-wrapper-right" data-preview="4.5" data-tablet="2.4"
-                    data-mobile="2.4" data-space-lg="30" data-space-md="30" data-space="15" data-loop="false"
-                    data-auto-play="false">
-                    <div class="swiper-wrapper">
-                        {% if categorias_principales %}
-                            {% for categoria in categorias_principales %}
-                                <div class="swiper-slide" lazy="true">
-                                    <div class="collection-item-v3 hover-img">
-                                        <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" class="collection-image img-style">
+        <!-- Categories -->
+<section class="flat-spacing-14">
+    <div class="container">
+        <div class="flat-title wow fadeInUp" data-wow-delay="0s">
+            <span class="title">Shop by categories</span>
+        </div>
+        <div class="hover-sw-nav">
+            <div dir="ltr" class="swiper tf-sw-collection" data-preview="4" data-tablet="2" data-mobile="2"
+                data-space-lg="30" data-space-md="30" data-space="15" data-loop="false" data-auto-play="false">
+                <div class="swiper-wrapper">
+                    {% if categorias_principales %}
+                        {% for categoria in categorias_principales %}
+                            <div class="swiper-slide" lazy="true">
+                                <div class="collection-item style-2 hover-img">
+                                    <div class="collection-inner">
+                                        <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" class="collection-image img-style rounded-0">
                                             {% if categoria.imagen %}
                                                 <img class="lazyload" data-src="{{ categoria.imagen.url }}"
                                                     src="{{ categoria.imagen.url }}" alt="{{ categoria.nombre }}">
@@ -160,161 +156,68 @@
                                                 <img class="lazyload" data-src="{% static 'images/collections/collection-32.jpg' %}"
                                                     src="{% static 'images/collections/collection-32.jpg' %}" alt="{{ categoria.nombre }}">
                                             {% endif %}
-                                            <span class="box-icon">
-                                                <i class="icon-icon icon-arrow1-top-left"></i>
-                                            </span>
                                         </a>
                                         <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" class="link title fw-5">{{ categoria.nombre }}</a>
-                                            <div class="count">{{ categoria.num_productos|default:"0" }} items </div>
+                                            <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}"
+                                                class="tf-btn collection-title hover-icon fs-15"><span>{{ categoria.nombre }}</span><i
+                                                    class="icon icon-arrow1-top-left"></i></a>
                                         </div>
                                     </div>
                                 </div>
-                            {% endfor %}
-                        {% else %}
-                            <!-- Fallback si no hay categorías -->
-                            <div class="swiper-slide">
-                                <div class="collection-item-v3 hover-img">
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Fallback si no hay categorías -->
+                        <div class="swiper-slide" lazy="true">
+                            <div class="collection-item style-2 hover-img">
+                                <div class="collection-inner">
                                     <div class="collection-content text-center p-5">
                                         <p>No hay categorías disponibles en este momento.</p>
                                     </div>
                                 </div>
                             </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- /Collection -->
-        <!-- Product -->
-        <section class="flat-spacing-6 pt_0">
-            <div class="container">
-                <div class="flat-title wow fadeInUp" data-wow-delay="0s">
-                    <span class="title">Editor's Picks</span>
-                    <div class="d-flex gap-16 align-items-center box-pagi-arr">
-                        <div class="nav-sw-arrow nav-next-slider nav-next-product"><span
-                                class="icon icon-arrow1-left"></span></div>
-                        <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-line fs-12 fw-6">VIEW ALL</a>
-                        <div class="nav-sw-arrow nav-prev-slider nav-prev-product"><span
-                                class="icon icon-arrow1-right"></span></div>
-                    </div>
-                </div>
-                <div class="hover-sw-nav hover-sw-2">
-                    <div dir="ltr" class="swiper tf-sw-product-sell wrap-sw-over" data-preview="4" data-tablet="3"
-                        data-mobile="2" data-space-lg="30" data-space-md="15" data-pagination="2" data-pagination-md="3"
-                        data-pagination-lg="3">
-                        <div class="swiper-wrapper">
-                            {% if productos_destacados %}
-                                {% for producto in productos_destacados %}
-                                    <div class="swiper-slide" lazy="true">
-                                        <div class="card-product style-5">
-                                            <div class="card-product-wrapper">
-                                                <a href="{{ producto.get_absolute_url }}" class="product-img">
-                                                    {% if producto.main_image_src %}
-                                                        <img class="lazyload img-product" 
-                                                             data-src="{{ producto.main_image_src }}"
-                                                             src="{{ producto.main_image_src }}" 
-                                                             alt="{{ producto.nombre }}">
-                                                    {% else %}
-                                                        <img class="lazyload img-product" 
-                                                             data-src="{% static 'images/products/placeholder.jpg' %}"
-                                                             src="{% static 'images/products/placeholder.jpg' %}" 
-                                                             alt="{{ producto.nombre }}">
-                                                    {% endif %}
-                                                    
-                                                    {% if producto.hover_image_src %}
-                                                        <img class="lazyload img-hover" 
-                                                             data-src="{{ producto.hover_image_src }}"
-                                                             src="{{ producto.hover_image_src }}" 
-                                                             alt="{{ producto.nombre }}">
-                                                    {% endif %}
-                                                </a>
-                                                <div class="list-product-btn gap-0">
-                                                    <a href="#quick_add" data-bs-toggle="modal"
-                                                        class="box-icon bg_white quick-add tf-btn-loading shadow-none">
-                                                        <span class="icon icon-bag"></span>
-                                                        <span class="tooltip">Quick Add</span>
-                                                    </a>
-                                                    <a href="#"
-                                                        class="box-icon bg_white wishlist btn-icon-action shadow-none">
-                                                        <span class="icon icon-heart"></span>
-                                                        <span class="tooltip">Add to Wishlist</span>
-                                                        <span class="icon icon-delete"></span>
-                                                    </a>
-                                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                                        class="box-icon bg_white compare btn-icon-action shadow-none">
-                                                        <span class="icon icon-compare"></span>
-                                                        <span class="tooltip">Add to Compare</span>
-                                                        <span class="icon icon-check"></span>
-                                                    </a>
-                                                <a href="#quick_view" data-bs-toggle="modal"
-                                                    class="box-icon bg_white quickview btn-open-quickview tf-btn-loading shadow-none"
-                                                    data-product-id="{{ producto.id }}"
-                                                    data-product-name="{{ producto.nombre|escapejs }}"
-                                                    data-product-price="{{ producto.display_price }}"
-                                                    data-product-desc="{{ producto.descripcion_corta|default:'Producto de alta calidad'|escapejs }}"
-                                                    data-product-main-image="{{ producto.main_image_src }}"
-                                                    data-product-hover-image="{{ producto.hover_image_src }}"
-                                                    data-product-url="{{ producto.get_absolute_url }}"
-                                                    data-product-colors="{% for c in producto.colors %}{{ c.valor }}{% if not forloop.last %},{% endif %}{% endfor %}"
-                                                    data-product-sizes="{{ producto.sizes|join:',' }}">
-                                                    <span class="icon icon-view"></span>
-                                                    <span class="tooltip">Quick View</span>
-                                                </a>
-                                        </div>                                        <!-- DEBUG: Ver qué hay en sizes -->
-                                        <div style="background: yellow; padding: 5px; font-size: 11px;">
-                                            DEBUG sizes: {{ producto.sizes|length }} items - {{ producto.sizes }}
-                                        </div>
-                                        
-                                        {% if producto.sizes %}
-                                            <div class="size-list style-3">
-                                                {% for s in producto.sizes %}
-                                                    <span class="size-item">{{ s }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        {% else %}
-                                            <div style="background: red; color: white; padding: 5px;">
-                                                NO HAY TALLAS
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="card-product-info">
-                                        <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
-                                        <span class="price">${{ producto.display_price }}</span>
-
-                                        {% if producto.colors %}
-                                                    <ul class="list-color-product">
-                                                        {% for color in producto.colors %}
-                                                            <li class="list-color-item color-swatch {% if forloop.first %}active{% endif %}">
-                                                                <span class="tooltip">{{ color.valor }}</span>
-                                                                <span class="swatch-value"></span>
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <!-- Fallback si no hay productos -->
-                                <div class="swiper-slide">
-                                    <div class="card-product style-5">
-                                        <div class="card-product-info text-center p-5">
-                                            <p>No hay productos disponibles en este momento.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
                         </div>
-                    </div>
-                    <div class="nav-sw nav-next-slider nav-next-product box-icon w_46 round"><span
-                            class="icon icon-arrow-left"></span></div>
-                    <div class="nav-sw nav-prev-slider nav-prev-product box-icon w_46 round"><span
-                            class="icon icon-arrow-right"></span></div>
+                    {% endif %}
                 </div>
             </div>
-        </section>
+            <div class="nav-sw nav-next-slider nav-next-collection box-icon w_46 round"><span
+                    class="icon icon-arrow-left"></span></div>
+            <div class="nav-sw nav-prev-slider nav-prev-collection box-icon w_46 round"><span
+                    class="icon icon-arrow-right"></span></div>
+            <div class="sw-dots style-2 sw-pagination-collection justify-content-center"></div>
+        </div>
+    </div>
+</section>
+<!-- /Categories -->
+
+        <!-- Product -->
+       <!-- New Arrivals -->
+<section class="flat-spacing-6">
+    <div class="container">
+        <div class="flat-title mb_1 gap-14">
+            <span class="title wow fadeInUp" data-wow-delay="0s">New Arrivals</span>
+            <p class="sub-title wow fadeInUp" data-wow-delay="0s">Shop the Latest Styles: Stay ahead of the
+                curve with our newest arrivals</p>
+        </div>
+        <div class="grid-layout loadmore-item" data-grid="grid-4">
+            {% if productos_nuevos %}
+                {% for producto in productos_nuevos %}
+                    {% include 'includes/product_card.html' %}
+                {% endfor %}
+            {% else %}
+                <p>No hay productos nuevos disponibles.</p>
+            {% endif %}
+        </div>
+        <div class="tf-pagination-wrap view-more-button text-center">
+            <button id="btn-loadmore" class="tf-btn-loading tf-loading-default style-2 btn-loadmore"
+                    data-offset="{{ productos_nuevos|length }}" data-limit="4"
+                    data-url="{% url 'core:api_productos_nuevos' %}">
+                <span class="text">Load more</span>
+            </button>
+        </div>
+    </div>
+</section>
+<!-- /New Arrivals -->
         <!-- /Product -->
         <!-- Banner Countdown -->
         <section class="tf-hero-image-liquid">
@@ -1098,6 +1001,50 @@
             }
             
         }, false);
+    })();
+    </script>
+    <script>
+    (function(){
+        'use strict';
+        document.addEventListener('DOMContentLoaded', function(){
+            var btn = document.getElementById('btn-loadmore');
+            if(!btn) return;
+
+            var container = document.querySelector('.grid-layout.loadmore-item');
+            if(!container) return;
+
+            btn.addEventListener('click', function(){
+                var offset = parseInt(btn.getAttribute('data-offset') || '0', 10);
+                var limit = parseInt(btn.getAttribute('data-limit') || '4', 10);
+                var url = btn.getAttribute('data-url');
+                if(!url) return;
+
+                btn.disabled = true;
+                btn.classList.add('loading');
+
+                fetch(url + '?offset=' + offset + '&limit=' + limit, {
+                    credentials: 'same-origin'
+                }).then(function(res){
+                    if(!res.ok) throw new Error('Network response was not ok');
+                    return res.json();
+                }).then(function(data){
+                    if(data && data.html){
+                        container.insertAdjacentHTML('beforeend', data.html);
+                        var newCount = parseInt(data.count || 0, 10);
+                        btn.setAttribute('data-offset', offset + newCount);
+                        // Si menos de limit => ocultar botón
+                        if(newCount < limit){
+                            btn.style.display = 'none';
+                        }
+                    }
+                }).catch(function(err){
+                    console.error('Error loading more products:', err);
+                }).finally(function(){
+                    btn.disabled = false;
+                    btn.classList.remove('loading');
+                });
+            });
+        });
     })();
     </script>
     
