@@ -739,9 +739,23 @@
                             <li class="nav-account">
                                 {% if user.is_authenticated %}
                                     {% if user.rol == 'admin_tienda' or user.is_staff %}
-                                        <a href="{% url 'core:admin_index' %}" class="nav-icon-item" title="Admin Panel">
+                                        <a href="#" class="nav-icon-item dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Admin Panel">
                                             <i class="icon icon-account"></i>
                                         </a>
+                                        <div class="dropdown-menu dropdown-menu-end account-dropdown" style="min-width: 200px;">
+                                            <div class="px-3 py-2 border-bottom">
+                                                <small class="text-muted d-block">{{ user.email }}</small>
+                                                <small class="text-muted">{{ user.nombre }} {{ user.apellido }}</small>
+                                                <span class="badge bg-danger mt-1">Admin</span>
+                                            </div>
+                                            <a class="dropdown-item" href="{% url 'core:admin_index' %}">
+                                                <i class="icon icon-grid me-2"></i>Admin Panel
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item text-danger" href="{% url 'usuarios:logout' %}">
+                                                <i class="icon icon-arrow-right me-2"></i>Log out
+                                            </a>
+                                        </div>
                                     {% else %}
                                         <a href="#" class="nav-icon-item dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="My Account">
                                             <i class="icon icon-account"></i>
@@ -773,15 +787,21 @@
                                         </div>
                                     {% endif %}
                                 {% else %}
-                                    <a href="#login" data-bs-toggle="modal" class="nav-icon-item" title="Login">
-                                        <i class="icon icon-account"></i>
-                                    </a>
+                                    {% if '/login' in request.path or '/recover' in request.path %}
+                                        <a href="{% url 'usuarios:login' %}" class="nav-icon-item" title="Login">
+                                            <i class="icon icon-account"></i>
+                                        </a>
+                                    {% else %}
+                                        <a href="#login" data-bs-toggle="modal" class="nav-icon-item" title="Login">
+                                            <i class="icon icon-account"></i>
+                                        </a>
+                                    {% endif %}
                                 {% endif %}
                             </li>
                             <li class="nav-wishlist"><a href="wishlist.html" class="nav-icon-item"><i
                                         class="icon icon-heart"></i><span class="count-box">0</span></a></li>
                             <li class="nav-cart"><a href="#shoppingCart" data-bs-toggle="modal" class="nav-icon-item"><i
-                                        class="icon icon-bag"></i><span class="count-box">0</span></a></li>
+                                        class="icon icon-bag"></i><span class="count-box tf-cart-count">{{ cart|length }}</span></a></li>
                         </ul>
                     </div>
                 </div>
@@ -1297,91 +1317,9 @@
                         <div class="tf-mini-cart-main">
                             <div class="tf-mini-cart-sroll">
                                 <div class="tf-mini-cart-items">
-                                    <div class="tf-mini-cart-item">
-                                        <div class="tf-mini-cart-image">
-                                            <a href="product-detail.html">
-                                                <img src="{% static 'images/products/white-2.jpg' %}" alt="">
-                                            </a>
-                                        </div>
-                                        <div class="tf-mini-cart-info">
-                                            <a class="title link" href="product-detail.html">T-shirt</a>
-                                            <div class="meta-variant">Light gray</div>
-                                            <div class="price fw-6">$25.00</div>
-                                            <div class="tf-mini-cart-btns">
-                                                <div class="wg-quantity small">
-                                                    <span class="btn-quantity minus-btn">-</span>
-                                                    <input type="text" name="number" value="1">
-                                                    <span class="btn-quantity plus-btn">+</span>
-                                                </div>
-                                                <div class="tf-mini-cart-remove">Remove</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="tf-mini-cart-item">
-                                        <div class="tf-mini-cart-image">
-                                            <a href="product-detail.html">
-                                                <img src="{% static 'images/products/white-3.jpg' %}" alt="">
-                                            </a>
-                                        </div>
-                                        <div class="tf-mini-cart-info">
-                                            <a class="title link" href="product-detail.html">Oversized Motif T-shirt</a>
-                                            <div class="price fw-6">$25.00</div>
-                                            <div class="tf-mini-cart-btns">
-                                                <div class="wg-quantity small">
-                                                    <span class="btn-quantity minus-btn">-</span>
-                                                    <input type="text" name="number" value="1">
-                                                    <span class="btn-quantity plus-btn">+</span>
-                                                </div>
-                                                <div class="tf-mini-cart-remove">Remove</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tf-minicart-recommendations">
-                                    <div class="tf-minicart-recommendations-heading">
-                                        <div class="tf-minicart-recommendations-title">You may also like</div>
-                                        <div class="sw-dots small style-2 cart-slide-pagination"></div>
-                                    </div>
-                                    <div dir="ltr" class="swiper tf-cart-slide">
-                                        <div class="swiper-wrapper">
-                                            <div class="swiper-slide">
-                                                <div class="tf-minicart-recommendations-item">
-                                                    <div class="tf-minicart-recommendations-item-image">
-                                                        <a href="product-detail.html">
-                                                            <img src="{% static 'images/products/white-3.jpg' %}" alt="">
-                                                        </a>
-                                                    </div>
-                                                    <div class="tf-minicart-recommendations-item-infos flex-grow-1">
-                                                        <a class="title" href="product-detail.html">Loose Fit
-                                                            Sweatshirt</a>
-                                                        <div class="price">$25.00</div>
-                                                    </div>
-                                                    <div class="tf-minicart-recommendations-item-quickview">
-                                                        <div class="btn-show-quickview quickview hover-tooltip">
-                                                            <span class="icon icon-view"></span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="swiper-slide">
-                                                <div class="tf-minicart-recommendations-item">
-                                                    <div class="tf-minicart-recommendations-item-image">
-                                                        <a href="product-detail.html">
-                                                            <img src="{% static 'images/products/white-2.jpg' %}" alt="">
-                                                        </a>
-                                                    </div>
-                                                    <div class="tf-minicart-recommendations-item-infos flex-grow-1">
-                                                        <a class="title" href="product-detail.html">Loose Fit Hoodie</a>
-                                                        <div class="price">$25.00</div>
-                                                    </div>
-                                                    <div class="tf-minicart-recommendations-item-quickview">
-                                                        <div class="btn-show-quickview quickview hover-tooltip">
-                                                            <span class="icon icon-view"></span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <!-- Cart items will be loaded dynamically via JavaScript -->
+                                    <div class="text-center py-4">
+                                        <p class="text-muted">Cargando carrito...</p>
                                     </div>
                                 </div>
                             </div>
@@ -1407,19 +1345,11 @@
                                         </path>
                                     </svg>
                                 </div>
-                                <div class="tf-mini-cart-tool-btn btn-estimate-shipping">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="18" viewBox="0 0 26 18"
-                                        fill="currentColor">
-                                        <path fill-rule="evenodd" clip-rule="evenodd"
-                                            d="M0 0.811989C0 0.36354 0.36354 0 0.811989 0H15.4278C15.8763 0 16.2398 0.36354 16.2398 0.811989V3.10596H21.0144C23.6241 3.10596 25.8643 5.05894 25.8643 7.61523V14.6414C25.8643 15.0899 25.5007 15.4534 25.0523 15.4534H23.545C23.2139 16.9115 21.9098 18 20.3514 18C18.7931 18 17.4889 16.9115 17.1578 15.4534H8.69534C8.36423 16.9115 7.0601 18 5.50175 18C3.9434 18 2.63927 16.9115 2.30815 15.4534H0.811989C0.36354 15.4534 0 15.0899 0 14.6414V0.811989ZM2.35089 13.8294C2.74052 12.4562 4.00366 11.4503 5.50175 11.4503C6.99983 11.4503 8.26298 12.4562 8.6526 13.8294H14.6158V1.62398H1.62398V13.8294H2.35089ZM16.2398 4.72994V7.95749H24.2403V7.61523C24.2403 6.08759 22.8649 4.72994 21.0144 4.72994H16.2398ZM24.2403 9.58147H16.2398V13.8294H17.2006C17.5902 12.4562 18.8533 11.4503 20.3514 11.4503C21.8495 11.4503 23.1126 12.4562 23.5023 13.8294H24.2403V9.58147ZM5.50175 13.0743C4.58999 13.0743 3.85087 13.8134 3.85087 14.7251C3.85087 15.6369 4.58999 16.376 5.50175 16.376C6.41351 16.376 7.15263 15.6369 7.15263 14.7251C7.15263 13.8134 6.41351 13.0743 5.50175 13.0743ZM20.3514 13.0743C19.4397 13.0743 18.7005 13.8134 18.7005 14.7251C18.7005 15.6369 19.4397 16.376 20.3514 16.376C21.2632 16.376 22.0023 15.6369 22.0023 14.7251C22.0023 13.8134 21.2632 13.0743 20.3514 13.0743Z">
-                                        </path>
-                                    </svg>
-                                </div>
                             </div>
                             <div class="tf-mini-cart-bottom-wrap">
                                 <div class="tf-cart-totals-discounts">
                                     <div class="tf-cart-total">Subtotal</div>
-                                    <div class="tf-totals-total-value fw-6">$49.99 USD</div>
+                                    <div class="tf-totals-total-value fw-6">${{ cart.get_total_price|default:"0.00" }} USD</div>
                                 </div>
                                 <div class="tf-cart-tax">Taxes and <a href="#">shipping</a> calculated at checkout</div>
                                 <div class="tf-mini-cart-line"></div>
@@ -1501,43 +1431,144 @@
                                 </div>
                             </form>
                         </div>
-                        <div class="tf-mini-cart-tool-openable estimate-shipping">
-                            <div class="overplay tf-mini-cart-tool-close"></div>
-                            <div class="tf-mini-cart-tool-content">
-                                <div class="tf-mini-cart-tool-text">
-                                    <div class="icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="21" height="15"
-                                            viewBox="0 0 21 15" fill="currentColor">
-                                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                                d="M0.441406 1.13155C0.441406 0.782753 0.724159 0.5 1.07295 0.5H12.4408C12.7896 0.5 13.0724 0.782753 13.0724 1.13155V2.91575H16.7859C18.8157 2.91575 20.5581 4.43473 20.5581 6.42296V11.8878C20.5581 12.2366 20.2753 12.5193 19.9265 12.5193H18.7542C18.4967 13.6534 17.4823 14.5 16.2703 14.5C15.0582 14.5 14.0439 13.6534 13.7864 12.5193H7.20445C6.94692 13.6534 5.93259 14.5 4.72054 14.5C3.50849 14.5 2.49417 13.6534 2.23664 12.5193H1.07295C0.724159 12.5193 0.441406 12.2366 0.441406 11.8878V1.13155ZM2.26988 11.2562C2.57292 10.1881 3.55537 9.40578 4.72054 9.40578C5.88572 9.40578 6.86817 10.1881 7.17121 11.2562H11.8093V1.76309H1.7045V11.2562H2.26988ZM13.0724 4.17884V6.68916H19.295V6.42296C19.295 5.2348 18.2252 4.17884 16.7859 4.17884H13.0724ZM19.295 7.95226H13.0724V11.2562H13.8196C14.1227 10.1881 15.1051 9.40578 16.2703 9.40578C17.4355 9.40578 18.4179 10.1881 18.7209 11.2562H19.295V7.95226ZM4.72054 10.6689C4.0114 10.6689 3.43652 11.2437 3.43652 11.9529C3.43652 12.662 4.0114 13.2369 4.72054 13.2369C5.42969 13.2369 6.00456 12.662 6.00456 11.9529C6.00456 11.2437 5.42969 10.6689 4.72054 10.6689ZM16.2703 10.6689C15.5611 10.6689 14.9863 11.2437 14.9863 11.9529C14.9863 12.662 15.5611 13.2369 16.2703 13.2369C16.9794 13.2369 17.5543 12.662 17.5543 11.9529C17.5543 11.2437 16.9794 10.6689 16.2703 10.6689Z">
-                                            </path>
-                                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /shoppingCart -->
+
+    <!-- modal quick_view -->
+    <div class="modal fade modalDemo popup-quickview" id="quick_view">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="header">
+                    <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
+                </div>
+                <div class="wrap">
+                    <div class="tf-product-media-wrap">
+                        <div dir="ltr" class="swiper tf-single-slide">
+                            <div class="swiper-wrapper">
+                                <div class="swiper-slide">
+                                    <div class="item">
+                                        <img src="{% static 'images/products/orange-1.jpg' %}" alt="">
                                     </div>
-                                    <span class="fw-6">Estimate Shipping</span>
                                 </div>
-                                <div class="field">
-                                    <p>Country</p>
-                                    <select class="tf-select w-100" id="ShippingCountry_CartDrawer-Form"
-                                        name="address[country]" data-default="">
-                                        <option value="---" data-provinces="[]">---</option>
-                                        <option value="Australia">Australia</option>
-                                        <option value="Austria">Austria</option>
-                                        <option value="Belgium">Belgium</option>
-                                        <option value="Canada">Canada</option>
-                                        <option value="United States">United States</option>
-                                    </select>
+                                <div class="swiper-slide">
+                                    <div class="item">
+                                        <img src="{% static 'images/products/pink-1.jpg' %}" alt="">
+                                    </div>
                                 </div>
-                                <div class="field">
-                                    <p>Zip code</p>
-                                    <input type="text" name="text" placeholder="">
+                            </div>
+                            <div class="swiper-button-next button-style-arrow single-slide-prev"></div>
+                            <div class="swiper-button-prev button-style-arrow single-slide-next"></div>
+                        </div>
+                    </div>
+                    <div class="tf-product-info-wrap position-relative">
+                        <div class="tf-product-info-list">
+                            <div class="tf-product-info-title">
+                                <h5><a class="link" href="product-detail.html">Ribbed Tank Top</a></h5>
+                            </div>
+                            <div class="tf-product-info-badges">
+                                <div class="badges text-uppercase">Best seller</div>
+                                <div class="product-status-content">
+                                    <i class="icon-lightning"></i>
+                                    <p class="fw-6">Selling fast! 48 people have this in their carts.</p>
                                 </div>
-                                <div class="tf-cart-tool-btns">
+                            </div>
+                            <div class="tf-product-info-price">
+                                <div class="price">$18.00</div>
+                            </div>
+                            <div class="tf-product-description">
+                                <p>Nunc arcu faucibus a et lorem eu a mauris adipiscing conubia ac aptent ligula
+                                    facilisis a auctor habitant parturient a a.Interdum fermentum.</p>
+                            </div>
+                            <div class="tf-product-info-variant-picker">
+                                <div class="variant-picker-item">
+                                    <div class="variant-picker-label">
+                                        Color: <span class="fw-6 variant-picker-label-value">Orange</span>
+                                    </div>
+                                    <div class="variant-picker-values">
+                                        <input id="values-orange-1" type="radio" name="color-1" checked>
+                                        <label class="hover-tooltip radius-60" for="values-orange-1"
+                                            data-value="Orange">
+                                            <span class="btn-checkbox bg-color-orange"></span>
+                                            <span class="tooltip">Orange</span>
+                                        </label>
+                                        <input id="values-black-1" type="radio" name="color-1">
+                                        <label class=" hover-tooltip radius-60" for="values-black-1" data-value="Black">
+                                            <span class="btn-checkbox bg-color-black"></span>
+                                            <span class="tooltip">Black</span>
+                                        </label>
+                                        <input id="values-white-1" type="radio" name="color-1">
+                                        <label class="hover-tooltip radius-60" for="values-white-1" data-value="White">
+                                            <span class="btn-checkbox bg-color-white"></span>
+                                            <span class="tooltip">White</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="variant-picker-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="variant-picker-label">
+                                            Size: <span class="fw-6 variant-picker-label-value">S</span>
+                                        </div>
+                                        <div class="find-size btn-choose-size fw-6">Find your size</div>
+                                    </div>
+                                    <div class="variant-picker-values">
+                                        <input type="radio" name="size-1" id="values-s-1" checked>
+                                        <label class="style-text" for="values-s-1" data-value="S">
+                                            <p>S</p>
+                                        </label>
+                                        <input type="radio" name="size-1" id="values-m-1">
+                                        <label class="style-text" for="values-m-1" data-value="M">
+                                            <p>M</p>
+                                        </label>
+                                        <input type="radio" name="size-1" id="values-l-1">
+                                        <label class="style-text" for="values-l-1" data-value="L">
+                                            <p>L</p>
+                                        </label>
+                                        <input type="radio" name="size-1" id="values-xl-1">
+                                        <label class="style-text" for="values-xl-1" data-value="XL">
+                                            <p>XL</p>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tf-product-info-quantity">
+                                <div class="quantity-title fw-6">Quantity</div>
+                                <div class="wg-quantity">
+                                    <span class="btn-quantity minus-btn">-</span>
+                                    <input type="text" name="number" value="1">
+                                    <span class="btn-quantity plus-btn">+</span>
+                                </div>
+                            </div>
+                            <div class="tf-product-info-buy-button">
+                                <form class="">
                                     <a href="#"
-                                        class="tf-btn fw-6 justify-content-center btn-fill w-100 animate-hover-btn radius-3"><span>Estimate</span></a>
-                                    <div
-                                        class="tf-mini-cart-tool-primary text-center fw-6 w-100 tf-mini-cart-tool-close">
-                                        Cancel</div>
-                                </div>
+                                        class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Add
+                                            to cart -&nbsp;</span><span class="tf-qty-price">$8.00</span></a>
+                                    <a href="#"
+                                        class="tf-product-btn-wishlist hover-tooltip box-icon bg_white wishlist btn-icon-action">
+                                        <span class="icon icon-heart"></span>
+                                        <span class="tooltip">Add to Wishlist</span>
+                                        <span class="icon icon-delete"></span>
+                                    </a>
+                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
+                                        class="tf-product-btn-wishlist hover-tooltip box-icon bg_white compare btn-icon-action">
+                                        <span class="icon icon-compare"></span>
+                                        <span class="tooltip">Add to Compare</span>
+                                        <span class="icon icon-check"></span>
+                                    </a>
+                                    <div class="w-100">
+                                        <a href="#" class="btns-full">Buy with <img src="{% static 'images/payments/paypal.png' %}"
+                                                alt=""></a>
+                                        <a href="#" class="payment-more-option">More payment options</a>
+                                    </div>
+                                </form>
+                            </div>
+                            <div>
+                                <a href="product-detail.html" class="tf-btn fw-6 btn-line">View full details<i
+                                        class="icon icon-arrow1-top-left"></i></a>
                             </div>
                         </div>
                     </div>
@@ -1545,7 +1576,7 @@
             </div>
         </div>
     </div>
-    <!-- /shoppingCart -->
+    <!-- /modal quick_view -->
 
     <!-- Javascript -->
     <!-- Core libraries (PRIMERO - jQuery ANTES de Bootstrap) -->
@@ -1587,6 +1618,9 @@
 
     <!-- Main script SIEMPRE AL FINAL -->
     <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Cart functionality -->
+    <script src="{% static 'js/cart.js' %}"></script>
 
     <!-- Script para limpiar formulario de login -->
     <script>

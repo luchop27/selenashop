@@ -71,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.categorias_menu',
+                'core.context_processors.cart',
             ],
         },
     },
@@ -141,3 +142,26 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Shopping Cart Configuration
+CART_SESSION_ID = 'cart'
+
+# Email Configuration
+# Durante desarrollo, los correos se imprimen en la consola
+# Para producción, cambiar a un backend SMTP real
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Para usar Gmail en producción (descomentar y configurar):
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'tu-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'tu-app-password'
+# DEFAULT_FROM_EMAIL = 'Selena Shop <tu-email@gmail.com>'
+
+# Para desarrollo:
+DEFAULT_FROM_EMAIL = 'Selena Shop <noreply@selenashop.com>'
+
+# Tiempo de expiración del token de restablecimiento (en días)
+PASSWORD_RESET_TIMEOUT = 86400  # 24 horas en segundos

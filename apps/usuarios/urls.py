@@ -9,6 +9,10 @@ urlpatterns = [
     path('register/', views.registrar_usuario, name='register'),
     path('logout/', views.logout_usuario, name='logout'),
     
+    # Recuperación de contraseña
+    path('password-reset/', views.password_reset_request, name='password_reset_request'),
+    path('password-reset-confirm/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
+    
     # Panel de usuario
     path('my-account/', views.my_account, name='my_account'),
     path('my-account/orders/', views.my_account_orders, name='my_account_orders'),

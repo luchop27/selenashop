@@ -1,4 +1,5 @@
 from apps.productos.models import Categoria
+from .cart import Cart
 
 
 def categorias_menu(request):
@@ -14,3 +15,10 @@ def categorias_menu(request):
     return {
         'categorias_menu': categorias_principales
     }
+
+
+def cart(request):
+    """
+    Context processor para hacer el carrito disponible en todas las plantillas
+    """
+    return {'cart': Cart(request)}

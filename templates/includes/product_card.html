@@ -1,0 +1,68 @@
+{% load static %}
+{% comment %} Partial: tarjeta de producto (usada en home-05 y respuesta AJAX) {% endcomment %}
+<div class="card-product style-4 fl-item">
+    <div class="card-product-wrapper">
+        <a href="{{ producto.get_absolute_url }}" class="product-img">
+            {% if producto.main_image_src %}
+                <img class="lazyload img-product" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}" alt="{{ producto.nombre }}">
+            {% else %}
+                <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}" src="{% static 'images/products/placeholder.jpg' %}" alt="{{ producto.nombre }}">
+            {% endif %}
+            {% if producto.hover_image_src %}
+                <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}" src="{{ producto.hover_image_src }}" alt="{{ producto.nombre }}">
+            {% endif %}
+        </a>
+        <div class="list-product-btn column-right">
+            <a href="#" class="box-icon wishlist bg_white round btn-icon-action">
+                <span class="icon icon-heart"></span>
+                <span class="tooltip">Add to Wishlist</span>
+                <span class="icon icon-delete"></span>
+            </a>
+            <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft" class="box-icon compare bg_white round btn-icon-action">
+                <span class="icon icon-compare"></span>
+                <span class="tooltip">Add to Compare</span>
+                <span class="icon icon-check"></span>
+            </a>
+            <a href="#quick_view" data-bs-toggle="modal" class="box-icon quickview bg_white round tf-btn-loading btn-open-quickview"
+               data-product-id="{{ producto.id }}"
+               data-product-name="{{ producto.nombre|escapejs }}"
+               data-product-price="{{ producto.display_price }}"
+               data-product-desc="{{ producto.descripcion_corta|escapejs }}"
+               data-product-main-image="{{ producto.main_image_src }}"
+               data-product-hover-image="{{ producto.hover_image_src }}"
+               data-product-url="{{ producto.get_absolute_url }}"
+            data-product-colors="{% if producto.colors %}{% for c in producto.colors %}{% if not forloop.first %},{% endif %}{{ c.valor }}{% endfor %}{% endif %}"
+               data-product-sizes="{% if producto.sizes %}{{ producto.sizes|join:',' }}{% endif %}">
+                <span class="icon icon-view"></span>
+                <span class="tooltip">Quick View</span>
+            </a>
+        </div>
+        {% if producto.sizes %}
+            <div class="size-list">
+                {% for s in producto.sizes %}
+                    <span>{{ s }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <a href="#quick_add" data-bs-toggle="modal" class="btn-quick-add quick-add">QUICK ADD</a>
+    </div>
+    <div class="card-product-info">
+        <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
+        <span class="price">${{ producto.display_price }}</span>
+        {% if producto.colors %}
+            <ul class="list-color-product">
+                {% for color in producto.colors %}
+                    <li class="list-color-item color-swatch{% if forloop.first %} active{% endif %}">
+                        <span class="tooltip">{{ color.valor }}</span>
+                        <span class="swatch-value bg_{{ color.valor|lower }}"></span>
+                        {% if producto.main_image_src %}
+                            <img class="lazyload" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}" alt="{{ producto.nombre }}">
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    
+</div>
+

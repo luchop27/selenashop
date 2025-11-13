@@ -1168,3 +1168,6 @@ def admin_coleccion_delete(request, pk):
 	coleccion.delete()
 	messages.success(request, f'Colección "{nombre}" eliminada.')
 	return redirect('productos:admin_colecciones_list')
+
+
+
