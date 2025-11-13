@@ -190,9 +190,9 @@
 </section>
 <!-- /Categories -->
 
-        <!-- Product -->
+
        <!-- New Arrivals -->
-<section class="flat-spacing-6">
+<section class="flat-spacing-6 line">
     <div class="container">
         <div class="flat-title mb_1 gap-14">
             <span class="title wow fadeInUp" data-wow-delay="0s">New Arrivals</span>
@@ -214,30 +214,71 @@
                     data-url="{% url 'core:api_productos_nuevos' %}">
                 <span class="text">Load more</span>
             </button>
+             
         </div>
+       
     </div>
+    
 </section>
 <!-- /New Arrivals -->
-        <!-- /Product -->
-        <!-- Banner Countdown -->
-        <section class="tf-hero-image-liquid">
-            <img class="lazyload" data-src="{% static 'images/slider/banner-countdown.png' %}" src="{% static 'images/slider/banner-countdown.png' %}"
-                alt="img-banner" loading="lazy">
-            <div class="box-content">
-                <div class="container wow fadeInUp" data-wow-delay="0s">
-                    <h2 class="heading">Last Chance Offers</h2>
-                    <p>Get Them Before They're Gone</p>
-                    <div class="tf-countdown"> <!-- style-rectangle -->
-                        <div class="js-countdown" data-timer="1007500" data-labels="Days,Hours,Mins,Secs"></div>
+
+        <!-- Store -->
+        <section class="flat-spacing-9 pb_0 ">
+            <div class="container">
+                <div class="flat-title wow fadeInUp" data-wow-delay="0s">
+                    <span class="title">Visit our store</span>
+                </div>
+                <div class="flat-tab-store flat-animate-tab">
+                    <ul class="widget-tab-2" role="tablist">
+                        <li class="nav-tab-item" role="presentation">
+                            <a href="#hongkong" class="active" data-bs-toggle="tab">Machala</a>
+                        </li>
+                        <li class="nav-tab-item" role="presentation">
+                            <a href="#london" data-bs-toggle="tab">Bodega</a>
+                        </li>
+                        
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active show" id="hongkong" role="tabpanel">
+                            <div class="widget-card-store align-items-center tf-grid-layout md-col-2">
+                                <div class="store-item-info">
+                                    <h5 class="store-heading">Tienda Machala</h5>
+                                    <div class="description">
+                                        <p>301 Front St WToronto,<br>Ecomus@support.com <br>(08) 8942 1299</p>
+                                        <p>Mon - Fri, 8:30am - 10:30pm<br>Saturday, 8:30am - 10:30pm <br>Sunday Closed
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="store-img">
+                                    <img class="lazyload" data-src="images/shop/store/tienda.png"
+                                        src="images/shop/store/tienda.png" alt="store-img">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="london" role="tabpanel">
+                            <div class="widget-card-store align-items-center tf-grid-layout md-col-2">
+                                <div class="store-item-info">
+                                    <h5 class="store-heading">Bodega Machala</h5>
+                                    <div class="description">
+                                        <p>301 Front St WToronto,<br>Ecomus@support.com <br>(08) 8942 1299</p>
+                                        <p>Mon - Fri, 8:30am - 10:30pm<br>Saturday, 8:30am - 10:30pm <br>Sunday Closed
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="store-img">
+                                    <img class="lazyload" data-src="images/shop/store/bodega.jpeg"
+                                        src="images/shop/store/bodega.jpeg" alt="store-img">
+                                </div>
+                            </div>
+                        </div>
+                        
                     </div>
-                    <a href="shop-default.html" class="tf-btn btn-fill btn-md animate-hover-btn radius-3">Shop now -
-                        $129</a>
                 </div>
             </div>
         </section>
-        <!-- /Banner Countdown -->
+        <!-- /Store -->
         <!-- Look book -->
-        <section class="flat-spacing-16">
+        <!-- <section class="flat-spacing-16">
             <div class="container">
                 <div class="flat-lookbook-v2">
                     <div class="col-left">
@@ -423,8 +464,9 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </section> -->
         <!-- /Look book -->
+
         <!-- Icon box -->
         <section class="flat-spacing-9 flat-iconbox-v2">
             <div class="container">

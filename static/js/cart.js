@@ -106,8 +106,9 @@
                             <div class="price">$${parseFloat(product.precio).toFixed(2)}</div>
                         </div>
                         <div class="tf-minicart-recommendations-item-quickview">
-                            <a href="#quick_view" data-bs-toggle="modal" class="btn-show-quickview hover-tooltip">
+                            <a href="${product.url}" class="hover-tooltip">
                                 <span class="icon icon-view"></span>
+                                <span class="tooltip">View Details</span>
                             </a>
                         </div>
                     </div>

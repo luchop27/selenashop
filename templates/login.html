@@ -16,13 +16,22 @@
                         <div id="recover">
                             <h5 class="mb_24">Reset your password</h5>
                             <p class="mb_30">We will send you an email to reset your password</p>
+                            
+                            {% if reset_messages %}
+                                {% for message in reset_messages %}
+                                    <div class="alert alert-{{ message.tags }} mb_20">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            
                             <div>
-                                <form class="" id="login-form" action="#" method="post" accept-charset="utf-8"
-                                    data-mailchimp="true">
+                                <form class="" id="password-reset-form" action="{% url 'usuarios:password_reset_request' %}" method="post">
+                                    {% csrf_token %}
                                     <div class="tf-field style-1 mb_15">
                                         <input class="tf-field-input tf-input" placeholder="" type="email"
-                                            id="property3" name="email">
-                                        <label class="tf-field-label fw-4 text_black-2" for="property3">Email *</label>
+                                            id="reset-email" name="email" required>
+                                        <label class="tf-field-label fw-4 text_black-2" for="reset-email">Email *</label>
                                     </div>
                                     <div class="mb_20">
                                         <a href="#login" class="tf-btn btn-line">Cancel</a>
