@@ -385,6 +385,10 @@ def product_detail(request, producto_id=None):
         
         # Obtener todas las variantes
         variantes = list(producto.variantes.all())
+        print(f"DEBUG - Producto ID: {producto.id}, Nombre: {producto.nombre}")
+        print(f"DEBUG - Total variantes encontradas: {len(variantes)}")
+        for v in variantes:
+            print(f"DEBUG - Variante ID: {v.id}, Talla: {v.talla}, Color: {v.color}, Stock: {v.stock}")
         
         # Extraer colores únicos
         colores_disponibles = []
@@ -558,10 +562,44 @@ def product_detail(request, producto_id=None):
                         tallas_vistas_rec.add(codigo)
             prod.sizes = tallas_rec
         
+        # Obtener información adicional del producto
+        from apps.productos.models import ShippingInfo, ReturnPolicy, GlobalProductContent
+        
+        # Global product content (Features, Materials, Care instructions)
+        global_content = GlobalProductContent.objects.filter(activo=True).first()
+        
+        # Shipping info (obtener la primera activa)
+        shipping_info = ShippingInfo.objects.filter(activo=True).first()
+        
+        # Return policies (obtener todas las activas)
+        return_policies = ReturnPolicy.objects.filter(activo=True).order_by('orden')
+        
+        # Preparar datos de variantes con stock para JavaScript
+        import json
+        variantes_stock = {}
+        for variante in variantes:
+            if variante.talla:
+                key = f"{variante.talla.codigo}"
+                # Solo agregar color a la clave si realmente existe y no está vacío
+                if variante.color and variante.color.strip():
+                    key += f"_{variante.color}"
+                variantes_stock[key] = {
+                    'id': variante.id,
+                    'stock': variante.stock,
+                    'talla': variante.talla.codigo if variante.talla else None,
+                    'color': variante.color if variante.color else '',
+                    'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
+                }
+                # Debug: imprimir información de la variante
+                print(f"DEBUG Backend - Clave: '{key}' - Stock: {variante.stock} - Precio: {variante.precio} - Color: '{variante.color}'")
+        variantes_json = json.dumps(variantes_stock)
+        print(f"DEBUG Backend - Variantes JSON completo: {variantes_json}")
+        
         context = {
             'producto': producto,
             'imagenes': imagenes,
             'variantes': variantes,
+            'variantes_json': variantes_json,
             'colores_disponibles': colores_disponibles,
             'tallas_disponibles': tallas_disponibles,
             'precio_min': precio_min,
@@ -569,6 +607,9 @@ def product_detail(request, producto_id=None):
             'tiene_descuento': tiene_descuento,
             'productos_relacionados': productos_relacionados,
             'productos_recientes': productos_recientes,
+            'global_content': global_content,
+            'shipping_info': shipping_info,
+            'return_policies': return_policies,
         }
     else:
         # Sin ID, mostrar template demo

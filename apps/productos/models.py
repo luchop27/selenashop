@@ -394,3 +394,136 @@ class VarianteAtributo(models.Model):
 
     def __str__(self):
         return f"{self.variante} - {self.valor_atributo}"
+
+
+# ------------------------------
+# GLOBAL CONTENT SETTINGS
+# ------------------------------
+class GlobalProductContent(models.Model):
+    """
+    Contenido global para las páginas de producto (Features, Materials Care, etc.)
+    Solo debe existir UNA instancia de este modelo.
+    """
+    # Features Section
+    features_content = models.TextField(
+        blank=True,
+        help_text="HTML para la sección Features. Ej: <li>Front button placket</li>"
+    )
+    
+    # Materials Care Section  
+    materials_content = models.TextField(
+        blank=True,
+        help_text="HTML para Materials Care. Ej: <li>Content: 100% Cotton</li>"
+    )
+    
+    # Care Instructions Icons (mantener los íconos y descripciones)
+    care_icon_1 = models.CharField(max_length=50, default="icon-machine", help_text="Clase CSS del ícono 1")
+    care_text_1 = models.CharField(max_length=200, default="Machine wash max. 30ºC. Short spin.")
+    
+    care_icon_2 = models.CharField(max_length=50, default="icon-iron", help_text="Clase CSS del ícono 2")
+    care_text_2 = models.CharField(max_length=200, default="Iron maximum 110ºC.")
+    
+    care_icon_3 = models.CharField(max_length=50, default="icon-bleach", help_text="Clase CSS del ícono 3")
+    care_text_3 = models.CharField(max_length=200, default="Do not bleach/bleach.")
+    
+    care_icon_4 = models.CharField(max_length=50, default="icon-dry-clean", help_text="Clase CSS del ícono 4")
+    care_text_4 = models.CharField(max_length=200, default="Do not dry clean.")
+    
+    care_icon_5 = models.CharField(max_length=50, default="icon-tumble-dry", help_text="Clase CSS del ícono 5")
+    care_text_5 = models.CharField(max_length=200, default="Tumble dry, medium hear.")
+    
+    # Bottom text with icons
+    product_code_text = models.CharField(
+        max_length=300,
+        default="LT01: 70% wool, 15% polyester, 10% polyamide, 5% acrylic 900 Grms/mt",
+        help_text="Texto que aparece debajo de los íconos SVG"
+    )
+    
+    activo = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = "Contenido Global de Productos"
+        verbose_name_plural = "Contenido Global de Productos"
+    
+    def __str__(self):
+        return "Global Product Content Settings"
+    
+    def save(self, *args, **kwargs):
+        # Asegurar que solo exista una instancia (Singleton pattern)
+        if not self.pk and GlobalProductContent.objects.exists():
+            raise ValueError('Solo puede existir una instancia de GlobalProductContent')
+        return super().save(*args, **kwargs)
+
+
+# ------------------------------
+# SHIPPING & DELIVERY
+# ------------------------------
+class ShippingInfo(models.Model):
+    """
+    Información de envío general o por producto.
+    """
+    titulo = models.CharField(max_length=200, default="Shipping & Delivery")
+    descripcion = models.TextField(
+        help_text="Descripción general de la política de envío"
+    )
+    tiempo_nacional = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Ej: 3-6 días"
+    )
+    tiempo_internacional = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Ej: 12-26 días"
+    )
+    costo_envio = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Costo de envío estándar"
+    )
+    envio_gratis_desde = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Monto mínimo para envío gratis"
+    )
+    activo = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = "Información de Envío"
+        verbose_name_plural = "Información de Envío"
+    
+    def __str__(self):
+        return self.titulo
+
+
+# ------------------------------
+# RETURN POLICIES
+# ------------------------------
+class ReturnPolicy(models.Model):
+    """
+    Políticas de devolución con íconos opcionales.
+    """
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    icono = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Clase CSS del ícono (opcional)"
+    )
+    dias_devolucion = models.PositiveIntegerField(
+        default=30,
+        help_text="Días permitidos para devolución"
+    )
+    orden = models.PositiveIntegerField(default=0)
+    activo = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['orden']
+        verbose_name = "Política de Devolución"
+        verbose_name_plural = "Políticas de Devolución"
+    
+    def __str__(self):
+        return self.titulo

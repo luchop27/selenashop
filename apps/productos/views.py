@@ -692,15 +692,44 @@ def admin_producto_add(request):
 				atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
 				
 				# Crear la variante usando el precio_base del producto
-				from .models import Variante, VarianteAtributo, ValorAtributo
+				from .models import Variante, VarianteAtributo, ValorAtributo, Talla
+				
+				# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
+				talla_obj = None
+				color_valor = None
+				
+				try:
+					atributos_data = json.loads(atributos_json)
+					for attr in atributos_data:
+						atributo_nombre = attr.get('atributoNombre', '').lower()
+						valor_nombre = attr.get('valorNombre', '')
+						
+						# Si es una talla, buscar o crear el objeto Talla
+						if 'talla' in atributo_nombre and valor_nombre:
+							talla_obj, created = Talla.objects.get_or_create(
+								codigo=valor_nombre.upper(),
+								defaults={'nombre': valor_nombre}
+							)
+							print(f"DEBUG - Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
+						
+						# Si es color, guardarlo
+						elif 'color' in atributo_nombre and valor_nombre:
+							color_valor = valor_nombre
+				except Exception as e:
+					print(f"Error extrayendo talla/color de atributos: {e}")
+				
+				# Crear la variante con la talla asignada
 				variante = Variante.objects.create(
 					producto=producto,
+					talla=talla_obj,  # Asignar la talla al campo ForeignKey
+					color=color_valor,  # Asignar el color al campo CharField
 					sku=sku if sku else f'VAR-{producto.id}-{variante_index}',
-					precio=producto.precio_base,  # Usar el precio_base del producto
+					precio=producto.precio_base,
 					stock=int(stock) if stock else 0
 				)
+				print(f"DEBUG - Variante creada: ID={variante.id}, Talla={variante.talla}, Color={variante.color}, Stock={variante.stock}")
 				
-				# Asociar atributos a la variante
+				# Asociar atributos a la variante (para mantener compatibilidad con sistema de atributos)
 				try:
 					atributos_data = json.loads(atributos_json)
 					for attr in atributos_data:
@@ -802,38 +831,68 @@ def admin_producto_edit(request, pk):
 				if sku_key not in request.POST:
 					break
 				
-				sku = request.POST.get(sku_key, '').strip()
-				stock = request.POST.get(f'variante_{variante_index}_stock', '0')
-				atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
-				
-				# Crear la variante usando el precio_base del producto
-				from .models import Variante, VarianteAtributo, ValorAtributo
-				variante = Variante.objects.create(
-					producto=producto,
-					sku=sku if sku else f'VAR-{producto.id}-{variante_index}',
-					precio=producto.precio_base,  # Usar el precio_base del producto
-					stock=int(stock) if stock else 0
-				)
-				
-				# Asociar atributos a la variante
-				try:
-					atributos_data = json.loads(atributos_json)
-					for attr in atributos_data:
-						valor_id = attr.get('valorId')
-						if valor_id:
-							valor_atributo = ValorAtributo.objects.get(id=valor_id)
-							VarianteAtributo.objects.create(
-								variante=variante,
-								valor_atributo=valor_atributo
-							)
-				except Exception as e:
-					print(f"Error procesando atributos de variante: {e}")
-				
-				variante_index += 1
 			
-			total_imagenes = len(imagenes) if imagenes else 0
-			messages.success(request, f'Producto "{producto.nombre}" actualizado exitosamente con {variante_index} variante(s) y {total_imagenes} nueva(s) imagen(es).')
-			return redirect('productos:admin_productos_list')
+			sku = request.POST.get(sku_key, '').strip()
+			stock = request.POST.get(f'variante_{variante_index}_stock', '0')
+			atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
+			
+			# Crear la variante usando el precio_base del producto
+			from .models import Variante, VarianteAtributo, ValorAtributo, Talla
+			
+			# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
+			talla_obj = None
+			color_valor = None
+			
+			try:
+				atributos_data = json.loads(atributos_json)
+				for attr in atributos_data:
+					atributo_nombre = attr.get('atributoNombre', '').lower()
+					valor_nombre = attr.get('valorNombre', '')
+					
+					# Si es una talla, buscar o crear el objeto Talla
+					if 'talla' in atributo_nombre and valor_nombre:
+						talla_obj, created = Talla.objects.get_or_create(
+							codigo=valor_nombre.upper(),
+							defaults={'nombre': valor_nombre}
+						)
+						print(f"DEBUG - Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
+					
+					# Si es color, guardarlo
+					elif 'color' in atributo_nombre and valor_nombre:
+						color_valor = valor_nombre
+			except Exception as e:
+				print(f"Error extrayendo talla/color de atributos: {e}")
+			
+			# Crear la variante con la talla asignada
+			variante = Variante.objects.create(
+				producto=producto,
+				talla=talla_obj,  # Asignar la talla al campo ForeignKey
+				color=color_valor,  # Asignar el color al campo CharField
+				sku=sku if sku else f'VAR-{producto.id}-{variante_index}',
+				precio=producto.precio_base,
+				stock=int(stock) if stock else 0
+			)
+			print(f"DEBUG - Variante creada: ID={variante.id}, Talla={variante.talla}, Color={variante.color}, Stock={variante.stock}")
+			
+			# Asociar atributos a la variante (para mantener compatibilidad con sistema de atributos)
+			try:
+				atributos_data = json.loads(atributos_json)
+				for attr in atributos_data:
+					valor_id = attr.get('valorId')
+					if valor_id:
+						valor_atributo = ValorAtributo.objects.get(id=valor_id)
+						VarianteAtributo.objects.create(
+							variante=variante,
+							valor_atributo=valor_atributo
+						)
+			except Exception as e:
+				print(f"Error procesando atributos de variante: {e}")
+			
+			variante_index += 1
+		
+		total_imagenes = len(imagenes) if imagenes else 0
+		messages.success(request, f'Producto "{producto.nombre}" actualizado exitosamente con {variante_index} variante(s) y {total_imagenes} nueva(s) imagen(es).')
+		return redirect('productos:admin_productos_list')
 	else:
 		form = ProductoForm(instance=producto)
 	
@@ -841,13 +900,57 @@ def admin_producto_edit(request, pk):
 	variantes_data = []
 	for variante in producto.variantes.all():
 		atributos = []
-		for va in variante.atributos.all():
-			atributos.append({
-				'atributoId': va.valor_atributo.atributo.id,
-				'atributoNombre': va.valor_atributo.atributo.nombre,
-				'valorId': va.valor_atributo.id,
-				'valorNombre': va.valor_atributo.valor,
-			})
+		
+		# Primero intentar extraer desde campos directos (talla FK y color CharField)
+		if variante.talla:
+			# Buscar el ValorAtributo correspondiente a la talla para obtener IDs
+			try:
+				from .models import Atributo, ValorAtributo
+				atributo_talla = Atributo.objects.filter(nombre__icontains='talla').first()
+				if atributo_talla:
+					valor_talla = ValorAtributo.objects.filter(
+						atributo=atributo_talla,
+						valor=variante.talla.codigo
+					).first()
+					if valor_talla:
+						atributos.append({
+							'atributoId': atributo_talla.id,
+							'atributoNombre': atributo_talla.nombre,
+							'valorId': valor_talla.id,
+							'valorNombre': valor_talla.valor,
+						})
+			except Exception as e:
+				print(f"Error buscando atributo de talla: {e}")
+		
+		if variante.color:
+			# Buscar el ValorAtributo correspondiente al color
+			try:
+				atributo_color = Atributo.objects.filter(nombre__icontains='color').first()
+				if atributo_color:
+					valor_color = ValorAtributo.objects.filter(
+						atributo=atributo_color,
+						valor=variante.color
+					).first()
+					if valor_color:
+						atributos.append({
+							'atributoId': atributo_color.id,
+							'atributoNombre': atributo_color.nombre,
+							'valorId': valor_color.id,
+							'valorNombre': valor_color.valor,
+						})
+			except Exception as e:
+				print(f"Error buscando atributo de color: {e}")
+		
+		# Si no se encontraron atributos desde campos directos, buscar en sistema de atributos
+		if not atributos:
+			for va in variante.atributos.all():
+				atributos.append({
+					'atributoId': va.valor_atributo.atributo.id,
+					'atributoNombre': va.valor_atributo.atributo.nombre,
+					'valorId': va.valor_atributo.id,
+					'valorNombre': va.valor_atributo.valor,
+				})
+		
 		variantes_data.append({
 			'sku': variante.sku,
 			'precio': str(variante.precio),

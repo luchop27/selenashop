@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block content %}
         <!-- breadcrumb -->
@@ -114,22 +114,25 @@
                                             <div class="price">${{ precio_min|default:producto.precio_base }}</div>
                                         {% endif %}
                                     </div>
-                                    <div class="tf-product-info-liveview">
-                                        <div class="liveview-count">20</div>
-                                        <p class="fw-6">People are viewing this right now</p>
-                                    </div>
-                                    <div class="tf-product-info-countdown">
-                                        <div class="countdown-wrap">
-                                            <div class="countdown-title">
-                                                <i class="icon-time tf-ani-tada"></i>
-                                                <p>HURRY UP! SALE ENDS IN:</p>
-                                            </div>
-                                            <div class="tf-countdown style-1">
-                                                <div class="js-countdown" data-timer="1007500"
-                                                    data-labels="Days :,Hours :,Mins :,Secs"></div>
-                                            </div>
+                                    {% if producto.marca or producto.categoria or producto.tipo %}
+                                    <div class="tf-product-info-meta mb_15">
+                                        {% if producto.marca %}
+                                        <div class="meta-item">
+                                            <span class="fw-6">Brand:</span> <span>{{ producto.marca }}</span>
                                         </div>
+                                        {% endif %}
+                                        {% if producto.categoria %}
+                                        <div class="meta-item">
+                                            <span class="fw-6">Category:</span> <span>{{ producto.categoria.nombre }}</span>
+                                        </div>
+                                        {% endif %}
+                                        {% if producto.tipo %}
+                                        <div class="meta-item">
+                                            <span class="fw-6">Type:</span> <span>{{ producto.tipo }}</span>
+                                        </div>
+                                        {% endif %}
                                     </div>
+                                    {% endif %}
                                     <div class="tf-product-info-variant-picker">
                                         {% if colores_disponibles %}
                                         <div class="variant-picker-item">
@@ -181,18 +184,12 @@
                                             <a href="#"
                                                 class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Add
                                                     to cart -&nbsp;</span><span
-                                                    class="tf-qty-price total-price">$8.00</span></a>
+                                                    class="tf-qty-price total-price">${{ precio_min|default:producto.precio_base }}</span></a>
                                             <a href="#"
                                                 class="tf-product-btn-wishlist hover-tooltip box-icon bg_white wishlist btn-icon-action">
                                                 <span class="icon icon-heart"></span>
                                                 <span class="tooltip">Add to Wishlist</span>
                                                 <span class="icon icon-delete"></span>
-                                            </a>
-                                            <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                                class="tf-product-btn-wishlist hover-tooltip box-icon bg_white compare btn-icon-action">
-                                                <span class="icon icon-compare"></span>
-                                                <span class="tooltip">Add to Compare</span>
-                                                <span class="icon icon-check"></span>
                                             </a>
                                             <div class="w-100">
                                                 <a href="#" class="btns-full">Buy with <img
@@ -202,12 +199,6 @@
                                         </form>
                                     </div>
                                     <div class="tf-product-info-extra-link">
-                                        <a href="#compare_color" data-bs-toggle="modal" class="tf-product-extra-icon">
-                                            <div class="icon">
-                                                <img src="images/item/compare.svg" alt="">
-                                            </div>
-                                            <div class="text fw-6">Compare color</div>
-                                        </a>
                                         <a href="#ask_question" data-bs-toggle="modal" class="tf-product-extra-icon">
                                             <div class="icon">
                                                 <i class="icon-question"></i>
@@ -347,64 +338,81 @@
                             <div class="widget-content-tab">
                                 <div class="widget-content-inner active">
                                     <div class="">
+                                        {% if producto.descripcion_larga %}
+                                        <div class="mb_30">
+                                            {{ producto.descripcion_larga|linebreaks }}
+                                        </div>
+                                        {% elif producto.descripcion_corta %}
                                         <p class="mb_30">
-                                            Button-up shirt sleeves and a relaxed silhouette. It’s tailored with drapey,
-                                            crinkle-texture fabric that’s made from LENZING™ ECOVERO™ Viscose —
-                                            responsibly
-                                            sourced wood-based
-                                            fibres produced through a process that reduces impact on forests,
-                                            biodiversity and
-                                            water supply.
+                                            {{ producto.descripcion_corta }}
                                         </p>
+                                        {% else %}
+                                        <p class="mb_30">
+                                            Información del producto no disponible.
+                                        </p>
+                                        {% endif %}
+                                        {% if global_content %}
                                         <div class="tf-product-des-demo">
                                             <div class="right">
+                                                {% if global_content.features_content %}
                                                 <h3 class="fs-16 fw-5">Features</h3>
                                                 <ul>
-                                                    <li>Front button placket</li>
-                                                    <li> Adjustable sleeve tabs</li>
-                                                    <li>Babaton embroidered crest at placket and hem</li>
+                                                    {{ global_content.features_content|safe }}
                                                 </ul>
+                                                {% endif %}
+                                                
+                                                {% if global_content.materials_content %}
                                                 <h3 class="fs-16 fw-5">Materials Care</h3>
                                                 <ul class="mb-0">
-                                                    <li>Content: 100% LENZING™ ECOVERO™ Viscose</li>
-                                                    <li>Care: Hand wash</li>
-                                                    <li>Imported</li>
+                                                    {{ global_content.materials_content|safe }}
                                                 </ul>
+                                                {% endif %}
                                             </div>
                                             <div class="left">
                                                 <h3 class="fs-16 fw-5">Materials Care</h3>
+                                                {% if global_content.care_text_1 %}
                                                 <div class="d-flex gap-10 mb_15 align-items-center">
                                                     <div class="icon">
-                                                        <i class="icon-machine"></i>
+                                                        <i class="{{ global_content.care_icon_1 }}"></i>
                                                     </div>
-                                                    <span>Machine wash max. 30ºC. Short spin.</span>
+                                                    <span>{{ global_content.care_text_1 }}</span>
                                                 </div>
+                                                {% endif %}
+                                                {% if global_content.care_text_2 %}
                                                 <div class="d-flex gap-10 mb_15 align-items-center">
                                                     <div class="icon">
-                                                        <i class="icon-iron"></i>
+                                                        <i class="{{ global_content.care_icon_2 }}"></i>
                                                     </div>
-                                                    <span>Iron maximum 110ºC.</span>
+                                                    <span>{{ global_content.care_text_2 }}</span>
                                                 </div>
+                                                {% endif %}
+                                                {% if global_content.care_text_3 %}
                                                 <div class="d-flex gap-10 mb_15 align-items-center">
                                                     <div class="icon">
-                                                        <i class="icon-bleach"></i>
+                                                        <i class="{{ global_content.care_icon_3 }}"></i>
                                                     </div>
-                                                    <span>Do not bleach/bleach.</span>
+                                                    <span>{{ global_content.care_text_3 }}</span>
                                                 </div>
+                                                {% endif %}
+                                                {% if global_content.care_text_4 %}
                                                 <div class="d-flex gap-10 mb_15 align-items-center">
                                                     <div class="icon">
-                                                        <i class="icon-dry-clean"></i>
+                                                        <i class="{{ global_content.care_icon_4 }}"></i>
                                                     </div>
-                                                    <span>Do not dry clean.</span>
+                                                    <span>{{ global_content.care_text_4 }}</span>
                                                 </div>
+                                                {% endif %}
+                                                {% if global_content.care_text_5 %}
                                                 <div class="d-flex gap-10 align-items-center">
                                                     <div class="icon">
-                                                        <i class="icon-tumble-dry"></i>
+                                                        <i class="{{ global_content.care_icon_5 }}"></i>
                                                     </div>
-                                                    <span>Tumble dry, medium hear.</span>
+                                                    <span>{{ global_content.care_text_5 }}</span>
                                                 </div>
+                                                {% endif %}
                                             </div>
                                         </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="widget-content-inner">
@@ -634,40 +642,43 @@
                                     </div>
                                 </div>
                                 <div class="widget-content-inner">
+                                    {% if shipping_info %}
                                     <div class="tf-page-privacy-policy">
-                                        <div class="title">The Company Private Limited Policy</div>
-                                        <p>The Company Private Limited and each of their respective subsidiary, parent
-                                            and affiliated companies is deemed to operate this Website (“we” or “us”)
-                                            recognizes that you care how information about you is used and shared. We
-                                            have created this Privacy Policy to inform you what information we collect
-                                            on the Website, how we use your information and the choices you have about
-                                            the way your information is collected and used. Please read this Privacy
-                                            Policy carefully. Your use of the Website indicates that you have read and
-                                            accepted our privacy practices, as outlined in this Privacy Policy.</p>
-                                        <p>Please be advised that the practices described in this Privacy Policy apply
-                                            to information gathered by us or our subsidiaries, affiliates or agents: (i)
-                                            through this Website, (ii) where applicable, through our Customer Service
-                                            Department in connection with this Website, (iii) through information
-                                            provided to us in our free standing retail stores, and (iv) through
-                                            information provided to us in conjunction with marketing promotions and
-                                            sweepstakes.</p>
-                                        <p>We are not responsible for the content or privacy practices on any websites.
-                                        </p>
-                                        <p>We reserve the right, in our sole discretion, to modify, update, add to,
-                                            discontinue, remove or otherwise change any portion of this Privacy Policy,
-                                            in whole or in part, at any time. When we amend this Privacy Policy, we will
-                                            revise the “last updated” date located at the top of this Privacy Policy.
-                                        </p>
-                                        <p>If you provide information to us or access or use the Website in any way
-                                            after this Privacy Policy has been changed, you will be deemed to have
-                                            unconditionally consented and agreed to such changes. The most current
-                                            version of this Privacy Policy will be available on the Website and will
-                                            supersede all previous versions of this Privacy Policy.</p>
-                                        <p>If you have any questions regarding this Privacy Policy, you should contact
-                                            our Customer Service Department by email at marketing@company.com</p>
+                                        <div class="title">{{ shipping_info.titulo }}</div>
+                                        <p>{{ shipping_info.descripcion|linebreaks }}</p>
+                                        {% if shipping_info.tiempo_nacional or shipping_info.tiempo_internacional %}
+                                        <p><strong>Delivery Times:</strong></p>
+                                        <ul>
+                                            {% if shipping_info.tiempo_nacional %}
+                                            <li>National: {{ shipping_info.tiempo_nacional }}</li>
+                                            {% endif %}
+                                            {% if shipping_info.tiempo_internacional %}
+                                            <li>International: {{ shipping_info.tiempo_internacional }}</li>
+                                            {% endif %}
+                                        </ul>
+                                        {% endif %}
+                                        {% if shipping_info.envio_gratis_desde %}
+                                        <p><strong>Free shipping</strong> for orders over ${{ shipping_info.envio_gratis_desde }}</p>
+                                        {% endif %}
                                     </div>
+                                    {% else %}
+                                    <div class="tf-page-privacy-policy">
+                                        <div class="title">Shipping & Delivery</div>
+                                        <p>Shipping information not available.</p>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 <div class="widget-content-inner">
+                                    {% if return_policies %}
+                                    <div class="tf-page-privacy-policy mb-4">
+                                        <div class="title">Return Policies</div>
+                                        <ul class="mb-0">
+                                            {% for policy in return_policies %}
+                                            <li class="mb-2"><strong>{{ policy.titulo }}:</strong> {{ policy.descripcion }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
                                     <ul class="d-flex justify-content-center mb_18">
                                         <li class="">
                                             <svg viewBox="0 0 40 40" width="35px" height="35px" color="#222"
@@ -726,8 +737,9 @@
                                             </svg>
                                         </li>
                                     </ul>
-                                    <p class="text-center text-paragraph">LT01: 70% wool, 15% polyester, 10% polyamide,
-                                        5% acrylic 900 Grms/mt</p>
+                                    {% if global_content.product_code_text %}
+                                    <p class="text-center text-paragraph">{{ global_content.product_code_text }}</p>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -2824,5 +2836,310 @@
     </div>
     <!-- /modal find_size -->
 
+    <!-- Script para control de cantidad según stock -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Datos de variantes con stock desde Django
+        const variantesData = {{ variantes_json|safe }};
+        console.log('Variantes disponibles:', variantesData);
+        
+        // Elementos del DOM
+        const quantityInput = document.querySelector('.quantity-product');
+        const btnIncrease = document.querySelector('.btn-increase');
+        const btnDecrease = document.querySelector('.btn-decrease');
+        const sizeInputs = document.querySelectorAll('input[name="size1"]');
+        const colorInputs = document.querySelectorAll('input[name="color1"]');
+        const totalPriceElement = document.querySelector('.tf-qty-price.total-price');
+        
+        // Variables globales para que cart.js pueda acceder
+        window.currentMaxStock = 0; // Inicialmente sin stock hasta seleccionar variante
+        window.currentVariantId = null;
+        let currentPrice = 0; // Se actualizará al seleccionar variante
+        let isProcessing = false; // Flag para prevenir clics múltiples
+        
+        // Función para obtener la variante actual según talla y color seleccionados
+        function getCurrentVariant() {
+            const selectedSize = document.querySelector('input[name="size1"]:checked');
+            const selectedColor = document.querySelector('input[name="color1"]:checked');
+            
+            if (!selectedSize) {
+                console.log('No hay talla seleccionada');
+                return null;
+            }
+            
+            // Obtener el label asociado al input
+            const sizeLabel = selectedSize.nextElementSibling;
+            const sizeValue = sizeLabel ? sizeLabel.getAttribute('data-value') : '';
+            
+            let colorValue = '';
+            if (selectedColor) {
+                const colorLabel = selectedColor.nextElementSibling;
+                colorValue = colorLabel ? colorLabel.getAttribute('data-color') : '';
+            }
+            
+            console.log('========== DEBUG ==========');
+            console.log('Input talla checked:', selectedSize);
+            console.log('Label de talla:', sizeLabel);
+            console.log('Talla seleccionada:', sizeValue);
+            console.log('Color seleccionado:', colorValue);
+            console.log('Variantes disponibles:', Object.keys(variantesData));
+            
+            // Buscar la variante en los datos
+            // IMPORTANTE: Solo agregar color si realmente existe y no es vacío
+            let key = sizeValue;
+            if (colorValue && colorValue.trim() !== '') {
+                key += '_' + colorValue;
+            }
+            
+            console.log('Buscando variante con clave: "' + key + '"');
+            const variant = variantesData[key];
+            console.log('Variante encontrada:', variant);
+            
+            if (!variant) {
+                console.error('⚠️ NO SE ENCONTRÓ LA VARIANTE');
+                console.error('Clave buscada: "' + key + '"');
+                console.error('Claves disponibles:', Object.keys(variantesData));
+                console.table(variantesData);
+            } else {
+                console.log('✅ Variante encontrada:');
+                console.log('  - ID:', variant.id);
+                console.log('  - Stock:', variant.stock);
+                console.log('  - Precio:', variant.precio);
+                console.log('  - Talla:', variant.talla);
+                console.log('  - Color:', variant.color);
+            }
+            console.log('===========================');
+            
+            return variant || null;
+        }
+        
+        // Función para actualizar el stock máximo
+        function updateMaxStock() {
+            const variant = getCurrentVariant();
+            
+            if (variant) {
+                window.currentMaxStock = variant.stock;
+                window.currentVariantId = variant.id;
+                currentPrice = parseFloat(variant.precio);
+                
+                console.log('Stock máximo actualizado:', window.currentMaxStock);
+                console.log('Precio actualizado:', currentPrice);
+                
+                // Ajustar cantidad actual si excede el nuevo stock máximo
+                const currentQty = parseInt(quantityInput.value) || 1;
+                if (currentQty > window.currentMaxStock) {
+                    quantityInput.value = window.currentMaxStock > 0 ? window.currentMaxStock : 1;
+                }
+                
+                // Si no hay stock, poner en 1 pero deshabilitar botones
+                if (window.currentMaxStock === 0) {
+                    quantityInput.value = 1;
+                }
+                
+                // Actualizar botones según stock
+                updateButtons();
+                updateTotalPrice();
+            } else {
+                console.warn('No se encontró variante para la selección actual');
+                window.currentMaxStock = 0;
+                window.currentVariantId = null;
+                quantityInput.value = 1;
+                updateButtons();
+                updateTotalPrice();
+            }
+        }
+        
+        // Función para actualizar el estado de los botones
+        function updateButtons() {
+            const currentQty = parseInt(quantityInput.value) || 1;
+            
+            console.log('Actualizando botones - Cantidad:', currentQty, 'Stock máximo:', window.currentMaxStock);
+            
+            // Deshabilitar botón de incremento si llegamos al stock máximo o no hay stock
+            if (currentQty >= window.currentMaxStock || window.currentMaxStock === 0) {
+                btnIncrease.classList.add('disabled');
+                btnIncrease.style.opacity = '0.5';
+                btnIncrease.style.cursor = 'not-allowed';
+                btnIncrease.style.pointerEvents = 'none';
+            } else {
+                btnIncrease.classList.remove('disabled');
+                btnIncrease.style.opacity = '1';
+                btnIncrease.style.cursor = 'pointer';
+                btnIncrease.style.pointerEvents = 'auto';
+            }
+            
+            // Deshabilitar botón de decremento si estamos en 1
+            if (currentQty <= 1) {
+                btnDecrease.classList.add('disabled');
+                btnDecrease.style.opacity = '0.5';
+                btnDecrease.style.cursor = 'not-allowed';
+                btnDecrease.style.pointerEvents = 'none';
+            } else {
+                btnDecrease.classList.remove('disabled');
+                btnDecrease.style.opacity = '1';
+                btnDecrease.style.cursor = 'pointer';
+                btnDecrease.style.pointerEvents = 'auto';
+            }
+        }
+        
+        // Función para actualizar el precio total
+        function updateTotalPrice() {
+            const qty = parseInt(quantityInput.value) || 1;
+            
+            // Si no hay precio (no se ha seleccionado variante), usar precio base
+            const priceToUse = currentPrice > 0 ? currentPrice : {{ producto.precio_base|default:0 }};
+            const total = (priceToUse * qty).toFixed(2);
+            
+            console.log('Calculando precio total:');
+            console.log('  - Cantidad:', qty);
+            console.log('  - Precio unitario:', priceToUse);
+            console.log('  - Total:', total);
+            
+            if (totalPriceElement) {
+                totalPriceElement.textContent = '$' + total;
+            }
+        }
+        
+        // Event listeners para cambio de talla
+        sizeInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                console.log('Cambio de talla detectado');
+                updateMaxStock();
+            });
+        });
+        
+        // Event listeners para cambio de color
+        colorInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                console.log('Cambio de color detectado');
+                updateMaxStock();
+            });
+        });
+        
+        // Event listener para incrementar cantidad con protección contra múltiples ejecuciones
+        btnIncrease.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            // Prevenir procesamiento múltiple
+            if (isProcessing) {
+                console.log('Ya procesando, ignorando click adicional');
+                return false;
+            }
+            
+            // Verificar si el botón está deshabilitado
+            if (btnIncrease.classList.contains('disabled') || btnIncrease.style.pointerEvents === 'none') {
+                console.log('Botón + está deshabilitado, ignorando click');
+                return false;
+            }
+            
+            isProcessing = true;
+            
+            const currentQty = parseInt(quantityInput.value) || 1;
+            console.log('=== INCREMENTO ===');
+            console.log('Cantidad actual:', currentQty);
+            console.log('Stock máximo:', window.currentMaxStock);
+            
+            // Validación estricta: solo incrementar si hay stock disponible
+            if (currentQty < window.currentMaxStock && window.currentMaxStock > 0) {
+                const newQty = currentQty + 1;
+                console.log('Intentando incrementar a:', newQty);
+                
+                // Triple verificación antes de asignar
+                if (newQty <= window.currentMaxStock) {
+                    quantityInput.value = newQty;
+                    console.log('✅ Cantidad actualizada a:', newQty);
+                    updateButtons();
+                    updateTotalPrice();
+                } else {
+                    console.log('❌ Bloqueado: excedería stock máximo');
+                }
+            } else {
+                console.log('❌ Bloqueado: ya en stock máximo');
+            }
+            
+            // Liberar el flag después de un pequeño delay
+            setTimeout(() => {
+                isProcessing = false;
+            }, 100);
+            
+            return false;
+        }, { capture: true });
+        
+        // Event listener para decrementar cantidad
+        btnDecrease.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            // Prevenir procesamiento múltiple
+            if (isProcessing) {
+                return false;
+            }
+            
+            // Verificar si el botón está deshabilitado
+            if (btnDecrease.classList.contains('disabled') || btnDecrease.style.pointerEvents === 'none') {
+                console.log('Botón - está deshabilitado, ignorando click');
+                return false;
+            }
+            
+            isProcessing = true;
+            
+            const currentQty = parseInt(quantityInput.value) || 1;
+            console.log('=== DECREMENTO ===');
+            console.log('Cantidad actual:', currentQty);
+            
+            if (currentQty > 1) {
+                quantityInput.value = currentQty - 1;
+                console.log('✅ Cantidad decrementada a:', currentQty - 1);
+                updateButtons();
+                updateTotalPrice();
+            }
+            
+            setTimeout(() => {
+                isProcessing = false;
+            }, 100);
+            
+            return false;
+        }, { capture: true });
+        
+        // Event listener para validar cuando el usuario termina de editar manualmente
+        quantityInput.addEventListener('blur', function() {
+            let value = parseInt(this.value) || 1;
+            
+            console.log('Validación manual (blur):', value, 'max:', window.currentMaxStock);
+            
+            // Limitar al stock máximo
+            if (value > window.currentMaxStock) {
+                value = window.currentMaxStock > 0 ? window.currentMaxStock : 1;
+                console.log('Ajustado a stock máximo:', value);
+            }
+            
+            // Mínimo 1
+            if (value < 1) {
+                value = 1;
+                console.log('Ajustado a mínimo 1');
+            }
+            
+            this.value = value;
+            updateButtons();
+            updateTotalPrice();
+        });
+        
+        // Prevenir que el input acepte valores no numéricos
+        quantityInput.addEventListener('keypress', function(e) {
+            if (e.key && !/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+        
+        // Inicializar: comenzar en 1 y obtener stock de la primera talla
+        quantityInput.value = 1;
+        updateMaxStock();
+        
+        console.log('Inicialización completa');
+    });
+    </script>
 
-    {% endblock %}
+{% endblock %}

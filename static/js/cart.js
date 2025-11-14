@@ -249,7 +249,15 @@
                 // Mostrar el modal del carrito
                 const cartModal = document.getElementById('shoppingCart');
                 if (cartModal) {
-                    const bsModal = new bootstrap.Modal(cartModal);
+                    // Usar getInstance para obtener la instancia existente o crear una nueva
+                    let bsModal = bootstrap.Modal.getInstance(cartModal);
+                    if (!bsModal) {
+                        bsModal = new bootstrap.Modal(cartModal, {
+                            backdrop: true,
+                            keyboard: true,
+                            focus: true
+                        });
+                    }
                     bsModal.show();
                 }
                 
@@ -326,10 +334,27 @@
         // Aquí podrías usar una librería de toast/notifications
     }
 
+    // Función global para limpiar backdrops residuales
+    function cleanupModalBackdrops() {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(function(backdrop) {
+            backdrop.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+
     // Event listener para el botón "Add to cart" en product detail
     document.addEventListener('DOMContentLoaded', function() {
         // Cargar el carrito al inicio
         loadCartItems();
+
+        // Listener global para limpiar backdrops cuando cualquier modal se cierra
+        document.addEventListener('hidden.bs.modal', function(event) {
+            // Pequeño delay para asegurar que Bootstrap termine su limpieza
+            setTimeout(cleanupModalBackdrops, 100);
+        });
 
         // Manejar click en botones "Add to cart"
         document.querySelectorAll('.btn-add-to-cart').forEach(function(btn) {
@@ -343,16 +368,33 @@
                     return;
                 }
 
-                // Obtener la variante seleccionada (si existe)
+                // Obtener la variante ID desde el script de control de stock
                 let varianteId = null;
-                const varianteSelect = document.querySelector('input[name="variant"]:checked, select[name="variant"]');
-                if (varianteSelect) {
-                    varianteId = varianteSelect.value || varianteSelect.dataset.varianteId;
+                if (typeof window.currentVariantId !== 'undefined' && window.currentVariantId) {
+                    varianteId = window.currentVariantId;
+                } else {
+                    // Fallback: buscar en inputs de variante
+                    const varianteSelect = document.querySelector('input[name="variant"]:checked, select[name="variant"]');
+                    if (varianteSelect) {
+                        varianteId = varianteSelect.value || varianteSelect.dataset.varianteId;
+                    }
                 }
 
                 // Obtener la cantidad
                 const quantityInput = document.querySelector('.quantity-product, input[name="number"]');
                 const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+                
+                // Validar que haya stock suficiente
+                if (typeof window.currentMaxStock !== 'undefined') {
+                    if (quantity > window.currentMaxStock) {
+                        showNotification('Stock insuficiente. Solo hay ' + window.currentMaxStock + ' unidades disponibles.', 'error');
+                        return;
+                    }
+                    if (window.currentMaxStock === 0) {
+                        showNotification('Producto sin stock disponible', 'error');
+                        return;
+                    }
+                }
 
                 // Agregar al carrito
                 addToCart(productoId, varianteId, quantity);
@@ -364,6 +406,11 @@
         if (cartModal) {
             cartModal.addEventListener('show.bs.modal', function() {
                 loadCartItems();
+            });
+            
+            // Limpiar backdrop cuando se cierra el modal
+            cartModal.addEventListener('hidden.bs.modal', function() {
+                cleanupModalBackdrops();
             });
         }
     });
