@@ -539,17 +539,19 @@ function generarVariantes() {
         variantDiv.style.cssText = 'border: 1px solid #e5e7eb; padding: 16px; border-radius: 8px; background: white;';
         
         variantDiv.innerHTML = `
-            <div class="body-text fw-7 mb-12">${nombre}</div>
+            <div class="body-text fw-7 mb-12">
+                ${nombre}
+                <span style="margin-left: 10px; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 11px; font-weight: normal;">
+                    SKU: ${skuGenerado}
+                </span>
+            </div>
             <div class="cols-lg gap16">
-                <fieldset>
-                    <div class="body-text mb-4">SKU (Generado automáticamente)</div>
-                    <input type="text" name="variante_${index}_sku" class="tf-input" value="${skuGenerado}" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
-                </fieldset>
                 <fieldset>
                     <div class="body-text mb-4">Stock</div>
                     <input type="number" name="variante_${index}_stock" class="tf-input" placeholder="0" value="0">
                 </fieldset>
             </div>
+            <input type="hidden" name="variante_${index}_sku" value="${skuGenerado}">
             <input type="hidden" name="variante_${index}_atributos" value='${JSON.stringify(combo)}'>
         `;
         

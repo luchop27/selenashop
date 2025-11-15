@@ -710,6 +710,16 @@ def cart_detail(request):
     
     items = []
     for item in cart:
+        # Obtener stock de la variante
+        stock = 0
+        if item['variante_id']:
+            try:
+                from apps.productos.models import Variante
+                variante = Variante.objects.get(id=item['variante_id'])
+                stock = variante.stock
+            except:
+                stock = 0
+        
         items.append({
             'product_id': f"{item['producto_id']}_{item['variante_id']}" if item['variante_id'] else str(item['producto_id']),
             'producto_id': item['producto_id'],
@@ -719,15 +729,17 @@ def cart_detail(request):
             'quantity': item['quantity'],
             'total': str(item['total_precio']),
             'imagen': item['imagen'],
-            'color': item.get('color'),
             'talla': item.get('talla'),
+            'stock': stock,
         })
     
     return JsonResponse({
         'success': True,
         'items': items,
         'cart_count': len(cart),
-        'cart_total': str(cart.get_total_price())
+        'cart_total': str(cart.get_total_price()),
+        'note': cart.get_note(),
+        'has_gift_wrap': cart.has_gift_wrap()
     })
 
 
@@ -744,6 +756,100 @@ def cart_clear(request):
         'cart_count': 0,
         'cart_total': '0.00'
     })
+
+
+def cart_save_note(request):
+    """
+    Vista para guardar una nota en el pedido
+    """
+    if request.method == 'POST':
+        cart = Cart(request)
+        note = request.POST.get('note', '')
+        cart.set_note(note)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Nota guardada correctamente',
+            'note': note
+        })
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
+def cart_add_gift_wrap(request):
+    """
+    Vista para agregar gift wrap al carrito
+    """
+    if request.method == 'POST':
+        cart = Cart(request)
+        cart.set_gift_wrap(True)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Gift wrap agregado',
+            'cart_total': str(cart.get_total_price()),
+            'gift_wrap_cost': '5.00'
+        })
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
+def cart_remove_gift_wrap(request):
+    """
+    Vista para remover gift wrap del carrito
+    """
+    if request.method == 'POST':
+        cart = Cart(request)
+        cart.set_gift_wrap(False)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Gift wrap removido',
+            'cart_total': str(cart.get_total_price())
+        })
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
+def view_cart(request):
+    """
+    Vista para mostrar la página completa del carrito (view-cart.html)
+    """
+    from apps.productos.models import Variante
+    
+    cart = Cart(request)
+    cart_items = []
+    
+    for item in cart:
+        # Obtener stock de la variante
+        stock = 0
+        if item['variante_id']:
+            try:
+                variante = Variante.objects.get(id=item['variante_id'])
+                stock = variante.stock
+            except:
+                stock = 0
+        
+        cart_items.append({
+            'product_id': f"{item['producto_id']}_{item['variante_id']}" if item['variante_id'] else str(item['producto_id']),
+            'producto': item['producto'],
+            'producto_id': item['producto_id'],
+            'variante_id': item['variante_id'],
+            'nombre': item['nombre'],
+            'precio': item['precio_decimal'],
+            'quantity': item['quantity'],
+            'total': item['total_precio'],
+            'imagen': item['imagen'],
+            'talla': item.get('talla'),
+            'color': item.get('color'),
+            'stock': stock,
+        })
+    
+    context = {
+        'cart_items': cart_items,
+        'cart': cart,
+        'note': cart.get_note(),
+        'has_gift_wrap': cart.has_gift_wrap(),
+    }
+    
+    return render(request, 'view-cart.html', context)
 
 
 def api_productos_nuevos(request):

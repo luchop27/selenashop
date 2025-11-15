@@ -1,5 +1,6 @@
 from apps.productos.models import Categoria
 from .cart import Cart
+from .models import DeliveryReturnInfo
 
 
 def categorias_menu(request):
@@ -22,3 +23,15 @@ def cart(request):
     Context processor para hacer el carrito disponible en todas las plantillas
     """
     return {'cart': Cart(request)}
+
+
+def delivery_return_info(request):
+    """
+    Context processor para hacer la información de Delivery & Return disponible en todas las plantillas
+    """
+    try:
+        info = DeliveryReturnInfo.objects.filter(activo=True).first()
+    except:
+        info = None
+    
+    return {'delivery_return_info': info}

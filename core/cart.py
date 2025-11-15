@@ -96,13 +96,19 @@ class Cart:
         """
         Iterar sobre los items en el carrito y obtener los productos de la BD
         """
-        product_ids = [int(item['producto_id']) for item in self.cart.values()]
+        # Filtrar solo items válidos (diccionarios, no metadatos)
+        valid_items = {k: v for k, v in self.cart.items() if not k.startswith('_') and isinstance(v, dict)}
+        
+        product_ids = [int(item['producto_id']) for item in valid_items.values()]
         
         # Obtener los productos de la base de datos
         productos = Producto.objects.filter(id__in=product_ids).prefetch_related('imagenes')
         
-        cart = self.cart.copy()
-        for item in cart.values():
+        # Hacer una copia profunda para no modificar el carrito en sesión
+        for key, item_data in valid_items.items():
+            # Crear una copia del item para no modificar el original
+            item = item_data.copy()
+            
             # Encontrar el producto correspondiente
             item['producto'] = next((p for p in productos if p.id == item['producto_id']), None)
             item['precio_decimal'] = Decimal(item['precio'])
@@ -113,13 +119,19 @@ class Cart:
         """
         Contar todos los items en el carrito
         """
-        return sum(item['quantity'] for item in self.cart.values())
+        return sum(item['quantity'] for key, item in self.cart.items() if not key.startswith('_') and isinstance(item, dict))
     
     def get_total_price(self):
         """
         Calcular el precio total de todos los items en el carrito
         """
-        return sum(Decimal(item['precio']) * item['quantity'] for item in self.cart.values())
+        subtotal = sum(Decimal(item['precio']) * item['quantity'] for key, item in self.cart.items() if not key.startswith('_') and isinstance(item, dict))
+        
+        # Agregar costo de gift wrap si está habilitado
+        if self.has_gift_wrap():
+            subtotal += Decimal('5.00')
+        
+        return subtotal
     
     def clear(self):
         """
@@ -142,3 +154,35 @@ class Cart:
             else:
                 self.remove(product_id)
             self.save()
+    
+    def set_note(self, note):
+        """
+        Guardar una nota para el pedido
+        """
+        cart_data = self.session.get(settings.CART_SESSION_ID, {})
+        cart_data['_note'] = note
+        self.session[settings.CART_SESSION_ID] = cart_data
+        self.save()
+    
+    def get_note(self):
+        """
+        Obtener la nota del pedido
+        """
+        cart_data = self.session.get(settings.CART_SESSION_ID, {})
+        return cart_data.get('_note', '')
+    
+    def set_gift_wrap(self, enabled=True):
+        """
+        Habilitar/deshabilitar gift wrap
+        """
+        cart_data = self.session.get(settings.CART_SESSION_ID, {})
+        cart_data['_gift_wrap'] = enabled
+        self.session[settings.CART_SESSION_ID] = cart_data
+        self.save()
+    
+    def has_gift_wrap(self):
+        """
+        Verificar si el gift wrap está habilitado
+        """
+        cart_data = self.session.get(settings.CART_SESSION_ID, {})
+        return cart_data.get('_gift_wrap', False)
