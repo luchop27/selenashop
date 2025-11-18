@@ -812,7 +812,7 @@ def view_cart(request):
     """
     Vista para mostrar la página completa del carrito (view-cart.html)
     """
-    from apps.productos.models import Variante
+    from apps.productos.models import Variante, Producto
     
     cart = Cart(request)
     cart_items = []
@@ -842,11 +842,17 @@ def view_cart(request):
             'stock': stock,
         })
     
+    # Obtener productos recomendados (productos aleatorios activos)
+    productos_recomendados = Producto.objects.filter(
+        activo=True
+    ).prefetch_related('imagenes', 'variantes').order_by('?')[:8]
+    
     context = {
         'cart_items': cart_items,
         'cart': cart,
         'note': cart.get_note(),
         'has_gift_wrap': cart.has_gift_wrap(),
+        'productos_recomendados': productos_recomendados,
     }
     
     return render(request, 'view-cart.html', context)
