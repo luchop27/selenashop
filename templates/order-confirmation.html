@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+        <!-- page-title -->
+        <div class="tf-page-title">
+            <div class="container-full">
+                <div class="heading text-center">Confirmación de Pedido</div>
+            </div>
+        </div>
+        <!-- /page-title -->
+
+        <!-- page-confirmation -->
+        <section class="flat-spacing-11">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-xl-8 col-lg-10">
+                        <div class="tf-page-cart-checkout widget-wrap-checkout">
+                            <!-- Success Message -->
+                            <div class="text-center mb-5">
+                                <div class="mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="bi bi-check-circle-fill text-success" viewBox="0 0 16 16">
+                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="fw-6 mb-3">¡Pedido Realizado con Éxito!</h3>
+                                <p class="text-secondary mb-2">Gracias por tu compra, {{ pedido.first_name }}.</p>
+                                <p class="text-secondary">Recibirás un correo de confirmación pronto.</p>
+                            </div>
+
+                            <!-- Order Details -->
+                            <div class="bg-light p-4 rounded mb-4">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="fw-5 mb-2">Número de Pedido</h6>
+                                        <p class="text-secondary mb-0">{{ pedido.numero_pedido }}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="fw-5 mb-2">Fecha</h6>
+                                        <p class="text-secondary mb-0">{{ pedido.created_at|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="fw-5 mb-2">Email</h6>
+                                        <p class="text-secondary mb-0">{{ pedido.email }}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="fw-5 mb-2">Teléfono</h6>
+                                        <p class="text-secondary mb-0">{{ pedido.phone }}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="fw-5 mb-2">Método de Pago</h6>
+                                        <p class="text-secondary mb-0">{{ pedido.get_metodo_pago_display }}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="fw-5 mb-2">Estado</h6>
+                                        <span class="badge bg-warning text-dark">{{ pedido.get_estado_display }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Shipping Address -->
+                            <div class="bg-light p-4 rounded mb-4">
+                                <h6 class="fw-5 mb-3">Dirección de Envío</h6>
+                                <p class="text-secondary mb-1">{{ pedido.first_name }} {{ pedido.last_name }}</p>
+                                <p class="text-secondary mb-1">{{ pedido.address }}</p>
+                                <p class="text-secondary mb-1">{{ pedido.city }}, {{ pedido.country }}</p>
+                            </div>
+
+                            <!-- Order Items -->
+                            <div class="mb-4">
+                                <h6 class="fw-5 mb-3">Productos del Pedido</h6>
+                                <ul class="wrap-checkout-product">
+                                    {% for item in pedido.items.all %}
+                                    <li class="checkout-product-item">
+                                        <figure class="img-product">
+                                            {% if item.imagen_url %}
+                                                <img src="{{ item.imagen_url }}" alt="{{ item.nombre_producto }}">
+                                            {% else %}
+                                                <img src="{% static 'images/products/placeholder.jpg' %}" alt="{{ item.nombre_producto }}">
+                                            {% endif %}
+                                            <span class="quantity">{{ item.cantidad }}</span>
+                                        </figure>
+                                        <div class="content">
+                                            <div class="info">
+                                                <p class="name">{{ item.nombre_producto }}</p>
+                                                {% if item.talla or item.color %}
+                                                <span class="variant text-secondary">
+                                                    {% if item.color %}{{ item.color }}{% endif %}
+                                                    {% if item.talla and item.color %} / {% endif %}
+                                                    {% if item.talla %}{{ item.talla }}{% endif %}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                            <span class="price">${{ item.subtotal }}</span>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                            <!-- Order Totals -->
+                            <div class="bg-light p-4 rounded mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="fw-5">Subtotal</h6>
+                                    <h6 class="fw-5">${{ pedido.subtotal }}</h6>
+                                </div>
+                                {% if pedido.gift_wrap %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="fw-5">Envoltura de regalo</h6>
+                                    <h6 class="fw-5">${{ pedido.gift_wrap_cost }}</h6>
+                                </div>
+                                {% endif %}
+                                {% if pedido.discount_code %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="fw-5 text-success">Descuento ({{ pedido.discount_code }})</h6>
+                                    <h6 class="fw-5 text-success">-${{ pedido.discount_amount }}</h6>
+                                </div>
+                                {% endif %}
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="fw-6">Total</h5>
+                                    <h5 class="fw-6 text-success">${{ pedido.total }}</h5>
+                                </div>
+                            </div>
+
+                            {% if pedido.order_note %}
+                            <!-- Order Notes -->
+                            <div class="bg-light p-4 rounded mb-4">
+                                <h6 class="fw-5 mb-2">Notas del Pedido</h6>
+                                <p class="text-secondary mb-0">{{ pedido.order_note }}</p>
+                            </div>
+                            {% endif %}
+
+                            <!-- Actions -->
+                            <div class="text-center">
+                                <a href="{% url 'core:inicio' %}" class="tf-btn btn-fill animate-hover-btn radius-3 me-2">
+                                    <span>Volver al Inicio</span>
+                                    <i class="icon icon-arrow-right"></i>
+                                </a>
+                                <a href="{% url 'core:shop-collection-sub' %}" class="tf-btn btn-outline-dark animate-hover-btn radius-3">
+                                    <span>Seguir Comprando</span>
+                                    <i class="icon icon-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- /page-confirmation -->
+
+{% endblock %}

@@ -415,14 +415,17 @@
                 
                 // Validar que haya stock suficiente
                 if (typeof window.currentMaxStock !== 'undefined') {
-                    if (quantity > window.currentMaxStock) {
-                        showNotification('Stock insuficiente. Solo hay ' + window.currentMaxStock + ' unidades disponibles.', 'error');
-                        return;
-                    }
-                    if (window.currentMaxStock === 0) {
+                    // Si es un producto sin atributos y tiene stock definido, permitir agregar
+                    if (window.currentMaxStock > 0) {
+                        if (quantity > window.currentMaxStock) {
+                            showNotification('Stock insuficiente. Solo hay ' + window.currentMaxStock + ' unidades disponibles.', 'error');
+                            return;
+                        }
+                    } else if (window.currentMaxStock === 0) {
                         showNotification('Producto sin stock disponible', 'error');
                         return;
                     }
+                    // Si currentMaxStock no está definido o es undefined, continuar (productos antiguos sin validación)
                 }
 
                 // Agregar al carrito

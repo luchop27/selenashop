@@ -24,6 +24,13 @@ urlpatterns = [
     path('cart/add-gift-wrap/', views.cart_add_gift_wrap, name='cart_add_gift_wrap'),
     path('cart/remove-gift-wrap/', views.cart_remove_gift_wrap, name='cart_remove_gift_wrap'),
     path('cart/recommendations/', views.cart_recommendations, name='cart_recommendations'),
+    
+    # Checkout URLs
+    path('checkout/', views.checkout, name='checkout'),
+    path('checkout/process/', views.checkout_process, name='checkout_process'),
+    path('checkout/validate-discount/', views.validate_discount_code, name='validate_discount_code'),
+    path('order/confirmation/<int:pedido_id>/', views.order_confirmation, name='order_confirmation'),
+    
     # Endpoint AJAX para cargar más productos nuevos
     path('api/productos-nuevos/', views.api_productos_nuevos, name='api_productos_nuevos'),
 ]

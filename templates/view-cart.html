@@ -221,7 +221,7 @@
                                     <span class="total-value" id="cartTotal">${{ cart.get_total_price }} USD</span>
                                 </div>
                                 <div class="cart-checkout-btn">
-                                    <a href="checkout.html"
+                                    <a href="{% url 'core:checkout' %}"
                                         class="tf-btn w-100 btn-fill animate-hover-btn radius-3 justify-content-center">
                                         <span>Finalizar Compra</span>
                                     </a>
@@ -774,6 +774,9 @@
 // Quick View JavaScript con Sistema de Atributos
 (function() {
     'use strict';
+    
+    // Variable global para prevenir múltiples ejecuciones
+    let isProcessingQuickView = false;
 
     // Obtener CSRF token
     function getCookie(name) {
@@ -817,29 +820,111 @@
         // Manejar botones de cantidad en el modal
         const modal = document.getElementById('quick_view');
         if (modal) {
+            // Event listener para reiniciar cuando se abre el modal
+            modal.addEventListener('shown.bs.modal', function() {
+                const quantityInput = this.querySelector('input[name="number"]');
+                if (quantityInput) {
+                    quantityInput.value = 1;
+                    updateQuickViewButtons();
+                    updateQuickViewPrice();
+                    console.log('Modal abierto - cantidad reiniciada a 1');
+                }
+            });
+            
             const minusBtn = modal.querySelector('.minus-btn');
             const plusBtn = modal.querySelector('.plus-btn');
             const quantityInput = modal.querySelector('input[name="number"]');
             
             if (minusBtn && plusBtn && quantityInput) {
-                minusBtn.addEventListener('click', function() {
-                    let value = parseInt(quantityInput.value);
-                    if (value > 1) {
-                        quantityInput.value = value - 1;
-                        updateQuickViewPrice();
+                // Event listener para botón de incremento con protección contra múltiples ejecuciones
+                plusBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    // Prevenir procesamiento múltiple
+                    if (isProcessingQuickView) {
+                        console.log('QuickView - Ya procesando, ignorando click adicional');
+                        return false;
                     }
-                });
-                
-                plusBtn.addEventListener('click', function() {
-                    let value = parseInt(quantityInput.value);
-                    const maxStock = parseInt(modal.dataset.maxStock) || 999;
-                    if (value < maxStock) {
-                        quantityInput.value = value + 1;
-                        updateQuickViewPrice();
+                    
+                    // Verificar si el botón está deshabilitado
+                    if (this.classList.contains('disabled') || this.style.pointerEvents === 'none') {
+                        console.log('QuickView - Botón + está deshabilitado');
+                        return false;
+                    }
+                    
+                    isProcessingQuickView = true;
+                    
+                    const currentQty = parseInt(quantityInput.value) || 1;
+                    const maxStock = parseInt(modal.dataset.maxStock) || 0;
+                    
+                    console.log('=== QuickView INCREMENTO ===');
+                    console.log('Cantidad actual:', currentQty);
+                    console.log('Stock máximo:', maxStock);
+                    
+                    // Validación estricta: solo incrementar si hay stock disponible
+                    if (currentQty < maxStock && maxStock > 0) {
+                        const newQty = currentQty + 1;
+                        console.log('Intentando incrementar a:', newQty);
+                        
+                        // Triple verificación antes de asignar
+                        if (newQty <= maxStock) {
+                            quantityInput.value = newQty;
+                            console.log('✅ Cantidad actualizada a:', newQty);
+                            updateQuickViewButtons();
+                            updateQuickViewPrice();
+                        } else {
+                            console.log('❌ Bloqueado: excedería stock máximo');
+                        }
                     } else {
-                        alert('Stock máximo alcanzado');
+                        console.log('❌ Bloqueado: ya en stock máximo');
                     }
-                });
+                    
+                    // Liberar el flag después de un pequeño delay
+                    setTimeout(() => {
+                        isProcessingQuickView = false;
+                    }, 100);
+                    
+                    return false;
+                }, { capture: true });
+                
+                // Event listener para botón de decremento
+                minusBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    // Prevenir procesamiento múltiple
+                    if (isProcessingQuickView) {
+                        return false;
+                    }
+                    
+                    // Verificar si el botón está deshabilitado
+                    if (this.classList.contains('disabled') || this.style.pointerEvents === 'none') {
+                        console.log('QuickView - Botón - está deshabilitado');
+                        return false;
+                    }
+                    
+                    isProcessingQuickView = true;
+                    
+                    const currentQty = parseInt(quantityInput.value) || 1;
+                    console.log('=== QuickView DECREMENTO ===');
+                    console.log('Cantidad actual:', currentQty);
+                    
+                    if (currentQty > 1) {
+                        quantityInput.value = currentQty - 1;
+                        console.log('✅ Cantidad decrementada a:', currentQty - 1);
+                        updateQuickViewButtons();
+                        updateQuickViewPrice();
+                    }
+                    
+                    setTimeout(() => {
+                        isProcessingQuickView = false;
+                    }, 100);
+                    
+                    return false;
+                }, { capture: true });
             }
 
             // Manejar cambio de atributos
@@ -901,9 +986,18 @@
         // Guardar datos del producto en el modal
         modal.dataset.productoId = data.id;
         modal.dataset.basePrice = data.precio;
-        modal.dataset.maxStock = data.stock || 999;
+        modal.dataset.maxStock = data.stock || 0;  // ❌ CAMBIO: Usar 0 en lugar de 999
         modal.dataset.variantes = JSON.stringify(data.variantes);
         modal.dataset.atributos = JSON.stringify(data.atributos);
+        modal.dataset.variantesStock = JSON.stringify(data.variantes_stock || {});
+        modal.dataset.varianteDefaultId = data.variante_default_id || '';
+        
+        console.log('🔍 QuickView - Datos iniciales:', {
+            productoId: data.id,
+            precio: data.precio,
+            stock: data.stock,
+            maxStock: modal.dataset.maxStock
+        });
         
         // Título
         document.getElementById('quickview-title').textContent = data.nombre;
@@ -947,6 +1041,27 @@
         // Renderizar atributos
         const variantsContainer = document.getElementById('quickview-variants');
         variantsContainer.innerHTML = '';
+        
+        // ========== NUEVO: Para productos sin atributos (default variant) ==========
+        if (data.variante_default_id) {
+            // Este es un producto sin atributos (ej: Reloj, Accesorios)
+            // Usar la variante default automáticamente
+            const variantesStock = data.variantes_stock || {};
+            if (variantesStock['default']) {
+                modal.dataset.selectedVariantId = variantesStock['default'].id;
+                modal.dataset.basePrice = variantesStock['default'].precio;
+                modal.dataset.maxStock = variantesStock['default'].stock;
+                document.getElementById('quickview-price').textContent = `$${variantesStock['default'].precio}`;
+                document.getElementById('quickview-stock').textContent = variantesStock['default'].stock;
+                console.log('✅ Quick View: Producto sin atributos - Variante DEFAULT activada:');
+                console.log('  - ID:', variantesStock['default'].id);
+                console.log('  - Stock:', variantesStock['default'].stock);
+                console.log('  - Precio:', variantesStock['default'].precio);
+            }
+            updateQuickViewPrice();
+            return; // No renderizar atributos
+        }
+        // ========================================================================
         
         if (data.atributos && data.atributos.length > 0) {
             data.atributos.forEach((atributo, index) => {
@@ -1015,6 +1130,9 @@
         
         // Reiniciar cantidad a 1
         modal.querySelector('input[name="number"]').value = 1;
+        
+        // Actualizar botones y precio
+        updateQuickViewButtons();
         updateQuickViewPrice();
     }
 
@@ -1053,12 +1171,33 @@
             modal.dataset.maxStock = matchingVariant.stock;
             document.getElementById('quickview-price').textContent = `$${matchingVariant.precio}`;
             document.getElementById('quickview-stock').textContent = matchingVariant.stock;
+            
+            console.log('🔄 Variante actualizada:', {
+                id: matchingVariant.id,
+                stock: matchingVariant.stock,
+                precio: matchingVariant.precio,
+                modalMaxStock: modal.dataset.maxStock
+            });
+            
+            // Ajustar cantidad si excede el nuevo stock
+            const quantityInput = modal.querySelector('input[name="number"]');
+            const currentQty = parseInt(quantityInput.value) || 1;
+            if (currentQty > matchingVariant.stock) {
+                quantityInput.value = matchingVariant.stock > 0 ? matchingVariant.stock : 1;
+                console.log('⚠️ Cantidad ajustada de', currentQty, 'a', quantityInput.value);
+            }
+            if (matchingVariant.stock === 0) {
+                quantityInput.value = 1;
+            }
         } else {
             const basePrice = modal.dataset.basePrice;
             document.getElementById('quickview-price').textContent = `$${basePrice}`;
             modal.dataset.selectedVariantId = '';
+            modal.dataset.maxStock = 0;
+            console.log('❌ No se encontró variante coincidente');
         }
         
+        updateQuickViewButtons();
         updateQuickViewPrice();
     }
 
@@ -1072,12 +1211,52 @@
             document.getElementById('quickview-total-price').textContent = `$${totalPrice}`;
         }
     }
+    
+    // Función para actualizar el estado de los botones de cantidad en quickview
+    function updateQuickViewButtons() {
+        const modal = document.getElementById('quick_view');
+        const quantityInput = modal.querySelector('input[name="number"]');
+        const btnIncrease = modal.querySelector('.plus-btn');
+        const btnDecrease = modal.querySelector('.minus-btn');
+        
+        const currentQty = parseInt(quantityInput.value) || 1;
+        const maxStock = parseInt(modal.dataset.maxStock) || 0;
+        
+        console.log('QuickView - Actualizando botones:', {currentQty, maxStock});
+        
+        // Deshabilitar botón de incremento si llegamos al stock máximo o no hay stock
+        if (currentQty >= maxStock || maxStock === 0) {
+            btnIncrease.classList.add('disabled');
+            btnIncrease.style.opacity = '0.5';
+            btnIncrease.style.cursor = 'not-allowed';
+            btnIncrease.style.pointerEvents = 'none';
+        } else {
+            btnIncrease.classList.remove('disabled');
+            btnIncrease.style.opacity = '1';
+            btnIncrease.style.cursor = 'pointer';
+            btnIncrease.style.pointerEvents = 'auto';
+        }
+        
+        // Deshabilitar botón de decremento si estamos en 1
+        if (currentQty <= 1) {
+            btnDecrease.classList.add('disabled');
+            btnDecrease.style.opacity = '0.5';
+            btnDecrease.style.cursor = 'not-allowed';
+            btnDecrease.style.pointerEvents = 'none';
+        } else {
+            btnDecrease.classList.remove('disabled');
+            btnDecrease.style.opacity = '1';
+            btnDecrease.style.cursor = 'pointer';
+            btnDecrease.style.pointerEvents = 'auto';
+        }
+    }
 
     function addToCartFromQuickView() {
         const modal = document.getElementById('quick_view');
         const productoId = modal.dataset.productoId;
         const variantId = modal.dataset.selectedVariantId;
         const quantity = parseInt(modal.querySelector('input[name="number"]').value);
+        const maxStock = parseInt(modal.dataset.maxStock) || 0;
         
         if (!productoId) {
             alert('Error: No se pudo identificar el producto');
@@ -1086,6 +1265,17 @@
 
         if (!variantId) {
             alert('Por favor, selecciona todas las opciones del producto');
+            return;
+        }
+        
+        // Validar stock
+        if (maxStock === 0) {
+            alert('Producto sin stock disponible');
+            return;
+        }
+        
+        if (quantity > maxStock) {
+            alert(`Stock insuficiente. Solo hay ${maxStock} unidades disponibles.`);
             return;
         }
 

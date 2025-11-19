@@ -90,11 +90,14 @@
 
                         <fieldset class="name mb-20" id="subcategoria-field" style="display: none;">
                             <div class="body-title mb-10">Subcategoría <span class="tf-color-1">*</span></div>
-                            <select name="categoria" id="id_categoria" class="tf-input" required>
+                            <select name="categoria" id="id_categoria" class="tf-input">
                                 <option value="">-- Seleccionar Subcategoría --</option>
                             </select>
                             <div class="text-tiny text-surface-2 mt-5">Ejemplo: Vestidos, Pantalones, Blusas, etc.</div>
                         </fieldset>
+                        
+                        <!-- Campo oculto para categoría cuando no hay subcategorías -->
+                        <input type="hidden" name="categoria_hidden" id="id_categoria_hidden">
 
                         <fieldset class="name" id="coleccion-field" style="display: none;">
                             <div class="body-title mb-10">Colección (Opcional)</div>
@@ -305,8 +308,15 @@ document.getElementById('id_categoria_principal').addEventListener('change', fun
             // NO tiene subcategorías - usar la categoría principal directamente
             document.getElementById('subcategoria-field').style.display = 'none';
             
-            // Asignar la categoría principal al campo oculto
-            selectSubcategoria.value = categoriaId;
+            // Usar campo oculto para enviar la categoría
+            const hiddenCategoriaInput = document.getElementById('id_categoria_hidden');
+            hiddenCategoriaInput.value = categoriaId;
+            hiddenCategoriaInput.name = 'categoria'; // Este campo enviará la categoría
+            
+            // Quitar el name del select visible para que no interfiera
+            selectSubcategoria.removeAttribute('name');
+            selectSubcategoria.value = '';
+            
             categoriaActual = categoriaPrincipalActual;
             
             // Mostrar los demás campos directamente
@@ -340,6 +350,12 @@ document.getElementById('id_categoria').addEventListener('change', function() {
     categoriaActual = categoriasData.find(c => c.id === subcategoriaId);
     
     if (subcategoriaId) {
+        // Restaurar el name al select visible y limpiar el campo oculto
+        this.setAttribute('name', 'categoria');
+        const hiddenCategoriaInput = document.getElementById('id_categoria_hidden');
+        hiddenCategoriaInput.removeAttribute('name');
+        hiddenCategoriaInput.value = '';
+        
         document.getElementById('coleccion-field').style.display = 'block';
         document.getElementById('product-fields').style.display = 'block';
         

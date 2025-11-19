@@ -1442,6 +1442,8 @@ def producto_quick_view(request, producto_id):
         
         # Preparar variantes con sus atributos (mismo patrón que admin_producto_edit)
         variantes = []
+        variantes_stock = {}  # Para JSON de control de stock en quick view
+        variante_default_id = None  # Para productos sin atributos
         atributo_talla = Atributo.objects.filter(nombre__icontains='talla').first()
         atributo_color = Atributo.objects.filter(nombre__icontains='color').first()
         
@@ -1501,6 +1503,29 @@ def producto_quick_view(request, producto_id):
                 'talla': variante.talla.codigo if variante.talla else None,
                 'color': variante.color or None
             })
+            
+            # Preparar JSON de stock para JavaScript (igual que en product_detail)
+            if variante.talla:
+                key = f"{variante.talla.codigo}"
+                if variante.color and variante.color.strip():
+                    key += f"_{variante.color}"
+                variantes_stock[key] = {
+                    'id': variante.id,
+                    'stock': variante.stock,
+                    'talla': variante.talla.codigo if variante.talla else None,
+                    'color': variante.color if variante.color else '',
+                    'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
+                }
+            else:
+                # Variante default (sin talla) para productos sin atributos
+                variante_default_id = variante.id
+                variantes_stock['default'] = {
+                    'id': variante.id,
+                    'stock': variante.stock,
+                    'talla': None,
+                    'color': '',
+                    'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
+                }
         
         # Calcular stock total (mismo patrón que ProductoListView)
         from django.db.models import Sum
@@ -1518,6 +1543,8 @@ def producto_quick_view(request, producto_id):
             'stock': total_stock,
             'imagenes': imagenes,
             'variantes': variantes,
+            'variantes_stock': variantes_stock,  # JSON para control de stock en JS
+            'variante_default_id': variante_default_id,  # Para productos sin atributos
             'atributos': list(atributos_dict.values()),
             'tiene_tallas': producto.tiene_tallas
         }
