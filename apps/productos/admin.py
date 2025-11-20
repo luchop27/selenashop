@@ -10,6 +10,9 @@ from .models import (
 	Atributo,
 	ValorAtributo,
 	VarianteAtributo,
+	GlobalProductContent,
+	ShippingInfo,
+	ReturnPolicy,
 )
 
 
@@ -484,3 +487,92 @@ class VarianteAtributoAdmin(admin.ModelAdmin):
 		"""Muestra el nombre del producto"""
 		return obj.variante.producto.nombre
 	producto_nombre.short_description = 'Producto'
+
+
+# =========================
+#  GLOBAL PRODUCT CONTENT
+# =========================
+@admin.register(GlobalProductContent)
+class GlobalProductContentAdmin(admin.ModelAdmin):
+	list_display = ('__str__', 'activo')
+	
+	fieldsets = (
+		('Features Section', {
+			'fields': ('features_content',),
+			'description': 'Contenido HTML para la sección Features (usar <li> tags)'
+		}),
+		('Materials Care Section', {
+			'fields': ('materials_content',),
+			'description': 'Contenido HTML para Materials Care (usar <li> tags)'
+		}),
+		('Care Instructions Icons', {
+			'fields': (
+				('care_icon_1', 'care_text_1'),
+				('care_icon_2', 'care_text_2'),
+				('care_icon_3', 'care_text_3'),
+				('care_icon_4', 'care_text_4'),
+				('care_icon_5', 'care_text_5'),
+			),
+			'description': 'Íconos y texto para instrucciones de cuidado'
+		}),
+		('Bottom Text', {
+			'fields': ('product_code_text',),
+			'description': 'Texto que aparece debajo de los íconos SVG'
+		}),
+		('Estado', {
+			'fields': ('activo',)
+		}),
+	)
+	
+	def has_add_permission(self, request):
+		# Solo permitir una instancia
+		return not GlobalProductContent.objects.exists()
+	
+	def has_delete_permission(self, request, obj=None):
+		# No permitir eliminar la única instancia
+		return False
+
+
+# =========================
+#  SHIPPING INFO
+# =========================
+@admin.register(ShippingInfo)
+class ShippingInfoAdmin(admin.ModelAdmin):
+	list_display = ('titulo', 'tiempo_nacional', 'tiempo_internacional', 'costo_envio', 'activo')
+	list_filter = ('activo',)
+	list_editable = ('activo',)
+	
+	fieldsets = (
+		('Información Básica', {
+			'fields': ('titulo', 'descripcion')
+		}),
+		('Tiempos de Entrega', {
+			'fields': ('tiempo_nacional', 'tiempo_internacional')
+		}),
+		('Costos', {
+			'fields': ('costo_envio', 'envio_gratis_desde')
+		}),
+		('Estado', {
+			'fields': ('activo',)
+		}),
+	)
+
+
+# =========================
+#  RETURN POLICIES
+# =========================
+@admin.register(ReturnPolicy)
+class ReturnPolicyAdmin(admin.ModelAdmin):
+	list_display = ('titulo', 'dias_devolucion', 'orden', 'activo')
+	list_filter = ('activo',)
+	list_editable = ('orden', 'activo')
+	ordering = ('orden',)
+	
+	fieldsets = (
+		('Información Básica', {
+			'fields': ('titulo', 'descripcion', 'icono')
+		}),
+		('Configuración', {
+			'fields': ('dias_devolucion', 'orden', 'activo')
+		}),
+	)

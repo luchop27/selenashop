@@ -14,12 +14,23 @@ urlpatterns = [
     path('admin-panel/', views.admin_index, name='admin_index'),
     
     # Cart URLs
+    path('cart/', views.view_cart, name='view_cart'),
     path('cart/add/', views.cart_add, name='cart_add'),
     path('cart/remove/', views.cart_remove, name='cart_remove'),
     path('cart/update/', views.cart_update, name='cart_update'),
     path('cart/detail/', views.cart_detail, name='cart_detail'),
     path('cart/clear/', views.cart_clear, name='cart_clear'),
+    path('cart/save-note/', views.cart_save_note, name='cart_save_note'),
+    path('cart/add-gift-wrap/', views.cart_add_gift_wrap, name='cart_add_gift_wrap'),
+    path('cart/remove-gift-wrap/', views.cart_remove_gift_wrap, name='cart_remove_gift_wrap'),
     path('cart/recommendations/', views.cart_recommendations, name='cart_recommendations'),
+    
+    # Checkout URLs
+    path('checkout/', views.checkout, name='checkout'),
+    path('checkout/process/', views.checkout_process, name='checkout_process'),
+    path('checkout/validate-discount/', views.validate_discount_code, name='validate_discount_code'),
+    path('order/confirmation/<int:pedido_id>/', views.order_confirmation, name='order_confirmation'),
+    
     # Endpoint AJAX para cargar más productos nuevos
     path('api/productos-nuevos/', views.api_productos_nuevos, name='api_productos_nuevos'),
 ]

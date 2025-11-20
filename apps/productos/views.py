@@ -682,6 +682,10 @@ def admin_producto_add(request):
 			# Procesar variantes dinámicas desde el formulario
 			import json
 			variante_index = 0
+			
+			# Verificar si la categoría del producto es "Ropa" o tiene variantes con atributos
+			es_categoria_ropa = producto.categoria and 'ropa' in producto.categoria.nombre.lower()
+			
 			while True:
 				sku_key = f'variante_{variante_index}_sku'
 				if sku_key not in request.POST:
@@ -692,15 +696,53 @@ def admin_producto_add(request):
 				atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
 				
 				# Crear la variante usando el precio_base del producto
-				from .models import Variante, VarianteAtributo, ValorAtributo
+				from .models import Variante, VarianteAtributo, ValorAtributo, Talla
+				
+				# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
+				talla_obj = None
+				color_valor = None
+				
+				try:
+					atributos_data = json.loads(atributos_json)
+					for attr in atributos_data:
+						atributo_nombre = attr.get('atributoNombre', '').lower()
+						valor_nombre = attr.get('valorNombre', '')
+						
+						# Si es una talla, buscar o crear el objeto Talla
+						if 'talla' in atributo_nombre and valor_nombre:
+							talla_obj, created = Talla.objects.get_or_create(
+								codigo=valor_nombre.upper(),
+								defaults={'nombre': valor_nombre}
+							)
+							print(f"DEBUG - Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
+						
+						# Si es color, guardarlo
+						elif 'color' in atributo_nombre and valor_nombre:
+							color_valor = valor_nombre
+				except Exception as e:
+					print(f"Error extrayendo talla/color de atributos: {e}")
+				
+				# Generar SKU automático: slug-TALLA (o slug-COLOR si no hay talla)
+				if not sku:
+					if talla_obj:
+						sku = f"{producto.slug}-{talla_obj.codigo}"
+					elif color_valor:
+						sku = f"{producto.slug}-{color_valor.upper()}"
+					else:
+						sku = f"{producto.slug}-{variante_index + 1}"
+				
+				# Crear la variante con la talla asignada
 				variante = Variante.objects.create(
 					producto=producto,
-					sku=sku if sku else f'VAR-{producto.id}-{variante_index}',
-					precio=producto.precio_base,  # Usar el precio_base del producto
+					talla=talla_obj,  # Asignar la talla al campo ForeignKey
+					color=color_valor,  # Asignar el color al campo CharField
+					sku=sku,
+					precio=producto.precio_base,
 					stock=int(stock) if stock else 0
 				)
+				print(f"DEBUG - Variante creada: ID={variante.id}, SKU={variante.sku}, Talla={variante.talla}, Color={variante.color}, Stock={variante.stock}")
 				
-				# Asociar atributos a la variante
+				# Asociar atributos a la variante (para mantener compatibilidad con sistema de atributos)
 				try:
 					atributos_data = json.loads(atributos_json)
 					for attr in atributos_data:
@@ -715,6 +757,18 @@ def admin_producto_add(request):
 					print(f"Error procesando atributos de variante: {e}")
 				
 				variante_index += 1
+			
+			# Si no se crearon variantes (productos sin atributos como accesorios), crear una variante por defecto
+			if variante_index == 0 and not es_categoria_ropa:
+				from .models import Variante
+				Variante.objects.create(
+					producto=producto,
+					sku=f"{producto.slug}-DEFAULT",
+					precio=producto.precio_base,
+					stock=int(request.POST.get('stock_default', '0'))
+				)
+				variante_index = 1
+				print(f"DEBUG - Variante por defecto creada para producto sin atributos")
 			
 			total_imagenes = len(imagenes)
 			messages.success(request, f'Producto "{producto.nombre}" creado exitosamente con {variante_index} variante(s) y {total_imagenes} imagen(es).')
@@ -755,6 +809,10 @@ def admin_producto_edit(request, pk):
 	"""
 	Editar producto existente con el diseño de ecomus
 	"""
+	# Imports necesarios para toda la función
+	from .models import Atributo, ValorAtributo, Variante, VarianteAtributo, Talla, Imagen
+	import json
+	
 	if request.user.rol != 'admin_tienda' and not request.user.is_staff:
 		messages.error(request, 'No tienes permiso para acceder.')
 		return redirect('core:inicio')
@@ -766,22 +824,30 @@ def admin_producto_edit(request, pk):
 		return redirect('productos:admin_productos_list')
 	
 	if request.method == 'POST':
+		print("\n" + "="*50)
+		print("DEBUG - EDICIÓN DE PRODUCTO")
+		print("="*50)
+		print("POST data recibido:")
+		for key, value in request.POST.items():
+			if key.startswith('variante_'):
+				print(f"  {key}: {value[:100] if len(str(value)) > 100 else value}")
+		print("="*50 + "\n")
+		
 		form = ProductoForm(request.POST, request.FILES, instance=producto)
 		
 		if form.is_valid():
 			producto = form.save()
+			print(f"Producto guardado: {producto.nombre}")
 			
 			# Procesar eliminación de imágenes
 			imagenes_eliminar = request.POST.get('imagenes_eliminar', '')
 			if imagenes_eliminar:
-				from .models import Imagen
 				ids_eliminar = [int(id) for id in imagenes_eliminar.split(',') if id.strip()]
 				Imagen.objects.filter(id__in=ids_eliminar, producto=producto).delete()
 			
 			# Procesar nuevas imágenes
 			imagenes = request.FILES.getlist('imagenes')
 			if imagenes:
-				from .models import Imagen
 				# Obtener la máxima posición actual
 				max_posicion = producto.imagenes.aggregate(Max('posicion'))['posicion__max'] or 0
 				for index, imagen_file in enumerate(imagenes):
@@ -791,63 +857,147 @@ def admin_producto_edit(request, pk):
 						posicion=max_posicion + index + 1
 					)
 			
-			# Eliminar variantes antiguas
-			producto.variantes.all().delete()
+		# Eliminar variantes antiguas
+		producto.variantes.all().delete()
+		print("DEBUG - Variantes antiguas eliminadas")
+		
+		# Procesar nuevas variantes dinámicas desde el formulario
+		variante_index = 0
+		while True:
+			sku_key = f'variante_{variante_index}_sku'
+			if sku_key not in request.POST:
+				print(f"DEBUG - No se encontró {sku_key}, finalizando bucle")
+				break
 			
-			# Procesar nuevas variantes dinámicas desde el formulario
-			import json
-			variante_index = 0
-			while True:
-				sku_key = f'variante_{variante_index}_sku'
-				if sku_key not in request.POST:
-					break
-				
-				sku = request.POST.get(sku_key, '').strip()
-				stock = request.POST.get(f'variante_{variante_index}_stock', '0')
-				atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
-				
-				# Crear la variante usando el precio_base del producto
-				from .models import Variante, VarianteAtributo, ValorAtributo
-				variante = Variante.objects.create(
-					producto=producto,
-					sku=sku if sku else f'VAR-{producto.id}-{variante_index}',
-					precio=producto.precio_base,  # Usar el precio_base del producto
-					stock=int(stock) if stock else 0
-				)
-				
-				# Asociar atributos a la variante
-				try:
-					atributos_data = json.loads(atributos_json)
-					for attr in atributos_data:
-						valor_id = attr.get('valorId')
-						if valor_id:
-							valor_atributo = ValorAtributo.objects.get(id=valor_id)
-							VarianteAtributo.objects.create(
-								variante=variante,
-								valor_atributo=valor_atributo
-							)
-				except Exception as e:
-					print(f"Error procesando atributos de variante: {e}")
-				
-				variante_index += 1
+			sku = request.POST.get(sku_key, '').strip()
+			stock = request.POST.get(f'variante_{variante_index}_stock', '0')
+			atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
 			
-			total_imagenes = len(imagenes) if imagenes else 0
-			messages.success(request, f'Producto "{producto.nombre}" actualizado exitosamente con {variante_index} variante(s) y {total_imagenes} nueva(s) imagen(es).')
-			return redirect('productos:admin_productos_list')
+			print(f"\nDEBUG - Procesando variante {variante_index}:")
+			print(f"  SKU: {sku}")
+			print(f"  Stock: {stock}")
+			print(f"  Atributos: {atributos_json[:100]}...")
+			
+			# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
+			talla_obj = None
+			color_valor = None
+			
+			try:
+				atributos_data = json.loads(atributos_json)
+				for attr in atributos_data:
+					atributo_nombre = attr.get('atributoNombre', '').lower()
+					valor_nombre = attr.get('valorNombre', '')
+					
+					# Si es una talla, buscar o crear el objeto Talla
+					if 'talla' in atributo_nombre and valor_nombre:
+						talla_obj, created = Talla.objects.get_or_create(
+							codigo=valor_nombre.upper(),
+							defaults={'nombre': valor_nombre}
+						)
+						print(f"  Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
+					
+					# Si es color, guardarlo
+					elif 'color' in atributo_nombre and valor_nombre:
+						color_valor = valor_nombre
+						print(f"  Color encontrado: {color_valor}")
+			except Exception as e:
+				print(f"  ❌ Error extrayendo talla/color de atributos: {e}")
+			
+			# Generar SKU automático: slug-TALLA (o slug-COLOR si no hay talla)
+			if not sku:
+				if talla_obj:
+					sku = f"{producto.slug}-{talla_obj.codigo}"
+				elif color_valor:
+					sku = f"{producto.slug}-{color_valor.upper()}"
+				else:
+					sku = f"{producto.slug}-{variante_index + 1}"
+			
+			# Crear la variante con la talla asignada
+			variante = Variante.objects.create(
+				producto=producto,
+				talla=talla_obj,
+				color=color_valor,
+				sku=sku,
+				precio=producto.precio_base,
+				stock=int(stock) if stock else 0
+			)
+			print(f"  ✅ Variante creada: ID={variante.id}, SKU={variante.sku}, Talla={variante.talla}, Color={variante.color}, Stock={variante.stock}")
+			
+			# Asociar atributos a la variante (para mantener compatibilidad con sistema de atributos)
+			try:
+				atributos_data = json.loads(atributos_json)
+				for attr in atributos_data:
+					valor_id = attr.get('valorId')
+					if valor_id:
+						valor_atributo = ValorAtributo.objects.get(id=valor_id)
+						VarianteAtributo.objects.create(
+							variante=variante,
+							valor_atributo=valor_atributo
+						)
+			except Exception as e:
+				print(f"  ❌ Error procesando atributos de variante: {e}")
+			
+			variante_index += 1
+		
+		print(f"\nDEBUG - Total variantes procesadas: {variante_index}")
+		total_imagenes = len(imagenes) if imagenes else 0
+		messages.success(request, f'Producto "{producto.nombre}" actualizado exitosamente con {variante_index} variante(s) y {total_imagenes} nueva(s) imagen(es).')
+		return redirect('productos:admin_productos_list')
 	else:
 		form = ProductoForm(instance=producto)
 	
 	# Preparar datos de variantes existentes para el JavaScript
 	variantes_data = []
+	
+	# Buscar atributos de talla y color una sola vez
+	atributo_talla = Atributo.objects.filter(nombre__icontains='talla').first()
+	atributo_color = Atributo.objects.filter(nombre__icontains='color').first()
+	
 	for variante in producto.variantes.all():
 		atributos = []
-		for va in variante.atributos.all():
-			atributos.append({
-				'atributoId': va.valor_atributo.atributo.id,
-				'atributoNombre': va.valor_atributo.atributo.nombre,
-				'valorId': va.valor_atributo.id,
-				'valorNombre': va.valor_atributo.valor,
-			})
+		
+		# Primero intentar extraer desde campos directos (talla FK y color CharField)
+		if variante.talla and atributo_talla:
+			# Buscar el ValorAtributo correspondiente a la talla
+			valor_talla = ValorAtributo.objects.filter(
+				atributo=atributo_talla,
+				valor=variante.talla.codigo
+			).first()
+			if valor_talla:
+				atributos.append({
+					'atributoId': atributo_talla.id,
+					'atributoNombre': atributo_talla.nombre,
+					'valorId': valor_talla.id,
+					'valorNombre': valor_talla.valor,
+				})
+				print(f"DEBUG GET - Variante {variante.sku}: Talla {variante.talla.codigo} convertida a atributo")
+		
+		if variante.color and atributo_color:
+			# Buscar el ValorAtributo correspondiente al color
+			valor_color = ValorAtributo.objects.filter(
+				atributo=atributo_color,
+				valor=variante.color
+			).first()
+			if valor_color:
+				atributos.append({
+					'atributoId': atributo_color.id,
+					'atributoNombre': atributo_color.nombre,
+					'valorId': valor_color.id,
+					'valorNombre': valor_color.valor,
+				})
+				print(f"DEBUG GET - Variante {variante.sku}: Color {variante.color} convertido a atributo")
+		
+		# Si no se encontraron atributos desde campos directos, buscar en sistema de atributos
+		if not atributos:
+			for va in variante.atributos.all():
+				atributos.append({
+					'atributoId': va.valor_atributo.atributo.id,
+					'atributoNombre': va.valor_atributo.atributo.nombre,
+					'valorId': va.valor_atributo.id,
+					'valorNombre': va.valor_atributo.valor,
+				})
+			print(f"DEBUG GET - Variante {variante.sku}: Usando atributos del sistema")
+		
 		variantes_data.append({
 			'sku': variante.sku,
 			'precio': str(variante.precio),
@@ -855,7 +1005,9 @@ def admin_producto_edit(request, pk):
 			'atributos': atributos
 		})
 	
-	import json
+	print(f"\nDEBUG GET - Total variantes preparadas: {len(variantes_data)}")
+	print(f"JSON enviado al template: {json.dumps(variantes_data, indent=2)}\n")
+	
 	return render(request, 'edit-product.html', {
 		'form': form,
 		'producto': producto,
@@ -1171,3 +1323,241 @@ def admin_coleccion_delete(request, pk):
 
 
 
+# =========================
+#  API QUICK VIEW
+# =========================
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+
+@require_http_methods(["GET"])
+def producto_quick_view(request, producto_id):
+    """
+    API endpoint para obtener datos del producto para Quick View
+    Funciona con el sistema de Atributos y es compatible con tu estructura actual
+    """
+    try:
+        # Usar el mismo patrón de prefetch que usas en ProductoListView
+        producto = Producto.objects.select_related(
+            "categoria", "coleccion"
+        ).prefetch_related(
+            "imagenes",
+            "variantes",
+            "variantes__talla",
+            "variantes__atributos__valor_atributo__atributo"
+        ).get(id=producto_id, activo=True)
+        
+        # Preparar imágenes (mismo formato que usas en panel_producto_crear)
+        imagenes = []
+        for img in producto.imagenes.all().order_by('posicion', 'created_at')[:5]:
+            imagenes.append({
+                'src': img.src,
+                'url': img.src
+            })
+        
+        # Obtener todos los atributos únicos del producto
+        atributos_dict = {}
+        
+        for variante in producto.variantes.all():
+            # Primero intentar extraer desde campos directos (talla FK y color CharField)
+            # Esto es compatible con tu lógica en admin_producto_edit
+            
+            # Procesar Talla desde FK
+            if variante.talla:
+                atributo_talla = Atributo.objects.filter(
+                    nombre__icontains='talla'
+                ).first()
+                
+                if atributo_talla:
+                    if atributo_talla.id not in atributos_dict:
+                        atributos_dict[atributo_talla.id] = {
+                            'id': atributo_talla.id,
+                            'nombre': atributo_talla.nombre,
+                            'slug': atributo_talla.slug,
+                            'tipo': atributo_talla.tipo,
+                            'valores': {}
+                        }
+                    
+                    # Buscar el ValorAtributo correspondiente
+                    valor_talla = ValorAtributo.objects.filter(
+                        atributo=atributo_talla,
+                        valor=variante.talla.codigo
+                    ).first()
+                    
+                    if valor_talla and valor_talla.id not in atributos_dict[atributo_talla.id]['valores']:
+                        atributos_dict[atributo_talla.id]['valores'][valor_talla.id] = {
+                            'id': valor_talla.id,
+                            'valor': valor_talla.valor,
+                            'codigo_color': valor_talla.codigo_color or ''
+                        }
+            
+            # Procesar Color desde CharField
+            if variante.color:
+                atributo_color = Atributo.objects.filter(
+                    nombre__icontains='color'
+                ).first()
+                
+                if atributo_color:
+                    if atributo_color.id not in atributos_dict:
+                        atributos_dict[atributo_color.id] = {
+                            'id': atributo_color.id,
+                            'nombre': atributo_color.nombre,
+                            'slug': atributo_color.slug,
+                            'tipo': atributo_color.tipo,
+                            'valores': {}
+                        }
+                    
+                    # Buscar el ValorAtributo correspondiente
+                    valor_color = ValorAtributo.objects.filter(
+                        atributo=atributo_color,
+                        valor=variante.color
+                    ).first()
+                    
+                    if valor_color and valor_color.id not in atributos_dict[atributo_color.id]['valores']:
+                        atributos_dict[atributo_color.id]['valores'][valor_color.id] = {
+                            'id': valor_color.id,
+                            'valor': valor_color.valor,
+                            'codigo_color': valor_color.codigo_color or ''
+                        }
+            
+            # Procesar atributos del sistema de VarianteAtributo
+            for variante_atributo in variante.atributos.all():
+                valor_attr = variante_atributo.valor_atributo
+                atributo = valor_attr.atributo
+                
+                if atributo.id not in atributos_dict:
+                    atributos_dict[atributo.id] = {
+                        'id': atributo.id,
+                        'nombre': atributo.nombre,
+                        'slug': atributo.slug,
+                        'tipo': atributo.tipo,
+                        'valores': {}
+                    }
+                
+                if valor_attr.id not in atributos_dict[atributo.id]['valores']:
+                    atributos_dict[atributo.id]['valores'][valor_attr.id] = {
+                        'id': valor_attr.id,
+                        'valor': valor_attr.valor,
+                        'codigo_color': valor_attr.codigo_color or ''
+                    }
+        
+        # Preparar variantes con sus atributos (mismo patrón que admin_producto_edit)
+        variantes = []
+        variantes_stock = {}  # Para JSON de control de stock en quick view
+        variante_default_id = None  # Para productos sin atributos
+        atributo_talla = Atributo.objects.filter(nombre__icontains='talla').first()
+        atributo_color = Atributo.objects.filter(nombre__icontains='color').first()
+        
+        for variante in producto.variantes.all():
+            atributos_variante = {}
+            
+            # Extraer desde campos directos (talla FK y color CharField)
+            if variante.talla and atributo_talla:
+                valor_talla = ValorAtributo.objects.filter(
+                    atributo=atributo_talla,
+                    valor=variante.talla.codigo
+                ).first()
+                if valor_talla:
+                    atributos_variante[atributo_talla.slug] = {
+                        'atributo_id': atributo_talla.id,
+                        'atributo_nombre': atributo_talla.nombre,
+                        'valor_id': valor_talla.id,
+                        'valor': valor_talla.valor,
+                        'codigo_color': valor_talla.codigo_color or ''
+                    }
+            
+            if variante.color and atributo_color:
+                valor_color = ValorAtributo.objects.filter(
+                    atributo=atributo_color,
+                    valor=variante.color
+                ).first()
+                if valor_color:
+                    atributos_variante[atributo_color.slug] = {
+                        'atributo_id': atributo_color.id,
+                        'atributo_nombre': atributo_color.nombre,
+                        'valor_id': valor_color.id,
+                        'valor': valor_color.valor,
+                        'codigo_color': valor_color.codigo_color or ''
+                    }
+            
+            # Completar con atributos del sistema
+            for va in variante.atributos.all():
+                valor_attr = va.valor_atributo
+                atributo = valor_attr.atributo
+                
+                if atributo.slug not in atributos_variante:
+                    atributos_variante[atributo.slug] = {
+                        'atributo_id': atributo.id,
+                        'atributo_nombre': atributo.nombre,
+                        'valor_id': valor_attr.id,
+                        'valor': valor_attr.valor,
+                        'codigo_color': valor_attr.codigo_color or ''
+                    }
+            
+            variantes.append({
+                'id': variante.id,
+                'sku': variante.sku,
+                'precio': str(variante.precio or producto.precio_base),
+                'stock': variante.stock,
+                'atributos': atributos_variante,
+                # Mantener compatibilidad
+                'talla': variante.talla.codigo if variante.talla else None,
+                'color': variante.color or None
+            })
+            
+            # Preparar JSON de stock para JavaScript (igual que en product_detail)
+            if variante.talla:
+                key = f"{variante.talla.codigo}"
+                if variante.color and variante.color.strip():
+                    key += f"_{variante.color}"
+                variantes_stock[key] = {
+                    'id': variante.id,
+                    'stock': variante.stock,
+                    'talla': variante.talla.codigo if variante.talla else None,
+                    'color': variante.color if variante.color else '',
+                    'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
+                }
+            else:
+                # Variante default (sin talla) para productos sin atributos
+                variante_default_id = variante.id
+                variantes_stock['default'] = {
+                    'id': variante.id,
+                    'stock': variante.stock,
+                    'talla': None,
+                    'color': '',
+                    'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
+                }
+        
+        # Calcular stock total (mismo patrón que ProductoListView)
+        from django.db.models import Sum
+        total_stock = producto.variantes.aggregate(
+            total=Sum('stock')
+        )['total'] or 0
+        
+        data = {
+            'id': producto.id,
+            'nombre': producto.nombre,
+            'precio': str(producto.precio_base),
+            'descripcion_corta': producto.descripcion_corta or '',
+            'descripcion_larga': producto.descripcion_larga or '',
+            'marca': producto.marca or '',
+            'stock': total_stock,
+            'imagenes': imagenes,
+            'variantes': variantes,
+            'variantes_stock': variantes_stock,  # JSON para control de stock en JS
+            'variante_default_id': variante_default_id,  # Para productos sin atributos
+            'atributos': list(atributos_dict.values()),
+            'tiene_tallas': producto.tiene_tallas
+        }
+        
+        return JsonResponse(data)
+        
+    except Producto.DoesNotExist:
+        return JsonResponse({
+            'error': 'Producto no encontrado'
+        }, status=404)
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())  # Para debug
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)

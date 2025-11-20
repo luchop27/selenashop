@@ -90,11 +90,14 @@
 
                         <fieldset class="name mb-20" id="subcategoria-field" style="display: none;">
                             <div class="body-title mb-10">Subcategoría <span class="tf-color-1">*</span></div>
-                            <select name="categoria" id="id_categoria" class="tf-input" required>
+                            <select name="categoria" id="id_categoria" class="tf-input">
                                 <option value="">-- Seleccionar Subcategoría --</option>
                             </select>
                             <div class="text-tiny text-surface-2 mt-5">Ejemplo: Vestidos, Pantalones, Blusas, etc.</div>
                         </fieldset>
+                        
+                        <!-- Campo oculto para categoría cuando no hay subcategorías -->
+                        <input type="hidden" name="categoria_hidden" id="id_categoria_hidden">
 
                         <fieldset class="name" id="coleccion-field" style="display: none;">
                             <div class="body-title mb-10">Colección (Opcional)</div>
@@ -166,8 +169,15 @@
 
                     <!-- Paso 3: Atributos y Variantes -->
                     <div class="wg-box mb-30" id="attributes-section" style="display: none;">
-                        <div class="body-title mb-20">Paso 3: Atributos y Variantes</div>
+                        <div class="body-title mb-20" id="step3-title">Paso 3: Atributos y Variantes</div>
                         <div class="text-tiny mb-20">Agrega los atributos disponibles para esta categoría</div>
+                        
+                        <!-- Campo de stock por defecto (solo para productos sin variantes) -->
+                        <fieldset class="name mb-20" id="stock-default-field" style="display: none;">
+                            <div class="body-title mb-10">Stock del Producto</div>
+                            <input type="number" name="stock_default" class="tf-input" placeholder="0" value="0" min="0">
+                            <div class="text-tiny text-surface-2 mt-5">Stock disponible para este producto (si no usas variantes)</div>
+                        </fieldset>
                         
                         <button type="button" class="tf-button style-3 mb-20" id="btn-add-attribute">
                             <i class="icon-plus"></i> Agregar Atributo
@@ -298,19 +308,38 @@ document.getElementById('id_categoria_principal').addEventListener('change', fun
             // NO tiene subcategorías - usar la categoría principal directamente
             document.getElementById('subcategoria-field').style.display = 'none';
             
-            // Asignar la categoría principal al campo oculto
-            selectSubcategoria.value = categoriaId;
+            // Usar campo oculto para enviar la categoría
+            const hiddenCategoriaInput = document.getElementById('id_categoria_hidden');
+            hiddenCategoriaInput.value = categoriaId;
+            hiddenCategoriaInput.name = 'categoria'; // Este campo enviará la categoría
+            
+            // Quitar el name del select visible para que no interfiera
+            selectSubcategoria.removeAttribute('name');
+            selectSubcategoria.value = '';
+            
             categoriaActual = categoriaPrincipalActual;
             
             // Mostrar los demás campos directamente
             document.getElementById('coleccion-field').style.display = 'block';
             document.getElementById('product-fields').style.display = 'block';
-            document.getElementById('attributes-section').style.display = 'block';
-            document.getElementById('submit-buttons').style.display = 'block';
             
             // Mostrar u ocultar marca según categoría
             const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
             document.getElementById('marca-field').style.display = esRopa ? 'none' : 'block';
+            
+            // Solo mostrar atributos si es categoría Ropa, para otras categorías son opcionales
+            if (esRopa) {
+                document.getElementById('attributes-section').style.display = 'block';
+                document.getElementById('step3-title').textContent = 'Paso 3: Atributos y Variantes (Requerido)';
+                document.getElementById('stock-default-field').style.display = 'none';
+            } else {
+                document.getElementById('attributes-section').style.display = 'block';
+                document.getElementById('step3-title').textContent = 'Paso 3: Atributos y Variantes (Opcional)';
+                document.getElementById('stock-default-field').style.display = 'block';
+            }
+            
+            // Siempre mostrar botón submit
+            document.getElementById('submit-buttons').style.display = 'block';
         }
     }
 });
@@ -321,30 +350,53 @@ document.getElementById('id_categoria').addEventListener('change', function() {
     categoriaActual = categoriasData.find(c => c.id === subcategoriaId);
     
     if (subcategoriaId) {
+        // Restaurar el name al select visible y limpiar el campo oculto
+        this.setAttribute('name', 'categoria');
+        const hiddenCategoriaInput = document.getElementById('id_categoria_hidden');
+        hiddenCategoriaInput.removeAttribute('name');
+        hiddenCategoriaInput.value = '';
+        
         document.getElementById('coleccion-field').style.display = 'block';
         document.getElementById('product-fields').style.display = 'block';
-        document.getElementById('attributes-section').style.display = 'block';
-        document.getElementById('submit-buttons').style.display = 'block';
         
         // Mostrar u ocultar marca según categoría
         const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
         document.getElementById('marca-field').style.display = esRopa ? 'none' : 'block';
+        
+        // Solo mostrar atributos si es categoría Ropa, para otras categorías son opcionales
+        if (esRopa) {
+            document.getElementById('attributes-section').style.display = 'block';
+            document.getElementById('step3-title').textContent = 'Paso 3: Atributos y Variantes (Requerido)';
+            document.getElementById('stock-default-field').style.display = 'none';
+        } else {
+            document.getElementById('attributes-section').style.display = 'block';
+            document.getElementById('step3-title').textContent = 'Paso 3: Atributos y Variantes (Opcional)';
+            document.getElementById('stock-default-field').style.display = 'block';
+        }
+        
+        // Siempre mostrar botón submit
+        document.getElementById('submit-buttons').style.display = 'block';
     }
 });
 
 // Agregar atributo
 document.getElementById('btn-add-attribute').addEventListener('click', function() {
     let atributosFiltrados = atributosDisponibles;
+    const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
     
     // Si es "Ropa", solo mostrar Talla y Color
-    if (categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa') {
+    if (esRopa) {
         atributosFiltrados = atributosDisponibles.filter(a => 
             a.nombre.toLowerCase() === 'talla' || a.nombre.toLowerCase() === 'color'
         );
     }
     
     if (atributosFiltrados.length === 0) {
-        alert('No hay atributos disponibles para esta categoría.');
+        if (esRopa) {
+            alert('No hay atributos de Talla y Color disponibles. Por favor, créalos primero.');
+        } else {
+            alert('No hay atributos disponibles. Puedes agregar el producto sin atributos.');
+        }
         return;
     }
 
@@ -539,17 +591,19 @@ function generarVariantes() {
         variantDiv.style.cssText = 'border: 1px solid #e5e7eb; padding: 16px; border-radius: 8px; background: white;';
         
         variantDiv.innerHTML = `
-            <div class="body-text fw-7 mb-12">${nombre}</div>
+            <div class="body-text fw-7 mb-12">
+                ${nombre}
+                <span style="margin-left: 10px; padding: 4px 8px; background: #e5e7eb; border-radius: 4px; font-size: 11px; font-weight: normal;">
+                    SKU: ${skuGenerado}
+                </span>
+            </div>
             <div class="cols-lg gap16">
-                <fieldset>
-                    <div class="body-text mb-4">SKU (Generado automáticamente)</div>
-                    <input type="text" name="variante_${index}_sku" class="tf-input" value="${skuGenerado}" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
-                </fieldset>
                 <fieldset>
                     <div class="body-text mb-4">Stock</div>
                     <input type="number" name="variante_${index}_stock" class="tf-input" placeholder="0" value="0">
                 </fieldset>
             </div>
+            <input type="hidden" name="variante_${index}_sku" value="${skuGenerado}">
             <input type="hidden" name="variante_${index}_atributos" value='${JSON.stringify(combo)}'>
         `;
         

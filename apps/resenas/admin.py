@@ -1,6 +1,15 @@
 # apps/resenas/admin.py
 from django.contrib import admin
-from .models import Resena
+from .models import Resena, RespuestaResena
+
+
+class RespuestaResenaInline(admin.TabularInline):
+    """Inline para respuestas a reseñas"""
+    model = RespuestaResena
+    extra = 0
+    fields = ('usuario', 'comentario', 'creado_en')
+    readonly_fields = ('creado_en',)
+    autocomplete_fields = ('usuario',)
 
 
 @admin.register(Resena)
@@ -14,10 +23,12 @@ class ResenaAdmin(admin.ModelAdmin):
         'usuario',
         'calificacion',
         'titulo',
+        'verificado',
         'creado_en',
     )
     list_filter = (
         'calificacion',
+        'verificado',
         'creado_en',
         'producto__categoria',
     )
@@ -31,19 +42,44 @@ class ResenaAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('creado_en',)
     autocomplete_fields = ('producto', 'usuario')
+    list_editable = ('verificado',)
     
     ordering = ('-creado_en',)
     date_hierarchy = 'creado_en'
+    inlines = [RespuestaResenaInline]
     
     fieldsets = (
         ('Información Principal', {
-            'fields': ('producto', 'usuario', 'calificacion')
+            'fields': ('producto', 'usuario', 'calificacion', 'verificado')
         }),
         ('Contenido de la Reseña', {
             'fields': ('titulo', 'comentario')
         }),
         ('Metadatos', {
             'fields': ('creado_en',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(RespuestaResena)
+class RespuestaResenaAdmin(admin.ModelAdmin):
+    """Panel de administración para respuestas a reseñas"""
+    list_display = ('id', 'resena', 'usuario', 'creado_en')
+    list_filter = ('creado_en',)
+    search_fields = ('comentario', 'usuario__email', 'resena__usuario__email')
+    readonly_fields = ('creado_en', 'actualizado_en')
+    autocomplete_fields = ('resena', 'usuario')
+    
+    fieldsets = (
+        ('Información', {
+            'fields': ('resena', 'usuario')
+        }),
+        ('Respuesta', {
+            'fields': ('comentario',)
+        }),
+        ('Metadatos', {
+            'fields': ('creado_en', 'actualizado_en'),
             'classes': ('collapse',)
         }),
     )

@@ -8,6 +8,10 @@ app_name = "productos"
 urlpatterns = [
     # públicas
     path('productos/', views.ProductoListView.as_view(), name='producto_list'),
+    # API Quick View
+    path('productos/api/<int:producto_id>/quick-view/', 
+     views.producto_quick_view, 
+     name='producto_quick_view'),
     path('producto/<slug:slug>/', views.ProductoDetailView.as_view(), name='producto_detail'),
     path('categoria/<slug:slug>/', views.CategoriaProductoListView.as_view(), name='producto_por_categoria'),
     path('estilo/<slug:slug>/', views.EstiloProductoListView.as_view(), name='producto_por_estilo'),

@@ -157,10 +157,17 @@
         let html = '';
         items.forEach(function(item) {
             const imageUrl = item.imagen || '/static/images/item/default-product.jpg';
-            const variant = item.color || item.talla ? `${item.color || ''} ${item.talla || ''}`.trim() : '';
+            // Solo mostrar talla, NO color
+            const variant = item.talla ? `Talla: ${item.talla}` : '';
+            const stock = item.stock || 0;
+            const isAtMaxStock = item.quantity >= stock;
+            const isAtMinQuantity = item.quantity <= 1;
+            
+            // Debug: mostrar info en consola
+            console.log(`📦 Renderizando: ${item.nombre}, Qty: ${item.quantity}, Stock: ${stock}, Max: ${isAtMaxStock}`);
             
             html += `
-                <div class="tf-mini-cart-item" data-product-id="${item.product_id}">
+                <div class="tf-mini-cart-item" data-product-id="${item.product_id}" data-stock="${stock}">
                     <div class="tf-mini-cart-image">
                         <a href="/product/${item.producto_id}/">
                             <img src="${imageUrl}" alt="${item.nombre}">
@@ -169,12 +176,13 @@
                     <div class="tf-mini-cart-info">
                         <a class="title link" href="/product/${item.producto_id}/">${item.nombre}</a>
                         ${variant ? `<div class="meta-variant">${variant}</div>` : ''}
+                        ${stock > 0 ? `<div class="meta-variant text-muted" style="font-size: 0.85rem;">Stock disponible: ${stock}</div>` : ''}
                         <div class="price fw-6">$${parseFloat(item.precio).toFixed(2)}</div>
                         <div class="tf-mini-cart-btns">
                             <div class="wg-quantity small">
-                                <span class="btn-quantity minus-btn" data-action="decrease">-</span>
+                                <span class="btn-quantity minus-btn" data-action="decrease" ${isAtMinQuantity ? 'style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>-</span>
                                 <input type="text" name="number" value="${item.quantity}" readonly>
-                                <span class="btn-quantity plus-btn" data-action="increase">+</span>
+                                <span class="btn-quantity plus-btn" data-action="increase" ${isAtMaxStock ? 'style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>+</span>
                             </div>
                             <div class="tf-mini-cart-remove" data-action="remove">Remove</div>
                         </div>
@@ -193,16 +201,37 @@
         document.querySelectorAll('.tf-mini-cart-item .btn-quantity').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                
                 const item = this.closest('.tf-mini-cart-item');
                 const productId = item.dataset.productId;
+                const stock = parseInt(item.dataset.stock) || 0;
                 const input = item.querySelector('input[name="number"]');
                 let quantity = parseInt(input.value);
                 const action = this.dataset.action;
 
+                console.log(`🛒 Cart Action: ${action}, Current: ${quantity}, Stock: ${stock}`);
+
                 if (action === 'increase') {
-                    quantity += 1;
-                } else if (action === 'decrease' && quantity > 1) {
-                    quantity -= 1;
+                    if (stock === 0) {
+                        console.log('❌ No hay stock disponible');
+                        return;
+                    }
+                    if (quantity < stock) {
+                        quantity += 1;
+                        console.log(`✅ Incrementado a ${quantity}`);
+                    } else {
+                        console.log(`❌ No se puede agregar más: stock máximo (${stock}) alcanzado`);
+                        return;
+                    }
+                } else if (action === 'decrease') {
+                    if (quantity > 1) {
+                        quantity -= 1;
+                        console.log(`✅ Decrementado a ${quantity}`);
+                    } else {
+                        console.log('❌ Cantidad mínima es 1');
+                        return;
+                    }
                 }
 
                 updateCartQuantity(productId, quantity);
@@ -249,7 +278,15 @@
                 // Mostrar el modal del carrito
                 const cartModal = document.getElementById('shoppingCart');
                 if (cartModal) {
-                    const bsModal = new bootstrap.Modal(cartModal);
+                    // Usar getInstance para obtener la instancia existente o crear una nueva
+                    let bsModal = bootstrap.Modal.getInstance(cartModal);
+                    if (!bsModal) {
+                        bsModal = new bootstrap.Modal(cartModal, {
+                            backdrop: true,
+                            keyboard: true,
+                            focus: true
+                        });
+                    }
                     bsModal.show();
                 }
                 
@@ -326,10 +363,27 @@
         // Aquí podrías usar una librería de toast/notifications
     }
 
+    // Función global para limpiar backdrops residuales
+    function cleanupModalBackdrops() {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(function(backdrop) {
+            backdrop.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+
     // Event listener para el botón "Add to cart" en product detail
     document.addEventListener('DOMContentLoaded', function() {
         // Cargar el carrito al inicio
         loadCartItems();
+
+        // Listener global para limpiar backdrops cuando cualquier modal se cierra
+        document.addEventListener('hidden.bs.modal', function(event) {
+            // Pequeño delay para asegurar que Bootstrap termine su limpieza
+            setTimeout(cleanupModalBackdrops, 100);
+        });
 
         // Manejar click en botones "Add to cart"
         document.querySelectorAll('.btn-add-to-cart').forEach(function(btn) {
@@ -343,16 +397,36 @@
                     return;
                 }
 
-                // Obtener la variante seleccionada (si existe)
+                // Obtener la variante ID desde el script de control de stock
                 let varianteId = null;
-                const varianteSelect = document.querySelector('input[name="variant"]:checked, select[name="variant"]');
-                if (varianteSelect) {
-                    varianteId = varianteSelect.value || varianteSelect.dataset.varianteId;
+                if (typeof window.currentVariantId !== 'undefined' && window.currentVariantId) {
+                    varianteId = window.currentVariantId;
+                } else {
+                    // Fallback: buscar en inputs de variante
+                    const varianteSelect = document.querySelector('input[name="variant"]:checked, select[name="variant"]');
+                    if (varianteSelect) {
+                        varianteId = varianteSelect.value || varianteSelect.dataset.varianteId;
+                    }
                 }
 
                 // Obtener la cantidad
                 const quantityInput = document.querySelector('.quantity-product, input[name="number"]');
                 const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+                
+                // Validar que haya stock suficiente
+                if (typeof window.currentMaxStock !== 'undefined') {
+                    // Si es un producto sin atributos y tiene stock definido, permitir agregar
+                    if (window.currentMaxStock > 0) {
+                        if (quantity > window.currentMaxStock) {
+                            showNotification('Stock insuficiente. Solo hay ' + window.currentMaxStock + ' unidades disponibles.', 'error');
+                            return;
+                        }
+                    } else if (window.currentMaxStock === 0) {
+                        showNotification('Producto sin stock disponible', 'error');
+                        return;
+                    }
+                    // Si currentMaxStock no está definido o es undefined, continuar (productos antiguos sin validación)
+                }
 
                 // Agregar al carrito
                 addToCart(productoId, varianteId, quantity);
@@ -365,7 +439,104 @@
             cartModal.addEventListener('show.bs.modal', function() {
                 loadCartItems();
             });
+            
+            // Limpiar backdrop cuando se cierra el modal
+            cartModal.addEventListener('hidden.bs.modal', function() {
+                cleanupModalBackdrops();
+            });
+        }
+
+        // Manejar el botón de agregar nota
+        const btnAddNote = document.querySelector('.btn-add-note');
+        if (btnAddNote) {
+            btnAddNote.addEventListener('click', function() {
+                document.querySelector('.add-note').classList.add('open');
+            });
+        }
+
+        // Manejar el cierre del panel de nota
+        document.querySelectorAll('.add-note .tf-mini-cart-tool-close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const notePanel = document.querySelector('.add-note');
+                notePanel.classList.remove('open');
+                
+                // Guardar la nota
+                const noteText = document.getElementById('Cart-note').value;
+                if (noteText.trim()) {
+                    saveCartNote(noteText);
+                }
+            });
+        });
+
+        // Manejar el botón de agregar gift wrap
+        const btnAddGift = document.querySelector('.btn-add-gift');
+        if (btnAddGift) {
+            btnAddGift.addEventListener('click', function() {
+                document.querySelector('.add-gift').classList.add('open');
+            });
+        }
+
+        // Manejar el cierre del panel de gift wrap
+        document.querySelectorAll('.add-gift .tf-mini-cart-tool-close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelector('.add-gift').classList.remove('open');
+            });
+        });
+
+        // Manejar el formulario de gift wrap
+        const giftForm = document.querySelector('.tf-product-form-addgift');
+        if (giftForm) {
+            giftForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                addGiftWrap();
+            });
         }
     });
+
+    // Función para guardar la nota del carrito
+    function saveCartNote(note) {
+        const formData = new FormData();
+        formData.append('note', note);
+
+        fetch('/cart/save-note/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Nota guardada correctamente', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving note:', error);
+        });
+    }
+
+    // Función para agregar gift wrap
+    function addGiftWrap() {
+        fetch('/cart/add-gift-wrap/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCartTotal(data.cart_total);
+                document.querySelector('.add-gift').classList.remove('open');
+                showNotification('Gift wrap agregado (+$5.00)', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding gift wrap:', error);
+        });
+    }
 
 })();

@@ -30,6 +30,9 @@ urlpatterns = [
     
     # URLs del catálogo de productos
     path('', include('apps.productos.urls')),
+    
+    # URLs de reseñas
+    path('reviews/', include('apps.resenas.urls')),
 ] 
 
 if settings.DEBUG:

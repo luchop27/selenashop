@@ -385,6 +385,10 @@ def product_detail(request, producto_id=None):
         
         # Obtener todas las variantes
         variantes = list(producto.variantes.all())
+        print(f"DEBUG - Producto ID: {producto.id}, Nombre: {producto.nombre}")
+        print(f"DEBUG - Total variantes encontradas: {len(variantes)}")
+        for v in variantes:
+            print(f"DEBUG - Variante ID: {v.id}, Talla: {v.talla}, Color: {v.color}, Stock: {v.stock}")
         
         # Extraer colores únicos
         colores_disponibles = []
@@ -558,10 +562,59 @@ def product_detail(request, producto_id=None):
                         tallas_vistas_rec.add(codigo)
             prod.sizes = tallas_rec
         
+        # Obtener información adicional del producto
+        from apps.productos.models import ShippingInfo, ReturnPolicy, GlobalProductContent
+        
+        # Global product content (Features, Materials, Care instructions)
+        global_content = GlobalProductContent.objects.filter(activo=True).first()
+        
+        # Shipping info (obtener la primera activa)
+        shipping_info = ShippingInfo.objects.filter(activo=True).first()
+        
+        # Return policies (obtener todas las activas)
+        return_policies = ReturnPolicy.objects.filter(activo=True).order_by('orden')
+        
+        # Preparar datos de variantes con stock para JavaScript
+        import json
+        variantes_stock = {}
+        variante_default_id = None  # Para productos sin atributos
+        
+        for variante in variantes:
+            if variante.talla:
+                key = f"{variante.talla.codigo}"
+                # Solo agregar color a la clave si realmente existe y no está vacío
+                if variante.color and variante.color.strip():
+                    key += f"_{variante.color}"
+                variantes_stock[key] = {
+                    'id': variante.id,
+                    'stock': variante.stock,
+                    'talla': variante.talla.codigo if variante.talla else None,
+                    'color': variante.color if variante.color else '',
+                    'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
+                }
+                # Debug: imprimir información de la variante
+                print(f"DEBUG Backend - Clave: '{key}' - Stock: {variante.stock} - Precio: {variante.precio} - Color: '{variante.color}'")
+            else:
+                # Variante default (sin talla) para productos sin atributos
+                variante_default_id = variante.id
+                variantes_stock['default'] = {
+                    'id': variante.id,
+                    'stock': variante.stock,
+                    'talla': None,
+                    'color': '',
+                    'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
+                }
+                print(f"DEBUG Backend - Variante DEFAULT: ID={variante.id} - Stock: {variante.stock} - Precio: {variante.precio}")
+        
+        variantes_json = json.dumps(variantes_stock)
+        print(f"DEBUG Backend - Variantes JSON completo: {variantes_json}")
+        
         context = {
             'producto': producto,
             'imagenes': imagenes,
             'variantes': variantes,
+            'variantes_json': variantes_json,
+            'variante_default_id': variante_default_id,  # Para productos sin atributos
             'colores_disponibles': colores_disponibles,
             'tallas_disponibles': tallas_disponibles,
             'precio_min': precio_min,
@@ -569,6 +622,9 @@ def product_detail(request, producto_id=None):
             'tiene_descuento': tiene_descuento,
             'productos_relacionados': productos_relacionados,
             'productos_recientes': productos_recientes,
+            'global_content': global_content,
+            'shipping_info': shipping_info,
+            'return_policies': return_policies,
         }
     else:
         # Sin ID, mostrar template demo
@@ -669,6 +725,16 @@ def cart_detail(request):
     
     items = []
     for item in cart:
+        # Obtener stock de la variante
+        stock = 0
+        if item['variante_id']:
+            try:
+                from apps.productos.models import Variante
+                variante = Variante.objects.get(id=item['variante_id'])
+                stock = variante.stock
+            except:
+                stock = 0
+        
         items.append({
             'product_id': f"{item['producto_id']}_{item['variante_id']}" if item['variante_id'] else str(item['producto_id']),
             'producto_id': item['producto_id'],
@@ -678,15 +744,17 @@ def cart_detail(request):
             'quantity': item['quantity'],
             'total': str(item['total_precio']),
             'imagen': item['imagen'],
-            'color': item.get('color'),
             'talla': item.get('talla'),
+            'stock': stock,
         })
     
     return JsonResponse({
         'success': True,
         'items': items,
         'cart_count': len(cart),
-        'cart_total': str(cart.get_total_price())
+        'cart_total': str(cart.get_total_price()),
+        'note': cart.get_note(),
+        'has_gift_wrap': cart.has_gift_wrap()
     })
 
 
@@ -703,6 +771,115 @@ def cart_clear(request):
         'cart_count': 0,
         'cart_total': '0.00'
     })
+
+
+def cart_save_note(request):
+    """
+    Vista para guardar una nota en el pedido
+    """
+    if request.method == 'POST':
+        cart = Cart(request)
+        note = request.POST.get('note', '')
+        cart.set_note(note)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Nota guardada correctamente',
+            'note': note
+        })
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
+def cart_add_gift_wrap(request):
+    """
+    Vista para agregar gift wrap al carrito
+    """
+    if request.method == 'POST':
+        cart = Cart(request)
+        cart.set_gift_wrap(True)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Gift wrap agregado',
+            'cart_total': str(cart.get_total_price()),
+            'gift_wrap_cost': '5.00'
+        })
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
+def cart_remove_gift_wrap(request):
+    """
+    Vista para remover gift wrap del carrito
+    """
+    if request.method == 'POST':
+        cart = Cart(request)
+        cart.set_gift_wrap(False)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Gift wrap removido',
+            'cart_total': str(cart.get_total_price())
+        })
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+
+
+def view_cart(request):
+    """
+    Vista para mostrar la página completa del carrito (view-cart.html)
+    """
+    from apps.productos.models import Variante, Producto
+    
+    cart = Cart(request)
+    cart_items = []
+    
+    for item in cart:
+        # Obtener stock de la variante
+        stock = 0
+        if item['variante_id']:
+            try:
+                variante = Variante.objects.get(id=item['variante_id'])
+                stock = variante.stock
+            except:
+                stock = 0
+        else:
+            # Si no hay variante_id, buscar la variante default del producto
+            try:
+                producto_obj = Producto.objects.get(id=item['producto_id'])
+                variante_default = producto_obj.variantes.first()  # Primera variante (default)
+                if variante_default:
+                    stock = variante_default.stock
+            except:
+                stock = 0
+        
+        cart_items.append({
+            'product_id': f"{item['producto_id']}_{item['variante_id']}" if item['variante_id'] else str(item['producto_id']),
+            'producto': item['producto'],
+            'producto_id': item['producto_id'],
+            'variante_id': item['variante_id'],
+            'nombre': item['nombre'],
+            'precio': item['precio_decimal'],
+            'quantity': item['quantity'],
+            'total': item['total_precio'],
+            'imagen': item['imagen'],
+            'talla': item.get('talla'),
+            'color': item.get('color'),
+            'stock': stock,
+        })
+    
+    # Obtener productos recomendados (productos aleatorios activos)
+    productos_recomendados = Producto.objects.filter(
+        activo=True
+    ).prefetch_related('imagenes', 'variantes').order_by('?')[:8]
+    
+    context = {
+        'cart_items': cart_items,
+        'cart': cart,
+        'note': cart.get_note(),
+        'has_gift_wrap': cart.has_gift_wrap(),
+        'productos_recomendados': productos_recomendados,
+    }
+    
+    return render(request, 'view-cart.html', context)
 
 
 def api_productos_nuevos(request):
@@ -843,3 +1020,249 @@ def cart_recommendations(request):
         'success': True,
         'recommendations': recommendations
     })
+
+
+# ==================== CHECKOUT VIEWS ====================
+
+def checkout(request):
+    """
+    Vista para mostrar la página de checkout
+    """
+    from apps.productos.models import Variante, Producto
+    
+    cart = Cart(request)
+    
+    # Verificar si el carrito está vacío
+    if len(cart) == 0:
+        messages.warning(request, 'Tu carrito está vacío. Agrega productos antes de continuar.')
+        return redirect('core:view_cart')
+    
+    # Preparar items del carrito para el template
+    cart_items = []
+    for item in cart:
+        cart_items.append({
+            'product_id': f"{item['producto_id']}_{item['variante_id']}" if item['variante_id'] else str(item['producto_id']),
+            'producto': item['producto'],
+            'producto_id': item['producto_id'],
+            'variante_id': item['variante_id'],
+            'nombre': item['nombre'],
+            'precio': item['precio_decimal'],
+            'quantity': item['quantity'],
+            'total': item['total_precio'],
+            'imagen': item['imagen'],
+            'talla': item.get('talla'),
+            'color': item.get('color'),
+        })
+    
+    context = {
+        'cart_items': cart_items,
+        'cart': cart,
+        'note': cart.get_note(),
+        'has_gift_wrap': cart.has_gift_wrap(),
+    }
+    
+    return render(request, 'checkout.html', context)
+
+
+def checkout_process(request):
+    """
+    Vista para procesar el pedido del checkout
+    """
+    if request.method != 'POST':
+        return redirect('core:checkout')
+    
+    from apps.productos.models import Variante, Producto
+    from .models import Pedido, DetallePedido
+    from decimal import Decimal
+    
+    cart = Cart(request)
+    
+    # Verificar si el carrito está vacío
+    if len(cart) == 0:
+        messages.error(request, 'Tu carrito está vacío.')
+        return redirect('core:view_cart')
+    
+    try:
+        # Obtener datos del formulario
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        country = request.POST.get('country', 'Ecuador').strip()  # Siempre Ecuador
+        city = request.POST.get('city', '').strip()
+        other_city = request.POST.get('other_city', '').strip()
+        address = request.POST.get('address', '').strip()
+        order_note = request.POST.get('order_note', '').strip()
+        payment_method = request.POST.get('payment_method', 'bank_transfer')
+        
+        # Si seleccionó "Otra ciudad", usar el campo other_city
+        if city == 'Otra' and other_city:
+            city = other_city
+        
+        # Validar campos requeridos
+        if not all([first_name, last_name, email, phone, city, address]):
+            messages.error(request, 'Por favor, completa todos los campos requeridos.')
+            return redirect('core:checkout')
+        
+        # Calcular totales
+        subtotal = cart.get_total_price()
+        gift_wrap = cart.has_gift_wrap()
+        gift_wrap_cost = Decimal('5.00') if gift_wrap else Decimal('0.00')
+        
+        # Aplicar código de descuento si existe
+        discount_code = request.POST.get('discount_code_applied', '').strip()
+        discount_amount = Decimal(request.POST.get('discount_amount', '0'))
+        
+        # Validar código de descuento si se proporcionó
+        if discount_code:
+            from .models import CodigoDescuento
+            try:
+                codigo = CodigoDescuento.objects.get(codigo=discount_code)
+                es_valido, mensaje = codigo.es_valido(subtotal)
+                if not es_valido:
+                    messages.warning(request, f'El código de descuento ya no es válido: {mensaje}')
+                    discount_amount = Decimal('0')
+                    discount_code = ''
+                else:
+                    # Incrementar uso del código
+                    codigo.usos_actuales += 1
+                    codigo.save()
+            except CodigoDescuento.DoesNotExist:
+                messages.warning(request, 'El código de descuento no es válido')
+                discount_amount = Decimal('0')
+                discount_code = ''
+        
+        total = subtotal + gift_wrap_cost - discount_amount
+        
+        # Crear el pedido
+        pedido = Pedido.objects.create(
+            usuario=request.user if request.user.is_authenticated else None,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            country=country,
+            city=city,
+            address=address,
+            order_note=order_note,
+            metodo_pago=payment_method,
+            subtotal=subtotal,
+            gift_wrap=gift_wrap,
+            gift_wrap_cost=gift_wrap_cost,
+            discount_code=discount_code if discount_code else None,
+            discount_amount=discount_amount,
+            total=total,
+            estado='pendiente'
+        )
+        
+        # Crear los detalles del pedido
+        for item in cart:
+            DetallePedido.objects.create(
+                pedido=pedido,
+                producto=item['producto'],
+                variante_id=item['variante_id'],
+                nombre_producto=item['nombre'],
+                talla=item.get('talla'),
+                color=item.get('color'),
+                precio_unitario=item['precio_decimal'],
+                cantidad=item['quantity'],
+                subtotal=item['total_precio'],
+                imagen_url=item['imagen']
+            )
+            
+            # Actualizar stock de la variante
+            if item['variante_id']:
+                try:
+                    variante = Variante.objects.get(id=item['variante_id'])
+                    if variante.stock >= item['quantity']:
+                        variante.stock -= item['quantity']
+                        variante.save()
+                except Variante.DoesNotExist:
+                    pass
+        
+        # Limpiar el carrito
+        cart.clear()
+        
+        # Mensaje de éxito
+        messages.success(
+            request,
+            f'¡Pedido realizado con éxito! Tu número de pedido es: {pedido.numero_pedido}'
+        )
+        
+        # Redirigir a página de confirmación
+        return redirect('core:order_confirmation', pedido_id=pedido.id)
+        
+    except Exception as e:
+        messages.error(request, f'Error al procesar el pedido: {str(e)}')
+        return redirect('core:checkout')
+
+
+def order_confirmation(request, pedido_id):
+    """
+    Vista para mostrar la confirmación del pedido
+    """
+    from django.shortcuts import get_object_or_404
+    from .models import Pedido
+    
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    
+    # Verificar que el pedido pertenece al usuario (si está autenticado)
+    if request.user.is_authenticated and pedido.usuario and pedido.usuario != request.user:
+        messages.error(request, 'No tienes permiso para ver este pedido.')
+        return redirect('core:inicio')
+    
+    context = {
+        'pedido': pedido,
+    }
+    
+    return render(request, 'order-confirmation.html', context)
+
+
+@require_POST
+def validate_discount_code(request):
+    """
+    Vista AJAX para validar códigos de descuento
+    """
+    from .models import CodigoDescuento
+    from decimal import Decimal
+    
+    discount_code = request.POST.get('discount_code', '').strip().upper()
+    
+    if not discount_code:
+        return JsonResponse({
+            'valid': False,
+            'message': 'Por favor ingresa un código de descuento'
+        })
+    
+    try:
+        codigo = CodigoDescuento.objects.get(codigo=discount_code)
+        
+        # Obtener monto del carrito
+        cart = Cart(request)
+        cart_total = cart.get_total_price()
+        
+        # Validar el código
+        es_valido, mensaje = codigo.es_valido(cart_total)
+        
+        if not es_valido:
+            return JsonResponse({
+                'valid': False,
+                'message': mensaje
+            })
+        
+        # Calcular descuento
+        discount_amount = codigo.calcular_descuento(cart_total)
+        
+        return JsonResponse({
+            'valid': True,
+            'discount_amount': float(discount_amount),
+            'discount_type': codigo.tipo,
+            'discount_value': float(codigo.valor),
+            'message': 'Código válido'
+        })
+        
+    except CodigoDescuento.DoesNotExist:
+        return JsonResponse({
+            'valid': False,
+            'message': 'El código de descuento no existe'
+        })
