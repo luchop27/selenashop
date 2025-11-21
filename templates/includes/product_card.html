@@ -44,7 +44,7 @@
                 {% endfor %}
             </div>
         {% endif %}
-        <a href="#quick_add" data-bs-toggle="modal" class="btn-quick-add quick-add">QUICK ADD</a>
+        <a href="#quick_add" data-bs-toggle="modal" class="btn-quick-add quick-add d-none d-md-flex">QUICK ADD</a>
     </div>
     <div class="card-product-info">
         <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>

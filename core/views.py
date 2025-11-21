@@ -192,6 +192,171 @@ def inicio(request):
         producto.sizes = size_values
 
     context['productos_nuevos'] = productos_nuevos
+    # --- Shop Gram: productos aleatorios de la categoría 'Ropa' ---
+    try:
+        categoria_ropa_main = Categoria.objects.filter(nombre__icontains='ropa', padre__isnull=True, estado=True).first()
+    except Exception:
+        categoria_ropa_main = None
+
+    if categoria_ropa_main:
+        sub_ids = list(categoria_ropa_main.subcategorias.filter(estado=True).values_list('id', flat=True))
+        categorias_ids = sub_ids + [categoria_ropa_main.id]
+        shop_qs = (
+            Producto.objects
+            .filter(activo=True, categoria_id__in=categorias_ids)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('?')[:5]
+        )
+    else:
+        shop_qs = (
+            Producto.objects
+            .filter(activo=True)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('?')[:5]
+        )
+
+    shop_gram_products = list(shop_qs)
+    for p in shop_gram_products:
+        # precio a mostrar
+        if getattr(p, 'precio_minimo', None):
+            p.display_price = f"{p.precio_minimo:.2f}"
+        else:
+            p.display_price = f"{p.precio_base:.2f}"
+
+        # imágenes
+        imagenes = list(p.imagenes.all()[:2])
+        if imagenes:
+            # usar la propiedad .src si está disponible, fallback a .imagen.url
+            p.main_image_src = getattr(imagenes[0], 'src', None) or (imagenes[0].imagen.url if imagenes[0].imagen else '')
+            p.hover_image_src = (
+                getattr(imagenes[1], 'src', None)
+                if len(imagenes) > 1 else p.main_image_src
+            ) or (imagenes[1].imagen.url if len(imagenes) > 1 and imagenes[1].imagen else p.main_image_src)
+        else:
+            p.main_image_src = ''
+            p.hover_image_src = ''
+
+        # descripción corta para el modal
+        p.short_description = p.descripcion_corta or (p.descripcion_larga[:150] if p.descripcion_larga else '')
+
+    context['shop_gram_products'] = shop_gram_products
+    # --- Testimonial / Reseñas: traer reseñas verificadas recientes ---
+    try:
+        from apps.resenas.models import Resena
+
+        # Intentar reseñas verificadas; si no hay, traer cualquier reseña reciente
+        qs_resenas = list(
+            Resena.objects
+            .filter(verificado=True)
+            .select_related('usuario', 'producto')
+            .order_by('-creado_en')[:5]
+        )
+
+        if not qs_resenas:
+            qs_resenas = list(
+                Resena.objects
+                .all()
+                .select_related('usuario', 'producto')
+                .order_by('-creado_en')[:5]
+            )
+
+        testimonials = []
+        for r in qs_resenas:
+            usuario = getattr(r, 'usuario', None)
+            if usuario:
+                nombre = ''
+                try:
+                    nombre = usuario.get_full_name() if callable(getattr(usuario, 'get_full_name', None)) else ''
+                except Exception:
+                    nombre = ''
+                if not nombre:
+                    nombre = getattr(usuario, 'nombre', '') or getattr(usuario, 'username', '') or getattr(usuario, 'email', '') or 'Cliente'
+            else:
+                nombre = 'Cliente'
+
+            producto = getattr(r, 'producto', None)
+            product_image = ''
+            product_title = ''
+            product_url = '#'
+            product_price = ''
+            if producto:
+                product_title = getattr(producto, 'nombre', '')
+                product_url = f'/product/{getattr(producto, "id", "")}/'
+                first_img = producto.imagenes.first() if hasattr(producto, 'imagenes') else None
+                if first_img and getattr(first_img, 'imagen', None):
+                    try:
+                        product_image = first_img.imagen.url
+                    except Exception:
+                        product_image = ''
+                try:
+                    precio_min = getattr(producto, 'precio_minimo', None)
+                    if precio_min:
+                        product_price = f"{precio_min:.2f}"
+                    else:
+                        product_price = str(getattr(producto, 'precio_base', ''))
+                except Exception:
+                    product_price = str(getattr(producto, 'precio_base', ''))
+
+            time_ago = r.get_tiempo_transcurrido() if hasattr(r, 'get_tiempo_transcurrido') else getattr(r, 'creado_en', '')
+
+            testimonials.append({
+                'rating': getattr(r, 'calificacion', 5) or 5,
+                'heading': getattr(r, 'titulo', '') or '',
+                'text': getattr(r, 'comentario', '') or '',
+                'author_name': nombre,
+                'metas': getattr(r, 'metas', '') or time_ago,
+                'product_image': product_image,
+                'product_title': product_title,
+                'product_url': product_url,
+                'product_price': product_price,
+            })
+
+    except Exception:
+        testimonials = []
+
+    # Si no hay reseñas en la BD, usar un fallback de ejemplo para evitar el mensaje "No reviews yet".
+    if not testimonials:
+        testimonials = [
+            {
+                'rating': 5,
+                'heading': 'Excelente servicio',
+                'text': 'Me encantó la calidad del producto y la rapidez en el envío.',
+                'author_name': 'María López',
+                'metas': 'Cliente de España',
+                'product_image': '/static/images/shop/products/img-p2.png',
+                'product_title': 'Jersey thong body',
+                'product_url': '#',
+                'product_price': '105.95',
+            },
+            {
+                'rating': 5,
+                'heading': 'Muy buena calidad',
+                'text': 'La tela es suave y el tallaje es perfecto. Volveré a comprar.',
+                'author_name': 'Carlos Ruiz',
+                'metas': 'Cliente de México',
+                'product_image': '/static/images/shop/products/img-p3.png',
+                'product_title': 'Cotton jersey top',
+                'product_url': '#',
+                'product_price': '7.95',
+            },
+            {
+                'rating': 5,
+                'heading': 'Recomiendo 100%',
+                'text': 'Muy buena atención al cliente y producto tal como se describe.',
+                'author_name': 'Ana Gómez',
+                'metas': 'Cliente de USA',
+                'product_image': '/static/images/shop/products/img-p4.png',
+                'product_title': 'Ribbed modal T-shirt',
+                'product_url': '#',
+                'product_price': '18.95',
+            },
+        ]
+
+    context['testimonials'] = testimonials
     return render(request, 'home-05.html', context)
 
 

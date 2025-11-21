@@ -34,6 +34,25 @@
         object-fit: cover;
         object-position: center;
     }
+    /* ===== Fix Shop Gram image sizing to avoid escaping the frame ===== */
+    .wrap-shop-gram .gallery-item .img-style {
+        width: 100%;
+        height: 220px; /* altura fija para desktop */
+        overflow: hidden;
+        display: block;
+        border-radius: 6px;
+    }
+    .wrap-shop-gram .gallery-item .img-style img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* recortar y mantener proporción */
+        display: block;
+    }
+    @media (max-width: 767px) {
+        .wrap-shop-gram .gallery-item .img-style {
+            height: 140px; /* menos alto en móviles */
+        }
+    }
 </style>
 
 
@@ -192,7 +211,7 @@
 
 
        <!-- New Arrivals -->
-<section class="flat-spacing-6 line">
+<section class="flat-spacing-6">
     <div class="container">
         <div class="flat-title mb_1 gap-14">
             <span class="title wow fadeInUp" data-wow-delay="0s">New Arrivals</span>
@@ -221,7 +240,86 @@
     
 </section>
 <!-- /New Arrivals -->
-
+<!-- Testimonial -->
+        <section class="flat-spacing-5 pt_0 flat-testimonial">
+            <div class="container">
+                <div class="flat-title wow fadeInUp" data-wow-delay="0s">
+                    <span class="title">Happy Clients</span>
+                    <p class="sub-title">Hear what they say about us</p>
+                </div>
+                <div class="wrap-carousel">
+                    <div dir="ltr" class="swiper tf-sw-testimonial" data-preview="3" data-tablet="2" data-mobile="1"
+                        data-space-lg="30" data-space-md="15">
+                        <div class="swiper-wrapper">
+                            {% if testimonials %}
+                                {% for res in testimonials %}
+                                    <div class="swiper-slide">
+                                        <div class="testimonial-item style-column wow fadeInUp" data-wow-delay="{% if forloop.first %}0s{% else %}.{{ forloop.counter0 }}s{% endif %}">
+                                            <div class="rating">
+                                                <i class="icon-star"></i>
+                                                <i class="icon-star"></i>
+                                                <i class="icon-star"></i>
+                                                <i class="icon-star"></i>
+                                                <i class="icon-star"></i>
+                                            </div>
+                                            <div class="heading">{{ res.heading|default:'' }}</div>
+                                            <div class="text">{{ res.text|default:'' }}</div>
+                                            <div class="author">
+                                                <div class="name">{{ res.author_name }}</div>
+                                                <div class="metas">{{ res.metas }}</div>
+                                            </div>
+                                            <div class="product">
+                                                <div class="image">
+                                                    <a href="{{ res.product_url }}">
+                                                        {% if res.product_image %}
+                                                            <img class="lazyload" data-src="{{ res.product_image }}" src="{{ res.product_image }}" alt="">
+                                                        {% else %}
+                                                            <img class="lazyload" data-src="{% static 'images/shop/products/img-p2.png' %}" src="{% static 'images/shop/products/img-p2.png' %}" alt="">
+                                                        {% endif %}
+                                                    </a>
+                                                </div>
+                                                <div class="content-wrap">
+                                                    <div class="product-title">
+                                                        <a href="{{ res.product_url }}">{{ res.product_title }}</a>
+                                                    </div>
+                                                    <div class="price">{% if res.product_price %}${{ res.product_price }}{% endif %}</div>
+                                                </div>
+                                                <a href="{{ res.product_url }}" class=""><i class="icon-arrow1-top-left"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Fallback: mostrar 1 slide vacío si no hay reseñas -->
+                                <div class="swiper-slide">
+                                    <div class="testimonial-item style-column wow fadeInUp" data-wow-delay="0s">
+                                        <div class="rating">
+                                            <i class="icon-star"></i>
+                                            <i class="icon-star"></i>
+                                            <i class="icon-star"></i>
+                                            <i class="icon-star"></i>
+                                            <i class="icon-star"></i>
+                                        </div>
+                                        <div class="heading">No reviews yet</div>
+                                        <div class="text">Be the first to leave a review for our products.</div>
+                                        <div class="author">
+                                            <div class="name">Customer</div>
+                                            <div class="metas">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="nav-sw nav-next-slider nav-next-testimonial lg"><span
+                            class="icon icon-arrow-left"></span></div>
+                    <div class="nav-sw nav-prev-slider nav-prev-testimonial lg"><span
+                            class="icon icon-arrow-right"></span></div>
+                    <div class="sw-dots style-2 sw-pagination-testimonial justify-content-center"></div>
+                </div>
+            </div>
+        </section>
+        <!-- /Testimonial -->
         <!-- Store -->
         <section class="flat-spacing-6  ">
             <div class="container">
@@ -275,313 +373,7 @@
             </div>
         </section>
         <!-- /Store -->
-        <!-- Look book -->
-        <!-- <section class="flat-spacing-16">
-            <div class="container">
-                <div class="flat-lookbook-v2">
-                    <div class="col-left">
-                        <div class="wrap-lookbook lookbook-sw radius-10 o-hidden">
-                            <div class="image">
-                                <img class="lazyload" data-src="{% static 'images/shop/file/lookbook-5.jpg' %}"
-                                    src="{% static 'images/shop/file/lookbook-5.jpg' %}" alt="collection-img">
-                            </div>
-                            <div class="navigation-sw-dot nav-next-lookbook"><span></span></div>
-                            <div class="navigation-sw-dot nav-prev-lookbook"><span></span></div>
-                        </div>
-                    </div>
-                    <div class="col-right">
-                        <div class="slider-wrap-lookbook">
-                            <div class="nav-sw nav-next-slider nav-next-lookbook"><span
-                                    class="icon icon-arrow-left"></span></div>
-                            <div class="inner-sw-lookbook">
-                                <div class="flat-title-lookbook">
-                                    <p class="label">SPRING SALE 30% OFF</p>
-                                    <h3 class="heading">Shop this look</h3>
-                                </div>
-                                <div dir="ltr" class="swiper tf-sw-lookbook wrap-sw-over" data-preview="1"
-                                    data-tablet="1" data-mobile="1" data-space-lg="30" data-space-md="15">
-                                    <div class="swiper-wrapper">
-                                        <div class="swiper-slide" lazy="true">
-                                            <div class="card-product">
-                                                <div class="card-product-wrapper">
-                                                    <a href="product-detail.html" class="product-img">
-                                                        <img class="lazyload img-product"
-                                                            data-src="{% static 'images/products/light-blue-2.jpg' %}"
-                                                            src="{% static 'images/products/light-blue-2.jpg' %}" alt="image-product">
-                                                        <img class="lazyload img-hover"
-                                                            data-src="{% static 'images/products/black-14.jpg' %}"
-                                                            src="{% static 'images/products/black-14.jpg' %}" alt="image-product">
-                                                    </a>
-                                                    <div class="list-product-btn absolute-2">
-                                                        <a href="#quick_add" data-bs-toggle="modal"
-                                                            class="box-icon bg_white quick-add tf-btn-loading">
-                                                            <span class="icon icon-bag"></span>
-                                                            <span class="tooltip">Quick Add</span>
-                                                        </a>
-                                                        <a href="#"
-                                                            class="box-icon bg_white wishlist btn-icon-action">
-                                                            <span class="icon icon-heart"></span>
-                                                            <span class="tooltip">Add to Wishlist</span>
-                                                            <span class="icon icon-delete"></span>
-                                                        </a>
-                                                        <a href="#compare" data-bs-toggle="offcanvas"
-                                                            aria-controls="offcanvasLeft"
-                                                            class="box-icon bg_white compare btn-icon-action">
-                                                            <span class="icon icon-compare"></span>
-                                                            <span class="tooltip">Add to Compare</span>
-                                                            <span class="icon icon-check"></span>
-                                                        </a>
-                                                        <a href="#quick_view" data-bs-toggle="modal"
-                                                            class="box-icon bg_white quickview tf-btn-loading">
-                                                            <span class="icon icon-view"></span>
-                                                            <span class="tooltip">Quick View</span>
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                                <div class="card-product-info">
-                                                    <a href="product-detail.html" class="title link">Cotton Twill
-                                                        Cap</a>
-                                                    <span class="price">From $26.95</span>
-                                                    <ul class="list-color-product">
-                                                        <li class="list-color-item color-swatch active">
-                                                            <span class="tooltip">Light Blue</span>
-                                                            <span class="swatch-value bg_light-blue sold-out"></span>
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/products/light-blue-2.jpg' %}"
-                                                                src="{% static 'images/products/light-blue-2.jpg' %}"
-                                                                alt="image-product">
-                                                        </li>
-                                                        <li class="list-color-item color-swatch">
-                                                            <span class="tooltip">Black</span>
-                                                            <span class="swatch-value bg_dark"></span>
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/products/black-14.jpg' %}"
-                                                                src="{% static 'images/products/black-14.jpg' %}" alt="image-product">
-                                                        </li>
-                                                        <li class="list-color-item color-swatch">
-                                                            <span class="tooltip">White</span>
-                                                            <span class="swatch-value bg_white"></span>
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/products/white-10.jpg' %}"
-                                                                src="{% static 'images/products/white-10.jpg' %}" alt="image-product">
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="swiper-slide" lazy="true">
-                                            <div class="card-product">
-                                                <div class="card-product-wrapper">
-                                                    <a href="product-detail.html" class="product-img">
-                                                        <img class="lazyload img-product"
-                                                            data-src="{% static 'images/products/beige-2.jpg' %}"
-                                                            src="{% static 'images/products/beige-2.jpg' %}" alt="image-product">
-                                                        <img class="lazyload img-hover"
-                                                            data-src="{% static 'images/products/beige-3.jpg' %}"
-                                                            src="{% static 'images/products/beige-3.jpg' %}" alt="image-product">
-                                                    </a>
-                                                    <div class="list-product-btn">
-                                                        <a href="#quick_add" data-bs-toggle="modal"
-                                                            class="box-icon bg_white quick-add tf-btn-loading">
-                                                            <span class="icon icon-bag"></span>
-                                                            <span class="tooltip">Quick Add</span>
-                                                        </a>
-                                                        <a href="#"
-                                                            class="box-icon bg_white wishlist btn-icon-action">
-                                                            <span class="icon icon-heart"></span>
-                                                            <span class="tooltip">Add to Wishlist</span>
-                                                            <span class="icon icon-delete"></span>
-                                                        </a>
-                                                        <a href="#compare" data-bs-toggle="offcanvas"
-                                                            aria-controls="offcanvasLeft"
-                                                            class="box-icon bg_white compare btn-icon-action">
-                                                            <span class="icon icon-compare"></span>
-                                                            <span class="tooltip">Add to Compare</span>
-                                                            <span class="icon icon-check"></span>
-                                                        </a>
-                                                        <a href="#quick_view" data-bs-toggle="modal"
-                                                            class="box-icon bg_white quickview tf-btn-loading">
-                                                            <span class="icon icon-view"></span>
-                                                            <span class="tooltip">Quick View</span>
-                                                        </a>
-                                                    </div>
-                                                    <div class="size-list">
-                                                        <span>S</span>
-                                                        <span>M</span>
-                                                        <span>L</span>
-                                                        <span>XL</span>
-                                                    </div>
-                                                    <div class="countdown-box">
-                                                        <div class="js-countdown" data-timer="1007500"
-                                                            data-labels="d :,h :,m :,s"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="card-product-info">
-                                                    <a href="product-detail.html" class="title link">Cotton jersey
-                                                        top</a>
-                                                    <span class="price">$7.95</span>
-                                                    <ul class="list-color-product">
-                                                        <li class="list-color-item color-swatch active">
-                                                            <span class="tooltip">Beige</span>
-                                                            <span class="swatch-value bg_beige"></span>
-                                                            <img class="lazyload" data-src="{% static 'images/products/beige-2.jpg' %}"
-                                                                src="{% static 'images/products/beige-2.jpg' %}" alt="image-product">
-                                                        </li>
-                                                        <li class="list-color-item color-swatch">
-                                                            <span class="tooltip">Black</span>
-                                                            <span class="swatch-value bg_dark"></span>
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/products/black-17.jpg' %}"
-                                                                src="{% static 'images/products/black-17.jpg' %}" alt="image-product">
-                                                        </li>
-                                                        <li class="list-color-item color-swatch">
-                                                            <span class="tooltip">Blue</span>
-                                                            <span class="swatch-value bg_blue-2"></span>
-                                                            <img class="lazyload" data-src="{% static 'images/products/blue-3.jpg' %}"
-                                                                src="{% static 'images/products/blue-3.jpg' %}" alt="image-product">
-                                                        </li>
-                                                        <li class="list-color-item color-swatch">
-                                                            <span class="tooltip">White</span>
-                                                            <span class="swatch-value bg_white"></span>
-                                                            <img class="lazyload"
-                                                                data-src="{% static 'images/products/white-12.jpg' %}"
-                                                                src="{% static 'images/products/white-12.jpg' %}" alt="image-product">
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="sw-dots style-2 sw-pagination-lookbook d-md-none"></div>
-                                </div>
-                            </div>
-
-                            <div class="nav-sw nav-prev-slider nav-prev-lookbook"><span
-                                    class="icon icon-arrow-right"></span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section> -->
-        <!-- /Look book -->
-
-        <!-- Icon box -->
-        <!-- <section class="flat-spacing-9 flat-iconbox-v2">
-            <div class="container">
-                <div class="wrap-carousel wrap-mobile wow fadeInUp" data-wow-delay="0s">
-                    <div dir="ltr" class="swiper tf-sw-mobile" data-preview="1" data-space="15">
-                        <div class="swiper-wrapper wrap-iconbox">
-                            <div class="swiper-slide">
-                                <div class="tf-icon-box text-center">
-                                    <div class="icon">
-                                        <i class="icon-shipping-1"></i>
-                                    </div>
-                                    <div class="content">
-                                        <div class="title">Free Shipping</div>
-                                        <p>Free shipping over order $120</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="tf-icon-box text-center">
-                                    <div class="icon">
-                                        <i class="icon-payment-1"></i>
-                                    </div>
-                                    <div class="content">
-                                        <div class="title">Flexible Payment</div>
-                                        <p>Pay with Multiple Credit Cards</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="tf-icon-box text-center">
-                                    <div class="icon">
-                                        <i class="icon-return-1"></i>
-                                    </div>
-                                    <div class="content">
-                                        <div class="title">14 Day Returns</div>
-                                        <p>Within 30 days for an exchange</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                    </div>
-                    <div class="sw-dots style-2 sw-pagination-mb justify-content-center"></div>
-                </div>
-            </div>
-        </section> -->
-        <!-- /Icon box -->
-        <!-- Shop Gram -->
-        <section class="flat-spacing-7">
-            <div class="container">
-                <div class="flat-title wow fadeInUp" data-wow-delay="0s">
-                    <span class="title">Shop Gram</span>
-                    <p class="sub-title">Inspire and let yourself be inspired, from one unique fashion to another.</p>
-                </div>
-                <div class="wrap-carousel wrap-shop-gram">
-                    <div dir="ltr" class="swiper tf-sw-shop-gallery" data-preview="5" data-tablet="3" data-mobile="2"
-                        data-space-lg="7" data-space-md="7">
-                        <div class="swiper-wrapper">
-                            <div class="swiper-slide">
-                                <div class="gallery-item hover-img wow fadeInUp" data-wow-delay="0s">
-                                    <div class="img-style">
-                                        <img class="lazyload img-hover" data-src="{% static 'images/shop/gallery/gallery-7.jpg' %}"
-                                            src="{% static 'images/shop/gallery/gallery-7.jpg' %}" alt="image-gallery">
-                                    </div>
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon"><span
-                                            class="icon icon-bag"></span> <span class="tooltip">Quick Add</span></a>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="gallery-item hover-img wow fadeInUp" data-wow-delay=".1s">
-                                    <div class="img-style">
-                                        <img class="lazyload img-hover" data-src="{% static 'images/shop/gallery/gallery-3.jpg' %}"
-                                            src="{% static 'images/shop/gallery/gallery-3.jpg' %}" alt="image-gallery">
-                                    </div>
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon"><span
-                                            class="icon icon-bag"></span> <span class="tooltip">Quick Add</span></a>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="gallery-item hover-img wow fadeInUp" data-wow-delay=".2s">
-                                    <div class="img-style">
-                                        <img class="lazyload img-hover" data-src="{% static 'images/shop/gallery/gallery-5.jpg' %}"
-                                            src="{% static 'images/shop/gallery/gallery-5.jpg' %}" alt="image-gallery">
-                                    </div>
-                                    <a href="#quick_add" data-bs-toggle="modal" class="box-icon"><span
-                                            class="icon icon-bag"></span> <span class="tooltip">Quick Add</span></a>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="gallery-item hover-img wow fadeInUp" data-wow-delay=".3s">
-                                    <div class="img-style">
-                                        <img class="lazyload img-hover" data-src="{% static 'images/shop/gallery/gallery-8.jpg' %}"
-                                            src="{% static 'images/shop/gallery/gallery-8.jpg' %}" alt="image-gallery">
-                                    </div>
-                                    <a href="product-detail.html" class="box-icon"><span class="icon icon-bag"></span>
-                                        <span class="tooltip">View product</span></a>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="gallery-item hover-img wow fadeInUp" data-wow-delay=".4s">
-                                    <div class="img-style">
-                                        <img class="lazyload img-hover" data-src="{% static 'images/shop/gallery/gallery-6.jpg' %}"
-                                            src="{% static 'images/shop/gallery/gallery-6.jpg' %}" alt="image-gallery">
-                                    </div>
-                                    <a href="product-detail.html" class="box-icon"><span class="icon icon-bag"></span>
-                                        <span class="tooltip">View product</span></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="sw-dots sw-pagination-gallery justify-content-center"></div>
-                </div>
-            </div>
-        </section>
-        <!-- /Shop Gram -->
-    
+       
         
     <!-- modal quick_add -->
     <div class="modal fade modalDemo popup-quickadd" id="quick_add">
@@ -919,128 +711,435 @@
     (function() {
         'use strict';
         
+        let isProcessingQuickView = false;
+        let currentProductData = null;
+
+        // Obtener CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        
         // Escuchar clicks en botones de quick view
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.btn-open-quickview');
             if (!btn) return;
             
+            e.preventDefault();
+            
+            var productId = btn.getAttribute('data-product-id');
+            if (productId) {
+                // Cargar desde API (con stock real)
+                loadProductQuickView(productId);
+            } else {
+                // Fallback: cargar datos estáticos
+                loadStaticQuickView(btn);
+            }
+        }, false);
+
+        // Cargar producto desde API con stock real
+        function loadProductQuickView(productId) {
+            console.log('Quick View: Cargando producto ID =', productId);
+            const modal = document.getElementById('quick_view');
+            
+            fetch(`/productos/api/${productId}/quick-view/`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Error al cargar el producto');
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Quick View: Datos recibidos =', data);
+                    currentProductData = data;
+                    populateQuickViewWithStock(data);
+                })
+                .catch(error => {
+                    console.error('Quick View: Error =', error);
+                });
+        }
+
+        // Poblar quick view con datos del API (con control de stock)
+        function populateQuickViewWithStock(data) {
+            const modal = document.getElementById('quick_view');
+            
+            // Guardar datos en el modal
+            modal.dataset.productoId = data.id;
+            modal.dataset.basePrice = data.precio;
+            modal.dataset.maxStock = data.stock || 0;
+            modal.dataset.variantes = JSON.stringify(data.variantes || []);
+            modal.dataset.atributos = JSON.stringify(data.atributos || []);
+            
+            // Actualizar título
+            var titleLink = modal.querySelector('.tf-product-info-title .link');
+            if (titleLink) {
+                titleLink.textContent = data.nombre;
+                titleLink.href = `/product/${data.id}/`;
+            }
+            
+            // Actualizar precio
+            var priceEl = modal.querySelector('.tf-product-info-price .price');
+            if (priceEl) {
+                priceEl.textContent = '$' + data.precio;
+            }
+            
+            // Actualizar descripción
+            var descEl = modal.querySelector('.tf-product-description p');
+            if (descEl) {
+                descEl.textContent = data.descripcion_corta || data.descripcion_larga || 'Sin descripción disponible';
+            }
+            
+            // Actualizar imágenes
+            var swiperWrapper = modal.querySelector('.swiper-wrapper');
+            if (swiperWrapper && data.imagenes && data.imagenes.length > 0) {
+                swiperWrapper.innerHTML = '';
+                data.imagenes.forEach(imagen => {
+                    var slide = document.createElement('div');
+                    slide.className = 'swiper-slide';
+                    slide.innerHTML = '<div class="item"><img src="' + imagen.src + '" alt="' + data.nombre + '"></div>';
+                    swiperWrapper.appendChild(slide);
+                });
+            }
+            
+            // Renderizar atributos con stock
+            if (data.atributos && data.atributos.length > 0) {
+                renderAttributes(data.atributos, modal);
+                updateVariantByAttributes();
+            }
+            
+            // Resetear cantidad a 1
+            var quantityInput = modal.querySelector('input[name="number"]');
+            if (quantityInput) {
+                quantityInput.value = 1;
+            }
+            
+            // Actualizar botones de cantidad
+            updateQuickViewButtons();
+            
+            // Actualizar precio total
+            var addBtnPrice = modal.querySelector('.tf-qty-price');
+            if (addBtnPrice) {
+                addBtnPrice.textContent = '$' + data.precio;
+            }
+            
+            // Actualizar link "View full details"
+            var viewDetailsLink = modal.querySelector('.tf-btn.btn-line');
+            if (viewDetailsLink) {
+                viewDetailsLink.href = `/product/${data.id}/`;
+            }
+        }
+
+        // Renderizar atributos (colores y tallas)
+        function renderAttributes(atributos, modal) {
+            const variantPicker = modal.querySelector('.tf-product-info-variant-picker');
+            if (!variantPicker) return;
+            
+            variantPicker.innerHTML = '';
+            
+            atributos.forEach((atributo, index) => {
+                const valoresArray = Object.values(atributo.valores);
+                const atributoDiv = document.createElement('div');
+                atributoDiv.className = 'variant-picker-item';
+                
+                if (atributo.tipo === 'color') {
+                    // Renderizar colores
+                    atributoDiv.innerHTML = `
+                        <div class="variant-picker-label">
+                            ${atributo.nombre}: <span class="fw-6 variant-picker-label-value">${valoresArray[0]?.valor || ''}</span>
+                        </div>
+                        <div class="variant-picker-values">
+                            ${valoresArray.map((valor, vIndex) => `
+                                <input type="radio" name="atributo_${atributo.id}" id="qv-attr-${atributo.id}-${valor.id}" 
+                                       value="${valor.id}" data-atributo-slug="${atributo.slug}" ${vIndex === 0 ? 'checked' : ''}>
+                                <label class="hover-tooltip radius-60" for="qv-attr-${atributo.id}-${valor.id}" data-value="${valor.valor}">
+                                    <span class="btn-checkbox ${valor.codigo_color ? '' : 'bg-color-' + valor.valor.toLowerCase()}" 
+                                          ${valor.codigo_color ? `style="background-color: ${valor.codigo_color};"` : ''}></span>
+                                    <span class="tooltip">${valor.valor}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    // Renderizar tallas u otros atributos
+                    atributoDiv.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="variant-picker-label">
+                                ${atributo.nombre}: <span class="fw-6 variant-picker-label-value">${valoresArray[0]?.valor || ''}</span>
+                            </div>
+                        </div>
+                        <div class="variant-picker-values">
+                            ${valoresArray.map((valor, vIndex) => `
+                                <input type="radio" name="atributo_${atributo.id}" id="qv-attr-${atributo.id}-${valor.id}" 
+                                       value="${valor.id}" data-atributo-slug="${atributo.slug}" ${vIndex === 0 ? 'checked' : ''}>
+                                <label class="style-text" for="qv-attr-${atributo.id}-${valor.id}" data-value="${valor.valor}">
+                                    <p>${valor.valor}</p>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                variantPicker.appendChild(atributoDiv);
+            });
+            
+            // Agregar event listeners para cambios de atributos
+            variantPicker.querySelectorAll('input[type="radio"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    updateVariantByAttributes();
+                });
+            });
+        }
+
+        // Actualizar variante según atributos seleccionados
+        function updateVariantByAttributes() {
+            const modal = document.getElementById('quick_view');
+            const variantes = JSON.parse(modal.dataset.variantes || '[]');
+            const atributos = JSON.parse(modal.dataset.atributos || '[]');
+            
+            // Obtener atributos seleccionados
+            const selectedAttrs = {};
+            atributos.forEach(atributo => {
+                const selectedInput = modal.querySelector(`input[name="atributo_${atributo.id}"]:checked`);
+                if (selectedInput) {
+                    const valorId = parseInt(selectedInput.value);
+                    selectedAttrs[atributo.slug] = valorId;
+                    
+                    // Actualizar label
+                    const label = selectedInput.closest('.variant-picker-item').querySelector('.variant-picker-label-value');
+                    if (label) {
+                        label.textContent = selectedInput.getAttribute('data-value') || selectedInput.nextElementSibling.dataset.value;
+                    }
+                }
+            });
+            
+            // Buscar variante que coincida
+            const matchingVariant = variantes.find(variante => {
+                return Object.keys(selectedAttrs).every(slug => {
+                    const varianteAttr = variante.atributos[slug];
+                    return varianteAttr && varianteAttr.valor_id === selectedAttrs[slug];
+                });
+            });
+            
+            if (matchingVariant) {
+                modal.dataset.selectedVariantId = matchingVariant.id;
+                modal.dataset.basePrice = matchingVariant.precio;
+                modal.dataset.maxStock = matchingVariant.stock;
+                
+                const priceEl = modal.querySelector('.tf-product-info-price .price');
+                if (priceEl) {
+                    priceEl.textContent = `$${matchingVariant.precio}`;
+                }
+                
+                console.log('🔄 Variante actualizada:', {
+                    id: matchingVariant.id,
+                    stock: matchingVariant.stock,
+                    precio: matchingVariant.precio
+                });
+                
+                // Ajustar cantidad si excede el nuevo stock
+                const quantityInput = modal.querySelector('input[name="number"]');
+                const currentQty = parseInt(quantityInput.value) || 1;
+                if (currentQty > matchingVariant.stock) {
+                    quantityInput.value = matchingVariant.stock > 0 ? matchingVariant.stock : 1;
+                }
+            } else {
+                modal.dataset.selectedVariantId = '';
+                modal.dataset.maxStock = 0;
+            }
+            
+            updateQuickViewButtons();
+            updateQuickViewPrice();
+        }
+
+        // Actualizar botones de cantidad
+        function updateQuickViewButtons() {
+            const modal = document.getElementById('quick_view');
+            const quantityInput = modal.querySelector('input[name="number"]');
+            const btnIncrease = modal.querySelector('.plus-btn');
+            const btnDecrease = modal.querySelector('.minus-btn');
+            
+            if (!quantityInput || !btnIncrease || !btnDecrease) return;
+            
+            const currentQty = parseInt(quantityInput.value) || 1;
+            const maxStock = parseInt(modal.dataset.maxStock) || 0;
+            
+            console.log('QuickView - Actualizando botones:', {currentQty, maxStock});
+            
+            // Deshabilitar botón de incremento si llegamos al stock máximo o no hay stock
+            if (currentQty >= maxStock || maxStock === 0) {
+                btnIncrease.classList.add('disabled');
+                btnIncrease.style.opacity = '0.5';
+                btnIncrease.style.cursor = 'not-allowed';
+                btnIncrease.style.pointerEvents = 'none';
+            } else {
+                btnIncrease.classList.remove('disabled');
+                btnIncrease.style.opacity = '1';
+                btnIncrease.style.cursor = 'pointer';
+                btnIncrease.style.pointerEvents = 'auto';
+            }
+            
+            // Deshabilitar botón de decremento si estamos en 1
+            if (currentQty <= 1) {
+                btnDecrease.classList.add('disabled');
+                btnDecrease.style.opacity = '0.5';
+                btnDecrease.style.cursor = 'not-allowed';
+                btnDecrease.style.pointerEvents = 'none';
+            } else {
+                btnDecrease.classList.remove('disabled');
+                btnDecrease.style.opacity = '1';
+                btnDecrease.style.cursor = 'pointer';
+                btnDecrease.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Actualizar precio total
+        function updateQuickViewPrice() {
+            const modal = document.getElementById('quick_view');
+            const quantity = parseInt(modal.querySelector('input[name="number"]').value) || 1;
+            const basePrice = parseFloat(modal.dataset.basePrice) || 0;
+            const totalPrice = (basePrice * quantity).toFixed(2);
+            
+            const addBtnPrice = modal.querySelector('.tf-qty-price');
+            if (addBtnPrice) {
+                addBtnPrice.textContent = '$' + totalPrice;
+            }
+        }
+
+        // Manejar botones de cantidad
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('quick_view');
+            if (!modal) return;
+            
+            const plusBtn = modal.querySelector('.plus-btn');
+            const minusBtn = modal.querySelector('.minus-btn');
+            const quantityInput = modal.querySelector('input[name="number"]');
+            
+            if (plusBtn && quantityInput) {
+                plusBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    if (isProcessingQuickView) {
+                        console.log('QuickView - Ya procesando, ignorando click');
+                        return false;
+                    }
+                    
+                    if (this.classList.contains('disabled') || this.style.pointerEvents === 'none') {
+                        console.log('QuickView - Botón + está deshabilitado');
+                        return false;
+                    }
+                    
+                    isProcessingQuickView = true;
+                    
+                    const currentQty = parseInt(quantityInput.value) || 1;
+                    const maxStock = parseInt(modal.dataset.maxStock) || 0;
+                    
+                    console.log('=== QuickView INCREMENTO ===');
+                    console.log('Cantidad actual:', currentQty);
+                    console.log('Stock máximo:', maxStock);
+                    
+                    // Validación estricta: solo incrementar si hay stock disponible
+                    if (currentQty < maxStock && maxStock > 0) {
+                        const newQty = currentQty + 1;
+                        console.log('Intentando incrementar a:', newQty);
+                        
+                        // Triple verificación antes de asignar
+                        if (newQty <= maxStock) {
+                            quantityInput.value = newQty;
+                            console.log('✅ Cantidad actualizada a:', newQty);
+                            updateQuickViewButtons();
+                            updateQuickViewPrice();
+                        } else {
+                            console.log('❌ Bloqueado: excedería stock máximo');
+                        }
+                    } else {
+                        console.log('❌ Bloqueado: ya en stock máximo');
+                    }
+                    
+                    setTimeout(() => { isProcessingQuickView = false; }, 100);
+                    return false;
+                }, { capture: true });
+            }
+            
+            if (minusBtn && quantityInput) {
+                minusBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    if (isProcessingQuickView) {
+                        console.log('QuickView - Ya procesando, ignorando click');
+                        return false;
+                    }
+                    
+                    if (this.classList.contains('disabled') || this.style.pointerEvents === 'none') {
+                        console.log('QuickView - Botón - está deshabilitado');
+                        return false;
+                    }
+                    
+                    isProcessingQuickView = true;
+                    
+                    const currentQty = parseInt(quantityInput.value) || 1;
+                    
+                    console.log('=== QuickView DECREMENTO ===');
+                    console.log('Cantidad actual:', currentQty);
+                    
+                    if (currentQty > 1) {
+                        quantityInput.value = currentQty - 1;
+                        console.log('✅ Cantidad decrementada a:', currentQty - 1);
+                        updateQuickViewButtons();
+                        updateQuickViewPrice();
+                    }
+                    
+                    setTimeout(() => { isProcessingQuickView = false; }, 100);
+                    return false;
+                }, { capture: true });
+            }
+        });
+
+        // Fallback: cargar datos estáticos (sin stock real)
+        function loadStaticQuickView(btn) {
             var modal = document.getElementById('quick_view');
             if (!modal) return;
             
-            // Obtener datos del producto desde data attributes
             var productName = btn.getAttribute('data-product-name') || '';
             var productPrice = btn.getAttribute('data-product-price') || '';
             var productMainImage = btn.getAttribute('data-product-main-image') || '';
             var productHoverImage = btn.getAttribute('data-product-hover-image') || '';
             var productUrl = btn.getAttribute('data-product-url') || '#';
             var productDesc = btn.getAttribute('data-product-desc') || '';
-            var colorsData = btn.getAttribute('data-product-colors') || '';
-            var sizesData = btn.getAttribute('data-product-sizes') || '';
             
-            // Parsear colores y tallas
-            var colors = colorsData ? colorsData.split(',').filter(Boolean) : [];
-            var sizes = sizesData ? sizesData.split(',').filter(Boolean) : [];
-            
-            // Actualizar título y link
             var titleLink = modal.querySelector('.tf-product-info-title .link');
             if (titleLink) {
                 titleLink.textContent = productName;
                 titleLink.href = productUrl;
             }
             
-            // Actualizar precio
             var priceEl = modal.querySelector('.tf-product-info-price .price');
             if (priceEl) {
                 priceEl.textContent = '$' + productPrice;
             }
             
-            // Actualizar descripción
             var descEl = modal.querySelector('.tf-product-description p');
             if (descEl) {
-                descEl.textContent = productDesc || 'Producto de alta calidad. Consulta todos los detalles en la página del producto.';
+                descEl.textContent = productDesc || 'Producto de alta calidad.';
             }
             
-            // Actualizar imágenes en el swiper
-            var swiperWrapper = modal.querySelector('.swiper-wrapper');
-            if (swiperWrapper) {
-                swiperWrapper.innerHTML = '';
-                
-                // Agregar imagen principal
-                if (productMainImage) {
-                    var slide1 = document.createElement('div');
-                    slide1.className = 'swiper-slide';
-                    slide1.innerHTML = '<div class="item"><img src="' + productMainImage + '" alt="' + productName + '"></div>';
-                    swiperWrapper.appendChild(slide1);
-                }
-                
-                // Agregar imagen hover si existe
-                if (productHoverImage && productHoverImage !== productMainImage) {
-                    var slide2 = document.createElement('div');
-                    slide2.className = 'swiper-slide';
-                    slide2.innerHTML = '<div class="item"><img src="' + productHoverImage + '" alt="' + productName + '"></div>';
-                    swiperWrapper.appendChild(slide2);
-                }
-            }
-            
-            // Actualizar colores
-            var colorContainer = modal.querySelector('.variant-picker-item:first-child .variant-picker-values');
-            if (colorContainer && colors.length > 0) {
-                colorContainer.innerHTML = '';
-                colors.forEach(function(color, idx) {
-                    var colorId = 'qv-color-' + idx;
-                    var input = document.createElement('input');
-                    input.id = colorId;
-                    input.type = 'radio';
-                    input.name = 'qv-color';
-                    if (idx === 0) input.checked = true;
-                    
-                    var label = document.createElement('label');
-                    label.htmlFor = colorId;
-                    label.className = 'hover-tooltip radius-60';
-                    label.setAttribute('data-value', color);
-                    label.innerHTML = '<span class="btn-checkbox bg-color-' + color.toLowerCase() + '"></span><span class="tooltip">' + color + '</span>';
-                    
-                    colorContainer.appendChild(input);
-                    colorContainer.appendChild(label);
-                });
-            }
-            
-            // Actualizar tallas
-            var sizeContainer = modal.querySelector('.variant-picker-item:nth-child(2) .variant-picker-values');
-            if (sizeContainer && sizes.length > 0) {
-                sizeContainer.innerHTML = '';
-                sizes.forEach(function(size, idx) {
-                    var sizeId = 'qv-size-' + idx;
-                    var input = document.createElement('input');
-                    input.id = sizeId;
-                    input.type = 'radio';
-                    input.name = 'qv-size';
-                    if (idx === 0) input.checked = true;
-                    
-                    var label = document.createElement('label');
-                    label.htmlFor = sizeId;
-                    label.className = 'style-text';
-                    label.setAttribute('data-value', size);
-                    label.innerHTML = '<p>' + size + '</p>';
-                    
-                    sizeContainer.appendChild(input);
-                    sizeContainer.appendChild(label);
-                });
-            }
-            
-            // Actualizar precio en el botón de agregar al carrito
             var addBtnPrice = modal.querySelector('.tf-qty-price');
             if (addBtnPrice) {
                 addBtnPrice.textContent = '$' + productPrice;
             }
-            
-            // Actualizar link "View full details"
-            var viewDetailsLink = modal.querySelector('.tf-btn.btn-line');
-            if (viewDetailsLink) {
-                viewDetailsLink.href = productUrl;
-            }
-            
-        }, false);
+        }
     })();
     </script>
     <script>
