@@ -432,56 +432,56 @@
                                         <div class="tab-reviews-heading">
                                             <div class="top">
                                                 <div class="text-center">
-                                                    <h1 class="number fw-6">4.8</h1>
-                                                    <div class="list-star">
-                                                        <i class="icon icon-star"></i>
-                                                        <i class="icon icon-star"></i>
-                                                        <i class="icon icon-star"></i>
-                                                        <i class="icon icon-star"></i>
-                                                        <i class="icon icon-star"></i>
+                                                    <h1 id="averageRating" class="number fw-6">0.0</h1>
+                                                    <div id="averageStars" class="list-star">
+                                                        <i class="icon icon-star" style="color: #ddd;"></i>
+                                                        <i class="icon icon-star" style="color: #ddd;"></i>
+                                                        <i class="icon icon-star" style="color: #ddd;"></i>
+                                                        <i class="icon icon-star" style="color: #ddd;"></i>
+                                                        <i class="icon icon-star" style="color: #ddd;"></i>
                                                     </div>
-                                                    <p>(168 Ratings)</p>
+                                                    <p id="totalRatingsText">(0 Ratings)</p>
                                                 </div>
                                                 <div class="rating-score">
-                                                    <div class="item">
+                                                    <div class="item" data-rating="5">
                                                         <div class="number-1 text-caption-1">5</div>
                                                         <i class="icon icon-star"></i>
                                                         <div class="line-bg">
-                                                            <div style="width: 94.67%;"></div>
+                                                            <div class="rating-bar" style="width: 0%;"></div>
                                                         </div>
-                                                        <div class="number-2 text-caption-1">59</div>
+                                                        <div class="number-2 text-caption-1 rating-count">0</div>
                                                     </div>
-                                                    <div class="item">
+                                                    <div class="item" data-rating="4">
                                                         <div class="number-1 text-caption-1">4</div>
                                                         <i class="icon icon-star"></i>
                                                         <div class="line-bg">
-                                                            <div style="width: 60%;"></div>
+                                                            <div class="rating-bar" style="width: 0%;"></div>
                                                         </div>
-                                                        <div class="number-2 text-caption-1">46</div>
+                                                        <div class="number-2 text-caption-1 rating-count">0</div>
                                                     </div>
-                                                    <div class="item">
+                                                    <div class="item" data-rating="3">
                                                         <div class="number-1 text-caption-1">3</div>
                                                         <i class="icon icon-star"></i>
                                                         <div class="line-bg">
-                                                            <div style="width: 0%;"></div>
+                                                            <div class="rating-bar" style="width: 0%;"></div>
                                                         </div>
-                                                        <div class="number-2 text-caption-1">0</div>
+                                                        <div class="number-2 text-caption-1 rating-count">0</div>
                                                     </div>
-                                                    <div class="item">
+                                                    <div class="item" data-rating="2">
                                                         <div class="number-1 text-caption-1">2</div>
                                                         <i class="icon icon-star"></i>
                                                         <div class="line-bg">
-                                                            <div style="width: 0%;"></div>
+                                                            <div class="rating-bar" style="width: 0%;"></div>
                                                         </div>
-                                                        <div class="number-2 text-caption-1">0</div>
+                                                        <div class="number-2 text-caption-1 rating-count">0</div>
                                                     </div>
-                                                    <div class="item">
+                                                    <div class="item" data-rating="1">
                                                         <div class="number-1 text-caption-1">1</div>
                                                         <i class="icon icon-star"></i>
                                                         <div class="line-bg">
-                                                            <div style="width: 0%;"></div>
+                                                            <div class="rating-bar" style="width: 0%;"></div>
                                                         </div>
-                                                        <div class="number-2 text-caption-1">0</div>
+                                                        <div class="number-2 text-caption-1 rating-count">0</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -496,7 +496,7 @@
                                         </div>
                                         <div class="reply-comment cancel-review-wrap">
                                             <div class="d-flex mb_24 gap-20 align-items-center justify-content-between flex-wrap">
-                                                <h5 class=""><span id="totalReviewsCount">0</span> Comments</h5>
+                                               <h5 class=""><span id="totalReviewsCount">0</span> Comments</h5>
                                                 <div class="d-flex align-items-center gap-12">
                                                     <div class="text-caption-1">Sort by:</div>
                                                     <select id="reviewSortBy" class="form-select form-select-sm" style="width: auto;">
@@ -507,69 +507,11 @@
                                                 </div>
                                             </div>
                                             <div id="reviewsContainer" class="reply-comment-wrap">
-                                                <div class="reply-comment-item">
-                                                    <div class="user">
-                                                        <div class="image">
-                                                            <img src="images/collections/collection-circle-9.jpg"
-                                                                alt="">
-                                                        </div>
-                                                        <div>
-                                                            <h6>
-                                                                <a href="#" class="link">Superb quality apparel that
-                                                                    exceeds expectations</a>
-                                                            </h6>
-                                                            <div class="day text_black-2">1 days ago</div>
-                                                        </div>
-                                                    </div>
-                                                    <p class="text_black-2">Great theme - we were looking for a theme
-                                                        with lots of built in features and flexibility and this was
-                                                        perfect. We expected to need to employ a developer to add a few
-                                                        finishing touches. But we actually managed to do everything
-                                                        ourselves. We did have one small query and the support given was
-                                                        swift and helpful.</p>
-                                                </div>
-                                                <div class="reply-comment-item type-reply">
-                                                    <div class="user">
-                                                        <div class="image">
-                                                            <img src="images/collections/collection-circle-10.jpg"
-                                                                alt="">
-                                                        </div>
-                                                        <div>
-                                                            <h6>
-                                                                <a href="#" class="link">Reply from Modave</a>
-                                                            </h6>
-                                                            <div class="day text_black-2">1 days ago</div>
-                                                        </div>
-                                                    </div>
-                                                    <p class="text_black-2">We love to hear it! Part of what we love
-                                                        most about Modave is how much it empowers store owners like
-                                                        yourself to build a beautiful website without having to hire a
-                                                        developer :) Thank you for this fantastic review!</p>
-                                                </div>
-                                                <div class="reply-comment-item">
-                                                    <div class="user">
-                                                        <div class="image">
-                                                            <img src="images/collections/collection-circle-9.jpg"
-                                                                alt="">
-                                                        </div>
-                                                        <div>
-                                                            <h6>
-                                                                <a href="#" class="link">Superb quality apparel that
-                                                                    exceeds expectations</a>
-                                                            </h6>
-                                                            <div class="day text_black-2">1 days ago </div>
-                                                        </div>
-                                                    </div>
-                                                    <p class="text_black-2">Great theme - we were looking for a theme
-                                                        with lots of built in features and flexibility and this was
-                                                        perfect. We expected to need to employ a developer to add a few
-                                                        finishing touches. But we actually managed to do everything
-                                                        ourselves. We did have one small query and the support given was
-                                                        swift and helpful.</p>
-                                                </div>
+                                                <p class="text-center text_black-2 py-5">Loading reviews...</p>
                                             </div>
                                         </div>
                                         {% if user.is_authenticated %}
+                                        <div id="userReviewStatus" class="alert d-none mb-3"></div>
                                         <form id="reviewForm" class="form-write-review write-review-wrap mt-4">
                                             {% csrf_token %}
                                             <div class="heading">
@@ -2706,95 +2648,6 @@
         </div>
     </div>
     <!-- /modal quick_view -->
-
-    <!-- modal find_size -->
-    <div class="modal fade modalDemo tf-product-modal popup-findsize" id="find_size">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="header">
-                    <div class="demo-title">Size chart</div>
-                    <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
-                </div>
-                <div class="tf-rte">
-                    <div class="tf-table-res-df">
-                        <h6>Size guide</h6>
-                        <table class="tf-sizeguide-table">
-                            <thead>
-                                <tr>
-                                    <th>Size</th>
-                                    <th>US</th>
-                                    <th>Bust</th>
-                                    <th>Waist</th>
-                                    <th>Low Hip</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>XS</td>
-                                    <td>2</td>
-                                    <td>32</td>
-                                    <td>24 - 25</td>
-                                    <td>33 - 34</td>
-                                </tr>
-                                <tr>
-                                    <td>S</td>
-                                    <td>4</td>
-                                    <td>34 - 35</td>
-                                    <td>26 - 27</td>
-                                    <td>35 - 26</td>
-                                </tr>
-                                <tr>
-                                    <td>M</td>
-                                    <td>6</td>
-                                    <td>36 - 37</td>
-                                    <td>28 - 29</td>
-                                    <td>38 - 40</td>
-                                </tr>
-                                <tr>
-                                    <td>L</td>
-                                    <td>8</td>
-                                    <td>38 - 29</td>
-                                    <td>30 - 31</td>
-                                    <td>42 - 44</td>
-                                </tr>
-                                <tr>
-                                    <td>XL</td>
-                                    <td>10</td>
-                                    <td>40 - 41</td>
-                                    <td>32 - 33</td>
-                                    <td>45 - 47</td>
-                                </tr>
-                                <tr>
-                                    <td>XXL</td>
-                                    <td>12</td>
-                                    <td>42 - 43</td>
-                                    <td>34 - 35</td>
-                                    <td>48 - 50</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="tf-page-size-chart-content">
-                        <div>
-                            <h6>Measuring Tips</h6>
-                            <div class="title">Bust</div>
-                            <p>Measure around the fullest part of your bust.</p>
-                            <div class="title">Waist</div>
-                            <p>Measure around the narrowest part of your torso.</p>
-                            <div class="title">Low Hip</div>
-                            <p class="mb-0">With your feet together measure around the fullest part of your hips/rear.
-                            </p>
-                        </div>
-                        <div>
-                            <img class="sizechart lazyload" data-src="images/shop/products/size_chart2.jpg"
-                                src="images/shop/products/size_chart2.jpg" alt="">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- /modal find_size -->
 
     <!-- Script para control de cantidad según stock -->
     <script>

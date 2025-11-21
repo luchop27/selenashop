@@ -145,6 +145,14 @@ def get_reviews(request, producto_id):
         promedio = 0
         rating_counts = {i: 0 for i in range(1, 6)}
     
+    # Verificar si el usuario actual ya reseñó (si está autenticado)
+    user_has_reviewed = False
+    if hasattr(request, 'user') and request.user.is_authenticated:
+        user_has_reviewed = Resena.objects.filter(
+            producto=producto,
+            usuario=request.user
+        ).exists()
+    
     # Construir respuesta
     reviews_data = []
     for resena in resenas:
@@ -161,7 +169,7 @@ def get_reviews(request, producto_id):
                     'id': resp.id,
                     'comment': resp.comentario,
                     'user_name': resp.usuario.get_full_name() or 'Modave',
-                    'created_at': resp.creado_en.strftime('%Y-%m-%d')
+                    'created_at': resp.get_tiempo_transcurrido() if hasattr(resp, 'get_tiempo_transcurrido') else resp.creado_en.strftime('%Y-%m-%d')
                 }
                 for resp in resena.respuestas.all()
             ]
@@ -170,6 +178,7 @@ def get_reviews(request, producto_id):
     return JsonResponse({
         'success': True,
         'reviews': reviews_data,
+        'user_has_reviewed': user_has_reviewed,
         'stats': {
             'average': round(promedio, 1),
             'total': total,

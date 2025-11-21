@@ -97,3 +97,24 @@ class RespuestaResena(models.Model):
 
     def __str__(self):
         return f"Respuesta de {self.usuario.email} a reseña de {self.resena.usuario.email}"
+    
+    def get_tiempo_transcurrido(self):
+        """Retorna el tiempo transcurrido desde la creación"""
+        diff = timezone.now() - self.creado_en
+        
+        if diff.days > 365:
+            years = diff.days // 365
+            return f"{years} {'year' if years == 1 else 'years'} ago"
+        elif diff.days > 30:
+            months = diff.days // 30
+            return f"{months} {'month' if months == 1 else 'months'} ago"
+        elif diff.days > 0:
+            return f"{diff.days} {'day' if diff.days == 1 else 'days'} ago"
+        elif diff.seconds >= 3600:
+            hours = diff.seconds // 3600
+            return f"{hours} {'hour' if hours == 1 else 'hours'} ago"
+        elif diff.seconds >= 60:
+            minutes = diff.seconds // 60
+            return f"{minutes} {'minute' if minutes == 1 else 'minutes'} ago"
+        else:
+            return "Just now"
