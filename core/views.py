@@ -121,16 +121,36 @@ def inicio(request):
         'productos_nuevos': None,
         'categorias_menu': categorias_menu,
     }
-    # Preparar 'productos_nuevos' (últimos 8 productos activos)
+    # Preparar 'productos_nuevos' (últimos 8 productos activos) pero solo de la categoría "Ropa"
     from django.db.models import Min
-    productos_nuevos_qs = (
-        Producto.objects
-        .filter(activo=True)
-        .select_related('categoria', 'coleccion')
-        .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
-        .annotate(precio_minimo=Min('variantes__precio'))
-        .order_by('-created_at')[:8]
-    )
+    # Intentar localizar la categoría principal de ropa y sus subcategorías
+    try:
+        categoria_ropa = Categoria.objects.get(nombre__iexact='Ropa', estado=True)
+    except Categoria.DoesNotExist:
+        # Fallback: buscar por nombre que contenga 'ropa' (insensible a mayúsculas)
+        categoria_ropa = Categoria.objects.filter(nombre__icontains='ropa', padre__isnull=True, estado=True).first()
+
+    if categoria_ropa:
+        sub_ids = list(categoria_ropa.subcategorias.filter(estado=True).values_list('id', flat=True))
+        categorias_ids = sub_ids + [categoria_ropa.id]
+        productos_nuevos_qs = (
+            Producto.objects
+            .filter(activo=True, categoria_id__in=categorias_ids)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('-created_at')[:8]
+        )
+    else:
+        # Si no existe la categoría ropa, conservar el comportamiento anterior
+        productos_nuevos_qs = (
+            Producto.objects
+            .filter(activo=True)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('-created_at')[:8]
+        )
 
     productos_nuevos = list(productos_nuevos_qs)
     # Preparar campos auxiliares para la plantilla (mismo esquema que productos_destacados)
@@ -902,14 +922,33 @@ def api_productos_nuevos(request):
     except Exception:
         limit = 4
 
-    qs = (
-        Producto.objects
-        .filter(activo=True)
-        .select_related('categoria', 'coleccion')
-        .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
-        .annotate(precio_minimo=Min('variantes__precio'))
-        .order_by('-created_at')
-    )
+    # Intentar restringir a categoría 'Ropa' y sus subcategorías, si existe
+    from apps.productos.models import Categoria
+    try:
+        categoria_ropa_ajax = Categoria.objects.filter(nombre__icontains='ropa', padre__isnull=True, estado=True).first()
+    except Exception:
+        categoria_ropa_ajax = None
+
+    if categoria_ropa_ajax:
+        sub_ids_ajax = list(categoria_ropa_ajax.subcategorias.filter(estado=True).values_list('id', flat=True))
+        categorias_ajax_ids = sub_ids_ajax + [categoria_ropa_ajax.id]
+        qs = (
+            Producto.objects
+            .filter(activo=True, categoria_id__in=categorias_ajax_ids)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('-created_at')
+        )
+    else:
+        qs = (
+            Producto.objects
+            .filter(activo=True)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('-created_at')
+        )
 
     productos_slice = list(qs[offset:offset + limit])
 
