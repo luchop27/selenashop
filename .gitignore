@@ -74,6 +74,4 @@ package-lock.json
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
 
-# Ignore local sqlite databases
-db*.sqlite
-*.sqlite3
+
