@@ -9,15 +9,19 @@
                 <div class="heading text-center">
                     {% if categoria_actual %}
                         {{ categoria_actual.nombre }}
+                    {% elif coleccion_actual %}
+                        {{ coleccion_actual.nombre }}
                     {% else %}
-                        New Arrival
+                        Nuevos Productos
                     {% endif %}
                 </div>
                 <p class="text-center text-2 text_black-2 mt_5">
                     {% if categoria_actual and categoria_actual.descripcion %}
                         {{ categoria_actual.descripcion }}
+                    {% elif coleccion_actual and coleccion_actual.descripcion %}
+                        {{ coleccion_actual.descripcion }}
                     {% else %}
-                        Shop through our latest selection of Fashion
+                        Explora nuestra última selección de moda
                     {% endif %}
                 </p>
             </div>
@@ -34,25 +38,19 @@
                             <div class="swiper-slide" lazy="true">
                                 <div class="collection-item style-2 hover-img">
                                     <div class="collection-inner">
-                                        <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" 
-                                        class="collection-image img-style" 
-                                        style="min-height: 320px; display: block; overflow: hidden; border-radius: 10px;">
+                                        <a href="{% url 'core:shop-collection-sub' %}?categoria={{ categoria.slug }}{% if coleccion_actual %}&coleccion={{ coleccion_actual.slug }}{% endif %}" class="collection-image img-style" style="min-height: 320px; display: block;">
                                             {% if categoria.imagen %}
-                                                <img class="lazyload" 
-                                                    data-src="{{ categoria.imagen.url }}"
-                                                    src="{{ categoria.imagen.url }}" 
-                                                    alt="{{ categoria.nombre }}" 
-                                                    style="width: 100%; height: 320px; object-fit: cover; display: block; border-radius: 10px;">
+                                                <img class="lazyload" data-src="{{ categoria.imagen.url }}"
+                                                    src="{{ categoria.imagen.url }}" alt="{{ categoria.nombre }}" 
+                                                    style="width: 100%; height: 320px; object-fit: cover; display: block;">
                                             {% else %}
-                                                <img class="lazyload" 
-                                                    data-src="{% static 'images/collections/collection-14.jpg' %}"
-                                                    src="{% static 'images/collections/collection-14.jpg' %}" 
-                                                    alt="{{ categoria.nombre }}"
-                                                    style="width: 100%; height: 320px; object-fit: cover; display: block; border-radius: 10px;">
+                                                <img class="lazyload" data-src="{% static 'images/collections/collection-14.jpg' %}"
+                                                    src="{% static 'images/collections/collection-14.jpg' %}" alt="{{ categoria.nombre }}"
+                                                    style="width: 100%; height: 320px; object-fit: cover; display: block;">
                                             {% endif %}
                                         </a>
                                         <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}"
+                                            <a href="{% url 'core:shop-collection-sub' %}?categoria={{ categoria.slug }}{% if coleccion_actual %}&coleccion={{ coleccion_actual.slug }}{% endif %}"
                                                 class="tf-btn collection-title hover-icon fs-15">
                                                 <span>{{ categoria.nombre }}</span>
                                                 <i class="icon icon-arrow1-top-left"></i>
@@ -66,14 +64,14 @@
                             <div class="swiper-slide" lazy="true">
                                 <div class="collection-item style-2 hover-img">
                                     <div class="collection-inner">
-                                        <a href="{% url 'productos:producto_list' %}" class="collection-image img-style" style="min-height: 320px; display: block;">
+                                        <a href="{% url 'core:shop-collection-sub' %}" class="collection-image img-style" style="min-height: 320px; display: block;">
                                             <img class="lazyload" data-src="{% static 'images/collections/collection-14.jpg' %}"
                                                 src="{% static 'images/collections/collection-14.jpg' %}" alt="collection-img"
                                                 style="width: 100%; height: 320px; object-fit: cover; display: block;">
                                         </a>
                                         <div class="collection-content">
-                                            <a href="{% url 'productos:producto_list' %}"
-                                                class="tf-btn collection-title hover-icon fs-15"><span>All Products</span><i
+                                            <a href="{% url 'core:shop-collection-sub' %}"
+                                                class="tf-btn collection-title hover-icon fs-15"><span>Todos los Productos</span><i
                                                     class="icon icon-arrow1-top-left"></i></a>
                                         </div>
                                     </div>
@@ -98,7 +96,7 @@
                     <div class="tf-control-filter">
                         <a href="#filterShop" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
                             class="tf-btn-filter"><span class="icon icon-filter"></span><span
-                                class="text">Filter</span></a>
+                                class="text">Filtrar</span></a>
                     </div>
                     <ul class="tf-control-layout d-flex justify-content-center">
                         <li class="tf-view-layout-switch sw-layout-list list-layout" data-value-layout="list">
@@ -123,33 +121,33 @@
                     <div class="tf-control-sorting d-flex justify-content-end">
                         <div class="tf-dropdown-sort" data-bs-toggle="dropdown">
                             <div class="btn-select">
-                                <span class="text-sort-value">Featured</span>
+                                <span class="text-sort-value">Destacados</span>
                                 <span class="icon icon-arrow-down"></span>
                             </div>
                             <div class="dropdown-menu">
                                 <div class="select-item active">
-                                    <span class="text-value-item">Featured</span>
+                                    <span class="text-value-item">Destacados</span>
                                 </div>
                                 <div class="select-item">
-                                    <span class="text-value-item">Best selling</span>
+                                    <span class="text-value-item">Más vendidos</span>
                                 </div>
                                 <div class="select-item" data-sort-value="a-z">
-                                    <span class="text-value-item">Alphabetically, A-Z</span>
+                                    <span class="text-value-item">Alfabéticamente, A-Z</span>
                                 </div>
                                 <div class="select-item" data-sort-value="z-a">
-                                    <span class="text-value-item">Alphabetically, Z-A</span>
+                                    <span class="text-value-item">Alfabéticamente, Z-A</span>
                                 </div>
                                 <div class="select-item" data-sort-value="price-low-high">
-                                    <span class="text-value-item">Price, low to high</span>
+                                    <span class="text-value-item">Precio, menor a mayor</span>
                                 </div>
                                 <div class="select-item" data-sort-value="price-high-low">
-                                    <span class="text-value-item">Price, high to low</span>
+                                    <span class="text-value-item">Precio, mayor a menor</span>
                                 </div>
                                 <div class="select-item">
-                                    <span class="text-value-item">Date, old to new</span>
+                                    <span class="text-value-item">Fecha, antiguo a nuevo</span>
                                 </div>
                                 <div class="select-item">
-                                    <span class="text-value-item">Date, new to old</span>
+                                    <span class="text-value-item">Fecha, nuevo a antiguo</span>
                                 </div>
                             </div>
                         </div>
@@ -160,7 +158,7 @@
                         <div id="product-count-grid" class="count-text"></div>
                         <div id="product-count-list" class="count-text"></div>
                         <div id="applied-filters"></div>
-                        <button id="remove-all" class="remove-all-filters" style="display: none;">Remove All <i
+                        <button id="remove-all" class="remove-all-filters" style="display: none;">Quitar Todos <i
                                 class="icon icon-close"></i></button>
                     </div>
                     <div class="tf-list-layout wrapper-shop" id="listLayout">
@@ -203,21 +201,15 @@
                                         </ul>
                                     {% endif %}
                                     <div class="list-product-btn">
-                                        <a href="#quick_add" data-bs-toggle="modal" 
-                                            class="box-icon bg_white quick-add tf-btn-loading">
-                                            <span class="icon icon-bag"></span>
-                                            <span class="tooltip">Quick Add</span>
-                                        </a>
                                         <a href="#" class="box-icon bg_white wishlist btn-icon-action">
                                             <span class="icon icon-heart"></span>
                                             <span class="tooltip">Add to Wishlist</span>
                                             <span class="icon icon-delete"></span>
                                         </a>
-                                        <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                            class="box-icon bg_white compare btn-icon-action">
-                                            <span class="icon icon-compare"></span>
-                                            <span class="tooltip">Add to Compare</span>
-                                            <span class="icon icon-check"></span>
+                                        <a href="#" class="box-icon bg_white wishlist btn-icon-action d-md-none">
+                                            <span class="icon icon-heart"></span>
+                                            <span class="tooltip">Add to Wishlist</span>
+                                            <span class="icon icon-delete"></span>
                                         </a>
                                         <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
                                             data-producto-id="{{ producto.id }}">
@@ -293,21 +285,15 @@
                                         {% endif %}
                                     </a>
                                     <div class="list-product-btn">
-                                        <a href="#quick_add" data-bs-toggle="modal" 
-                                            class="box-icon bg_white quick-add tf-btn-loading">
-                                            <span class="icon icon-bag"></span>
-                                            <span class="tooltip">Quick Add</span>
-                                        </a>
                                         <a href="#" class="box-icon bg_white wishlist btn-icon-action">
                                             <span class="icon icon-heart"></span>
                                             <span class="tooltip">Add to Wishlist</span>
                                             <span class="icon icon-delete"></span>
                                         </a>
-                                        <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                            class="box-icon bg_white compare btn-icon-action">
-                                            <span class="icon icon-compare"></span>
-                                            <span class="tooltip">Add to Compare</span>
-                                            <span class="icon icon-check"></span>
+                                        <a href="#" class="box-icon bg_white wishlist btn-icon-action d-md-none">
+                                            <span class="icon icon-heart"></span>
+                                            <span class="tooltip">Add to Wishlist</span>
+                                            <span class="icon icon-delete"></span>
                                         </a>
                                         <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
                                             data-producto-id="{{ producto.id }}">
@@ -413,7 +399,7 @@
                 <div class="toolbar-icon">
                     <i class="icon-fill"></i>
                 </div>
-                <div class="toolbar-label">Filter</div>
+                <div class="toolbar-label">Filtrar</div>
             </a>
         </div>
         <div class="toolbar-item">
@@ -455,100 +441,7 @@
     <!-- modalDemo -->
     
     <!-- /modalDemo -->
-    <!-- mobile menu -->
-        <div class="offcanvas offcanvas-start canvas-mb" id="mobileMenu">
-            <span class="icon-close icon-close-popup" data-bs-dismiss="offcanvas" aria-label="Close"></span>
-            <div class="mb-canvas-content">
-                <div class="mb-body">
-                    <ul class="nav-ul-mb" id="wrapper-menu-navigation">
-                        
-                        <li class="nav-mb-item">
-                            <a href="#dropdown-menu-two" class="collapsed mb-menu-link current" data-bs-toggle="collapse"
-                                aria-expanded="true" aria-controls="dropdown-menu-two">
-                                <span>Shop</span>
-                                <span class="btn-open-sub"></span>
-                            </a>
-                            <div id="dropdown-menu-two" class="collapse">
-                                <ul class="sub-nav-menu" id="sub-menu-navigation">
-                                    {% if categorias_menu %}
-                                        {% for categoria in categorias_menu %}
-                                            {% if categoria.subcategorias.exists %}
-                                                <li>
-                                                    <a href="#sub-cat-{{ categoria.id }}" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                                        aria-expanded="true" aria-controls="sub-cat-{{ categoria.id }}">
-                                                        <span>{{ categoria.nombre }}</span>
-                                                        <span class="btn-open-sub"></span>
-                                                    </a>
-                                                    <div id="sub-cat-{{ categoria.id }}" class="collapse">
-                                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                                            {% for subcategoria in categoria.subcategorias.all %}
-                                                                {% if subcategoria.estado %}
-                                                                    <li>
-                                                                        <a href="{% url 'productos:producto_list' %}?categoria={{ subcategoria.slug }}" class="sub-nav-link">
-                                                                            {{ subcategoria.nombre }}
-                                                                        </a>
-                                                                    </li>
-                                                                {% endif %}
-                                                            {% endfor %}
-                                                        </ul>
-                                                    </div>
-                                                </li>
-                                            {% else %}
-                                                <li>
-                                                    <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}" class="sub-nav-link">
-                                                        {{ categoria.nombre }}
-                                                    </a>
-                                                </li>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% else %}
-                                        <li>
-                                            <a href="{% url 'productos:producto_list' %}" class="sub-nav-link">Ver todos los productos</a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            </div>
-                        </li>
-                    </ul>
-                    <div class="mb-other-content">
-                        <div class="d-flex group-icon">
-                            <a href="wishlist.html" class="site-nav-icon"><i class="icon icon-heart"></i>Wishlist</a>
-                            <a href="home-search.html" class="site-nav-icon"><i class="icon icon-search"></i>Search</a>
-                        </div>
-                        <div class="mb-notice">
-                            <a href="#" class="text-need">Need help ?</a>
-                        </div>
-                        <ul class="mb-info">
-                            <li>Address: 1234 Fashion Street, Suite 567, <br> New York, NY 10001</li>
-                            <li>Email: <b>info@fashionshop.com</b></li>
-                            <li>Phone: <b>(212) 555-1234</b></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="mb-bottom">
-                    <a href="{% url 'usuarios:login' %}" class="site-nav-icon"><i class="icon icon-account"></i>Login</a>
-                    <div class="bottom-bar-language">
-                        <div class="tf-currencies">
-                            <select class="image-select center style-default type-currencies">
-                                <option data-thumbnail="{% static 'images/country/fr.svg' %}">EUR € | France</option>
-                                <option data-thumbnail="{% static 'images/country/de.svg' %}">EUR € | Germany</option>
-                                <option selected data-thumbnail="{% static 'images/country/us.svg' %}">USD $ | United States</option>
-                                <option data-thumbnail="{% static 'images/country/vn.svg' %}">VND ₫ | Vietnam</option>
-                            </select>
-                        </div>
-                        <div class="tf-languages">
-                            <select class="image-select center style-default type-languages">
-                                <option>English</option>
-                                <option>العربية</option>
-                                <option>简体中文</option>
-                                <option>اردو</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- /mobile menu -->
+    
 
     <!-- Filter -->
     <div class="offcanvas offcanvas-start canvas-filter" id="filterShop">
@@ -556,7 +449,7 @@
             <header class="canvas-header">
                 <div class="filter-icon">
                     <span class="icon icon-filter"></span>
-                    <span>Filter</span>
+                    <span>Filtrar</span>
                 </div>
                 <span class="icon-close icon-close-popup" data-bs-dismiss="offcanvas" aria-label="Close"></span>
             </header>
@@ -571,7 +464,7 @@
                         <ul class="list-categoris current-scrollbar mb_36">
                             {% for categoria in categorias_menu %}
                                 <li class="cate-item {% if request.GET.categoria == categoria.slug %}current{% endif %}">
-                                    <a href="{% url 'productos:producto_list' %}?categoria={{ categoria.slug }}">
+                                    <a href="{% url 'core:shop-collection-sub' %}?categoria={{ categoria.slug }}{% if coleccion_actual %}&coleccion={{ coleccion_actual.slug }}{% endif %}">
                                         <span>{{ categoria.nombre }}</span>
                                     </a>
                                     
@@ -580,7 +473,7 @@
                                             {% for subcategoria in categoria.subcategorias.all %}
                                                 {% if subcategoria.estado %}
                                                     <li class="cate-item {% if request.GET.categoria == subcategoria.slug %}current{% endif %}" style="font-size: 13px;">
-                                                        <a href="{% url 'productos:producto_list' %}?categoria={{ subcategoria.slug }}">
+                                                        <a href="{% url 'core:shop-collection-sub' %}?categoria={{ subcategoria.slug }}{% if coleccion_actual %}&coleccion={{ coleccion_actual.slug }}{% endif %}">
                                                             <span>→ {{ subcategoria.nombre }}</span>
                                                         </a>
                                                     </li>
@@ -593,8 +486,13 @@
                         </ul>
                     </div>
                 </div>
-                <form action="{% url 'productos:producto_list' %}" method="get" id="facet-filter-form" class="facet-filter-form">
-                    <input type="hidden" name="categoria" value="{{ request.GET.categoria }}">
+                <form action="{% url 'core:shop-collection-sub' %}" method="get" id="facet-filter-form" class="facet-filter-form">
+                    {% if categoria_actual %}
+                        <input type="hidden" name="categoria" value="{{ categoria_actual.slug }}">
+                    {% endif %}
+                    {% if coleccion_actual %}
+                        <input type="hidden" name="coleccion" value="{{ coleccion_actual.slug }}">
+                    {% endif %}
                     
                     <div class="widget-facet">
                         <div class="facet-title" data-bs-target="#availability" data-bs-toggle="collapse"
@@ -725,16 +623,7 @@
                                 <li class="list-item d-flex gap-12 align-items-center">
                                     <input type="radio" name="color" class="tf-check-color bg_light-green"
                                         id="Light Green" value="Light Green">
-                                    <label for="Light Green" class="label"><span>Verde Claro</span>&nbsp;<span>(3)</span></label>
-                                </li>
-                                </ul>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- End Filter -->    
+                                    <label for="Light Green" class="label"><span>Verde Claro</span>&nbsp;<span>(3)</span></l    
     <!-- modal quick_add -->
     <div class="modal fade modalDemo popup-quickadd" id="quick_add">
         <div class="modal-dialog modal-dialog-centered">
@@ -1668,4 +1557,4 @@
     {% endblock %}
 </body>
 
-</html>f
+</html>

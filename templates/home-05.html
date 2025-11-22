@@ -81,7 +81,7 @@
                                     {% else %}
                                         <p class="fade-item fade-item-2 text-white">Descubre nuestra colección exclusiva</p>
                                     {% endif %}
-                                    <a href="{% url 'productos:producto_list' %}?coleccion={{ coleccion.slug }}"
+                                    <a href="{% url 'core:shop-collection-sub' %}?coleccion={{ coleccion.slug }}"
                                         class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Ver
                                             colección</span><i class="icon icon-arrow-right"></i></a>
                                 </div>

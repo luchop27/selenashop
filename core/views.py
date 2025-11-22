@@ -368,22 +368,25 @@ def shop_collection_sub(request):
     """Lista de productos para la plantilla `shop-collection-sub.html`.
 
     - Filtra por categoría si se pasa `?categoria=<id_or_slug>`
+    - Filtra por colección si se pasa `?coleccion=<slug>`
     - Ordena por id (asc)
     - Anota precio mínimo de variantes y stock total
     - Prepara campos auxiliares que la plantilla espera: display_price, main_image_src,
       hover_image_src, colors, availability
     - Envía categorías o subcategorías según el contexto
     """
-    from apps.productos.models import Categoria
+    from apps.productos.models import Categoria, Coleccion
     
     categoria_param = request.GET.get('categoria')
+    coleccion_param = request.GET.get('coleccion')
     categoria_actual = None
+    coleccion_actual = None
     categorias_a_mostrar = []
 
     qs = (
         Producto.objects
         .filter(activo=True)
-        .select_related('categoria')
+        .select_related('categoria', 'coleccion')
         # prefetch imagenes, variantes, tallas y atributos de variantes (fallbacks)
         .prefetch_related(
             'imagenes',
@@ -395,6 +398,14 @@ def shop_collection_sub(request):
         .order_by('id')
     )
 
+    # Filtrar por colección si se especifica
+    if coleccion_param:
+        coleccion_actual = Coleccion.objects.filter(slug=coleccion_param).first()
+        if coleccion_actual:
+            qs = qs.filter(coleccion=coleccion_actual)
+            print(f"DEBUG: Filtrando por colección: {coleccion_actual.nombre}")
+
+    # Filtrar por categoría si se especifica
     if categoria_param:
         # aceptar id numérico o slug
         try:
@@ -440,15 +451,46 @@ def shop_collection_sub(request):
                 ).order_by('nombre')
             )
             print(f"DEBUG: Es categoría principal sin hijos, mostrando principales: {len(categorias_a_mostrar)}")
+    elif coleccion_actual:
+        # Si se filtra por colección, mostrar las subcategorías de Ropa
+        try:
+            categoria_ropa = Categoria.objects.get(slug='ropa', estado=True)
+            categorias_a_mostrar = list(
+                Categoria.objects.filter(
+                    padre=categoria_ropa,
+                    estado=True
+                ).order_by('nombre')
+            )
+            print(f"DEBUG: Filtrando por colección, mostrando subcategorías de Ropa: {len(categorias_a_mostrar)}")
+        except Categoria.DoesNotExist:
+            # Si no existe la categoría Ropa, mostrar categorías principales
+            categorias_a_mostrar = list(
+                Categoria.objects.filter(
+                    padre__isnull=True,
+                    estado=True
+                ).order_by('nombre')
+            )
+            print(f"DEBUG: Categoría Ropa no encontrada, mostrando principales: {len(categorias_a_mostrar)}")
     else:
-        # Si no hay categoría seleccionada, mostrar categorías principales
-        categorias_a_mostrar = list(
-            Categoria.objects.filter(
-                padre__isnull=True,
-                estado=True
-            ).order_by('nombre')
-        )
-        print(f"DEBUG: Sin categoría, mostrando principales: {len(categorias_a_mostrar)}")
+        # Si no hay categoría ni colección seleccionada, mostrar subcategorías de Ropa por defecto
+        try:
+            categoria_ropa = Categoria.objects.get(slug='ropa', estado=True)
+            categorias_a_mostrar = list(
+                Categoria.objects.filter(
+                    padre=categoria_ropa,
+                    estado=True
+                ).order_by('nombre')
+            )
+            print(f"DEBUG: Sin filtros, mostrando subcategorías de Ropa: {len(categorias_a_mostrar)}")
+        except Categoria.DoesNotExist:
+            # Si no existe la categoría Ropa, mostrar categorías principales
+            categorias_a_mostrar = list(
+                Categoria.objects.filter(
+                    padre__isnull=True,
+                    estado=True
+                ).order_by('nombre')
+            )
+            print(f"DEBUG: Sin filtros y Ropa no encontrada, mostrando principales: {len(categorias_a_mostrar)}")
     
     print(f"DEBUG: Total categorías a mostrar: {len(categorias_a_mostrar)}")
     for cat in categorias_a_mostrar:
@@ -502,13 +544,14 @@ def shop_collection_sub(request):
         # disponibilidad calculada a partir del stock total
         total_stock = getattr(p, 'total_stock', None)
         try:
-            p.availability = 'In stock' if (total_stock is not None and total_stock > 0) else 'Out of stock'
+            p.availability = 'En stock' if (total_stock is not None and total_stock > 0) else 'Agotado'
         except Exception:
-            p.availability = 'In stock'
+            p.availability = 'En stock'
 
     return render(request, 'shop-collection-sub.html', {
         'productos': productos,
         'categoria_actual': categoria_actual,
+        'coleccion_actual': coleccion_actual,
         'categorias_a_mostrar': categorias_a_mostrar,
     })
 

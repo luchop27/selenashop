@@ -31,7 +31,10 @@
                 e.preventDefault();
                 console.log('Quick View: Botón clickeado');
                 
-                const productoId = this.getAttribute('data-producto-id');
+                let productoId = this.getAttribute('data-product-id');
+                if (!productoId) {
+                    productoId = this.getAttribute('data-producto-id');
+                }
                 console.log('Quick View: Producto ID =', productoId);
                 
                 if (!productoId) {
@@ -171,6 +174,8 @@
             }
         }
     });
+
+    // Eliminado QUICK ADD: el mega menú queda solo con Vista Rápida
 
     function loadProductQuickView(productId) {
         console.log('Quick View: Cargando producto ID =', productId);
