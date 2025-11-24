@@ -118,6 +118,8 @@
                                             </li>
                                         </ul>
                                     </li>
+
+                                    
                                     
                                     <!-- Colecciones -->
                                     <li class="menu-item has-children {% block menu_collections %}{% endblock %}">
@@ -173,7 +175,7 @@
                                         </ul>
                                     </li>
                                     
-                                    <li class="menu-item has-children">
+                                    <li class="menu-item has-children {% block menu_orders %}{% endblock %}">
                                         <a href="#" class="menu-item-button">
                                             <div class="icon">
                                                 <svg width="24" height="22" viewBox="0 0 20 22" fill="none"
@@ -187,13 +189,18 @@
                                         </a>
                                         <ul class="sub-menu">
                                             <li class="sub-menu-item">
-                                                <a href="#" class="">
+                                                <a href="{% url 'core:admin_order_list' %}" class="">
                                                     <div class="text">Lista de Pedidos</div>
                                                 </a>
                                             </li>
                                             <li class="sub-menu-item">
-                                                <a href="#" class="">
+                                                <a href="{% url 'core:admin_order_detail_select' %}" class="">
                                                     <div class="text">Detalle de Pedido</div>
+                                                </a>
+                                            </li>
+                                            <li class="sub-menu-item">
+                                                <a href="{% url 'core:admin_order_tracking_select' %}" class="">
+                                                    <div class="text">Seguimiento de Pedido</div>
                                                 </a>
                                             </li>
                                         </ul>

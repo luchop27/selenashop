@@ -3,7 +3,7 @@
 
 {% block menu_orders %}active{% endblock %}
 
-{% block title %}Lista de Pedidos - Admin{% endblock %}
+{% block title %}Seleccionar Pedido - Seguimiento{% endblock %}
 
 {% block content %}
 <!-- main-content -->
@@ -13,7 +13,7 @@
         <!-- main-content-wrap -->
         <div class="main-content-wrap">
             <div class="flex items-center flex-wrap justify-between gap20 mb-30">
-                <h3>Lista de Pedidos</h3>
+                <h3>Seleccionar Pedido para Seguimiento</h3>
                 <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                     <li>
                         <a href="{% url 'core:admin_index' %}">
@@ -24,13 +24,45 @@
                         <i class="icon-chevron-right"></i>
                     </li>
                     <li>
-                        <div class="text-tiny">Pedidos</div>
+                        <a href="{% url 'core:admin_order_list' %}">
+                            <div class="text-tiny">Pedidos</div>
+                        </a>
+                    </li>
+                    <li>
+                        <i class="icon-chevron-right"></i>
+                    </li>
+                    <li>
+                        <div class="text-tiny">Seguimiento</div>
                     </li>
                 </ul>
             </div>
             
-            <!-- order-list -->
+            <!-- order-tracking-select -->
             <div class="wg-box">
+                <div class="mb-30">
+                    <div class="body-title-2 mb-20">Buscar Pedido</div>
+                    <form method="get" class="flex items-center gap10">
+                        <div class="wg-filter flex-grow">
+                            <fieldset class="name">
+                                <input type="text" 
+                                       placeholder="Buscar por número de pedido, nombre, email..." 
+                                       class="tf-input" 
+                                       name="q"
+                                       value="{{ search_query }}"
+                                       aria-required="true">
+                            </fieldset>
+                        </div>
+                        <button type="submit" class="tf-button style-1">
+                            <i class="icon-search"></i> Buscar
+                        </button>
+                        {% if search_query %}
+                        <a href="{% url 'core:admin_order_tracking_select' %}" class="tf-button style-3">
+                            <i class="icon-refresh"></i> Limpiar
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+
                 <div class="wg-table table-product-list">
                     <ul class="table-title flex gap20 mb-14">
                         <li><div class="body-title">Número de Pedido</div></li>
@@ -39,7 +71,7 @@
                         <li><div class="body-title">Fecha</div></li>
                         <li><div class="body-title">Total</div></li>
                         <li><div class="body-title">Estado</div></li>
-                        <li><div class="body-title">Acciones</div></li>
+                        <li><div class="body-title">Acción</div></li>
                     </ul>
 
                     <ul class="flex flex-column">
@@ -75,26 +107,42 @@
                                     <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
                                 {% endif %}
                             </div>
-                            <div class="flex items-center gap10">
-                                <a href="{% url 'core:admin_order_detail' pedido.id %}" class="tf-button style-3">
-                                    <i class="icon-eye"></i> Ver
-                                </a>
-                                <a href="{% url 'core:admin_order_tracking' pedido.id %}" class="tf-button style-2">
-                                    <i class="icon-truck"></i> Seguimiento
-                                </a>
+                            <div>
+                                <form method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="pedido_id" value="{{ pedido.id }}">
+                                    <button type="submit" class="tf-button style-1">
+                                        <i class="icon-truck"></i> Ver Seguimiento
+                                    </button>
+                                </form>
                             </div>
                         </li>
                         {% empty %}
                         <li class="wg-product item-row gap20">
                             <div class="text-center" style="width: 100%; padding: 40px;">
-                                <div class="body-text">No hay pedidos registrados.</div>
+                                <div class="body-text">
+                                    {% if search_query %}
+                                        No se encontraron pedidos que coincidan con "{{ search_query }}".
+                                    {% else %}
+                                        No hay pedidos registrados.
+                                    {% endif %}
+                                </div>
                             </div>
                         </li>
                         {% endfor %}
                     </ul>
                 </div>
+
+                {% if not search_query and pedidos|length >= 50 %}
+                <div class="mt-20">
+                    <div class="body-text text-muted">
+                        Mostrando los primeros 50 pedidos. Usa la búsqueda para encontrar pedidos específicos.
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+

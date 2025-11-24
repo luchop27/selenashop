@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Min, Sum
+from django.db.models import Min, Sum, Q
 
 # Import Producto model to build the shop listing
 from apps.productos.models import Producto
@@ -1513,3 +1513,103 @@ def validate_discount_code(request):
             'valid': False,
             'message': 'El código de descuento no existe'
         })
+
+# ==================== ADMIN ORDER VIEWS ====================
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from .models import Pedido
+
+@login_required
+def admin_order_list(request):
+    """
+    Vista para listar todos los pedidos en el panel de administración.
+    """
+    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
+        return redirect('core:inicio')
+
+    pedidos = Pedido.objects.all().select_related('usuario').prefetch_related('items').order_by('-created_at')
+    return render(request, 'oder-list.html', {'pedidos': pedidos})
+
+@login_required
+def admin_order_detail_select(request):
+    """
+    Vista para seleccionar un pedido y ver su detalle.
+    """
+    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
+        return redirect('core:inicio')
+    
+    # Si se envía un pedido_id por POST, redirigir al detalle
+    if request.method == 'POST':
+        pedido_id = request.POST.get('pedido_id')
+        if pedido_id:
+            return redirect('core:admin_order_detail', pedido_id=pedido_id)
+    
+    # Buscar pedidos si hay búsqueda
+    search_query = request.GET.get('q', '')
+    pedidos = Pedido.objects.all().select_related('usuario').order_by('-created_at')
+    
+    if search_query:
+        pedidos = pedidos.filter(
+            Q(numero_pedido__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    
+    return render(request, 'oder-detail-select.html', {
+        'pedidos': pedidos[:50],  # Limitar a 50 resultados
+        'search_query': search_query
+    })
+
+@login_required
+def admin_order_detail(request, pedido_id):
+    """
+    Vista para ver los detalles de un pedido específico en el panel de administración.
+    """
+    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
+        return redirect('core:inicio')
+
+    pedido = get_object_or_404(Pedido.objects.select_related('usuario').prefetch_related('items'), id=pedido_id)
+    return render(request, 'oder-detail.html', {'pedido': pedido})
+
+@login_required
+def admin_order_tracking_select(request):
+    """
+    Vista para seleccionar un pedido y ver su seguimiento.
+    """
+    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
+        return redirect('core:inicio')
+    
+    # Si se envía un pedido_id por POST, redirigir al seguimiento
+    if request.method == 'POST':
+        pedido_id = request.POST.get('pedido_id')
+        if pedido_id:
+            return redirect('core:admin_order_tracking', pedido_id=pedido_id)
+    
+    # Buscar pedidos si hay búsqueda
+    search_query = request.GET.get('q', '')
+    pedidos = Pedido.objects.all().select_related('usuario').order_by('-created_at')
+    
+    if search_query:
+        pedidos = pedidos.filter(
+            Q(numero_pedido__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    
+    return render(request, 'oder-tracking-select.html', {
+        'pedidos': pedidos[:50],  # Limitar a 50 resultados
+        'search_query': search_query
+    })
+
+@login_required
+def admin_order_tracking(request, pedido_id):
+    """
+    Vista para el seguimiento de un pedido específico.
+    """
+    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
+        return redirect('core:inicio')
+    
+    pedido = get_object_or_404(Pedido.objects.select_related('usuario').prefetch_related('items'), id=pedido_id)
+    return render(request, 'oder-tracking.html', {'pedido': pedido})

@@ -12,6 +12,11 @@ urlpatterns = [
     path('product/', views.product_detail, name='product_detail_demo'),  # Sin ID para ver demo
     path('dashboard/', views.dashboard_redirect, name='dashboard'),
     path('admin-panel/', views.admin_index, name='admin_index'),
+    path('admin-panel/orders/', views.admin_order_list, name='admin_order_list'),
+    path('admin-panel/orders/detail/', views.admin_order_detail_select, name='admin_order_detail_select'),
+    path('admin-panel/orders/detail/<int:pedido_id>/', views.admin_order_detail, name='admin_order_detail'),
+    path('admin-panel/orders/tracking/', views.admin_order_tracking_select, name='admin_order_tracking_select'),
+    path('admin-panel/orders/tracking/<int:pedido_id>/', views.admin_order_tracking, name='admin_order_tracking'),
     
     # Cart URLs
     path('cart/', views.view_cart, name='view_cart'),
