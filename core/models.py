@@ -155,6 +155,8 @@ class Pedido(models.Model):
         choices=ESTADO_CHOICES,
         default='pendiente'
     )
+    pagado = models.BooleanField(default=False, verbose_name='Pagado')
+    fecha_pago = models.DateTimeField(null=True, blank=True, verbose_name='Fecha de pago')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Última actualización')
     

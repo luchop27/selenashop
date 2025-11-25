@@ -1522,13 +1522,41 @@ from .models import Pedido
 @login_required
 def admin_order_list(request):
     """
-    Vista para listar todos los pedidos en el panel de administración.
+    Vista para listar todos los pedidos en el panel de administración con filtros.
     """
     if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
         return redirect('core:inicio')
 
     pedidos = Pedido.objects.all().select_related('usuario').prefetch_related('items').order_by('-created_at')
-    return render(request, 'oder-list.html', {'pedidos': pedidos})
+    
+    # Filtro por nombre/cliente
+    search_query = request.GET.get('q', '')
+    if search_query:
+        pedidos = pedidos.filter(
+            Q(numero_pedido__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    
+    # Filtro por estado
+    estado_filter = request.GET.get('estado', '')
+    if estado_filter:
+        pedidos = pedidos.filter(estado=estado_filter)
+    
+    # Filtro por pago
+    pago_filter = request.GET.get('pago', '')
+    if pago_filter == 'pagado':
+        pedidos = pedidos.filter(pagado=True)
+    elif pago_filter == 'no_pagado':
+        pedidos = pedidos.filter(pagado=False)
+    
+    return render(request, 'oder-list.html', {
+        'pedidos': pedidos,
+        'search_query': search_query,
+        'estado_filter': estado_filter,
+        'pago_filter': pago_filter,
+    })
 
 @login_required
 def admin_order_detail_select(request):
@@ -1613,3 +1641,36 @@ def admin_order_tracking(request, pedido_id):
     
     pedido = get_object_or_404(Pedido.objects.select_related('usuario').prefetch_related('items'), id=pedido_id)
     return render(request, 'oder-tracking.html', {'pedido': pedido})
+
+@login_required
+@require_POST
+def admin_order_mark_paid(request, pedido_id):
+    """
+    Vista para marcar un pedido como pagado.
+    Se puede marcar cualquier pedido como pagado, independientemente de su estado.
+    """
+    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
+        return JsonResponse({'success': False, 'message': 'No tienes permiso'}, status=403)
+    
+    from django.utils import timezone
+    
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    
+    # Verificar si ya está pagado
+    if pedido.pagado:
+        return JsonResponse({
+            'success': False, 
+            'message': 'Este pedido ya está marcado como pagado'
+        }, status=400)
+    
+    # Marcar como pagado
+    pedido.pagado = True
+    pedido.fecha_pago = timezone.now()
+    pedido.save()
+    
+    messages.success(request, f'Pedido {pedido.numero_pedido} marcado como pagado.')
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Pedido marcado como pagado exitosamente'
+    })

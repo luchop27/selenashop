@@ -42,23 +42,52 @@
                 <div class="flex items-center justify-between gap20 mb-30">
                     <div>
                         <div class="body-title-2 mb-10">Estado Actual del Pedido</div>
-                        {% if pedido.estado == 'pendiente' %}
-                            <span class="badge bg-warning">{{ pedido.get_estado_display }}</span>
-                        {% elif pedido.estado == 'procesando' %}
-                            <span class="badge bg-info">{{ pedido.get_estado_display }}</span>
-                        {% elif pedido.estado == 'enviado' %}
-                            <span class="badge bg-primary">{{ pedido.get_estado_display }}</span>
-                        {% elif pedido.estado == 'entregado' %}
-                            <span class="badge bg-success">{{ pedido.get_estado_display }}</span>
-                        {% elif pedido.estado == 'cancelado' %}
-                            <span class="badge bg-danger">{{ pedido.get_estado_display }}</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
-                        {% endif %}
+                        <div class="flex items-center gap10">
+                            {% if pedido.estado == 'pendiente' %}
+                                <span class="badge bg-warning">{{ pedido.get_estado_display }}</span>
+                            {% elif pedido.estado == 'procesando' %}
+                                <span class="badge bg-info">{{ pedido.get_estado_display }}</span>
+                            {% elif pedido.estado == 'enviado' %}
+                                <span class="badge bg-primary">{{ pedido.get_estado_display }}</span>
+                            {% elif pedido.estado == 'entregado' %}
+                                <span class="badge bg-success">{{ pedido.get_estado_display }}</span>
+                            {% elif pedido.estado == 'cancelado' %}
+                                <span class="badge bg-danger">{{ pedido.get_estado_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
+                            {% endif %}
+                            {% if pedido.pagado %}
+                                <span class="badge bg-success">✓ Pagado</span>
+                                {% if pedido.fecha_pago %}
+                                    <span class="text-tiny text-muted">({{ pedido.fecha_pago|date:"d M Y, H:i" }})</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">No Pagado</span>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div>
+                    <div class="flex items-center gap10">
+                        {% if not pedido.pagado %}
+                        <button type="button" 
+                                class="tf-button style-1" 
+                                id="mark-paid-btn"
+                                onclick="markAsPaid({{ pedido.id }})"
+                                style="background-color: #28a745; color: white; font-weight: bold;">
+                            <i class="icon-check"></i> Marcar como Pagado
+                        </button>
+                        {% else %}
+                        <div class="body-text text-success" style="padding: 10px;">
+                            <i class="icon-check-circle"></i> Este pedido ya está marcado como pagado
+                            {% if pedido.fecha_pago %}
+                                ({{ pedido.fecha_pago|date:"d M Y, H:i" }})
+                            {% endif %}
+                        </div>
+                        {% endif %}
                         <a href="{% url 'core:admin_order_detail' pedido.id %}" class="tf-button style-3">
                             <i class="icon-arrow-left"></i> Volver al detalle
+                        </a>
+                        <a href="{% url 'core:admin_order_list' %}" class="tf-button style-2">
+                            <i class="icon-list"></i> Lista de Pedidos
                         </a>
                     </div>
                 </div>
@@ -206,4 +235,85 @@
     color: white;
 }
 </style>
+
+<script>
+function markAsPaid(pedidoId) {
+    if (!confirm('¿Estás seguro de que deseas marcar este pedido como pagado?\n\nEsta acción registrará la fecha de pago y no se puede deshacer fácilmente.')) {
+        return;
+    }
+    
+    const btn = document.getElementById('mark-paid-btn');
+    if (!btn) {
+        alert('Error: No se encontró el botón.');
+        return;
+    }
+    
+    const originalText = btn.innerHTML;
+    const originalDisabled = btn.disabled;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="icon-spinner"></i> Procesando...';
+    btn.style.opacity = '0.6';
+    
+    // Obtener el token CSRF de las cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    
+    if (!csrftoken) {
+        alert('Error: No se pudo obtener el token de seguridad. Por favor, recarga la página.');
+        btn.disabled = originalDisabled;
+        btn.innerHTML = originalText;
+        btn.style.opacity = '1';
+        return;
+    }
+    
+    // Construir la URL correctamente
+    const url = '{% url "core:admin_order_mark_paid" 999 %}'.replace('999', pedidoId);
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Error en la respuesta del servidor');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert('✓ Pedido marcado como pagado exitosamente.\n\nLa página se recargará automáticamente.');
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+        } else {
+            throw new Error(data.message || 'Error desconocido');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al marcar el pedido como pagado:\n\n' + error.message);
+        btn.disabled = originalDisabled;
+        btn.innerHTML = originalText;
+        btn.style.opacity = '1';
+    });
+}
+</script>
 {% endblock %}

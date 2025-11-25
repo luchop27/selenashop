@@ -17,6 +17,7 @@ urlpatterns = [
     path('admin-panel/orders/detail/<int:pedido_id>/', views.admin_order_detail, name='admin_order_detail'),
     path('admin-panel/orders/tracking/', views.admin_order_tracking_select, name='admin_order_tracking_select'),
     path('admin-panel/orders/tracking/<int:pedido_id>/', views.admin_order_tracking, name='admin_order_tracking'),
+    path('admin-panel/orders/<int:pedido_id>/mark-paid/', views.admin_order_mark_paid, name='admin_order_mark_paid'),
     
     # Cart URLs
     path('cart/', views.view_cart, name='view_cart'),

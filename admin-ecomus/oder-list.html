@@ -31,6 +31,43 @@
             
             <!-- order-list -->
             <div class="wg-box">
+                <div class="mb-30">
+                    <div class="body-title-2 mb-20">Filtros de Búsqueda</div>
+                    <form method="get" class="flex items-center gap10 flex-wrap">
+                        <div class="wg-filter flex-grow" style="min-width: 200px;">
+                            <fieldset class="name">
+                                <input type="text" 
+                                       placeholder="Buscar por nombre, email, número de pedido..." 
+                                       class="tf-input" 
+                                       name="q"
+                                       value="{{ search_query }}"
+                                       aria-required="true">
+                            </fieldset>
+                        </div>
+                        <select name="estado" class="tf-input" style="width: 180px;" onchange="this.form.submit()">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente" {% if estado_filter == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                            <option value="procesando" {% if estado_filter == 'procesando' %}selected{% endif %}>Procesando</option>
+                            <option value="enviado" {% if estado_filter == 'enviado' %}selected{% endif %}>Enviado</option>
+                            <option value="entregado" {% if estado_filter == 'entregado' %}selected{% endif %}>Entregado</option>
+                            <option value="cancelado" {% if estado_filter == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                        </select>
+                        <select name="pago" class="tf-input" style="width: 150px;" onchange="this.form.submit()">
+                            <option value="">Todos los pagos</option>
+                            <option value="pagado" {% if pago_filter == 'pagado' %}selected{% endif %}>Pagados</option>
+                            <option value="no_pagado" {% if pago_filter == 'no_pagado' %}selected{% endif %}>No Pagados</option>
+                        </select>
+                        <button type="submit" class="tf-button style-1">
+                            <i class="icon-search"></i> Buscar
+                        </button>
+                        {% if search_query or estado_filter or pago_filter %}
+                        <a href="{% url 'core:admin_order_list' %}" class="tf-button style-3">
+                            <i class="icon-refresh"></i> Limpiar
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+                
                 <div class="wg-table table-product-list">
                     <ul class="table-title flex gap20 mb-14">
                         <li><div class="body-title">Número de Pedido</div></li>
@@ -60,7 +97,7 @@
                             <div>
                                 <div class="body-title-2">${{ pedido.total|floatformat:2 }}</div>
                             </div>
-                            <div>
+                            <div class="flex flex-column gap5">
                                 {% if pedido.estado == 'pendiente' %}
                                     <span class="badge bg-warning">{{ pedido.get_estado_display }}</span>
                                 {% elif pedido.estado == 'procesando' %}
@@ -73,6 +110,11 @@
                                     <span class="badge bg-danger">{{ pedido.get_estado_display }}</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
+                                {% endif %}
+                                {% if pedido.pagado %}
+                                    <span class="badge bg-success" style="font-size: 10px;">✓ Pagado</span>
+                                {% else %}
+                                    <span class="badge bg-secondary" style="font-size: 10px;">No Pagado</span>
                                 {% endif %}
                             </div>
                             <div class="flex items-center gap10">
