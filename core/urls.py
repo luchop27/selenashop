@@ -18,6 +18,12 @@ urlpatterns = [
     path('admin-panel/orders/tracking/', views.admin_order_tracking_select, name='admin_order_tracking_select'),
     path('admin-panel/orders/tracking/<int:pedido_id>/', views.admin_order_tracking, name='admin_order_tracking'),
     path('admin-panel/orders/<int:pedido_id>/mark-paid/', views.admin_order_mark_paid, name='admin_order_mark_paid'),
+    path('admin-panel/orders/<int:pedido_id>/cancel/', views.admin_order_cancel, name='admin_order_cancel'),
+    
+    # User Management URLs
+    path('admin-panel/users/', views.admin_user_list, name='admin_user_list'),
+    path('admin-panel/users/<int:user_id>/', views.admin_user_detail, name='admin_user_detail'),
+    path('admin-panel/users/<int:user_id>/delete/', views.admin_user_delete, name='admin_user_delete'),
     
     # Cart URLs
     path('cart/', views.view_cart, name='view_cart'),
@@ -39,4 +45,8 @@ urlpatterns = [
     
     # Endpoint AJAX para cargar más productos nuevos
     path('api/productos-nuevos/', views.api_productos_nuevos, name='api_productos_nuevos'),
+    
+    # Páginas estáticas
+    path('about-us/', views.about_us, name='about_us'),
+    path('nosotros/', views.about_us, name='nosotros'),
 ]

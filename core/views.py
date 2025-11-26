@@ -364,6 +364,23 @@ def home_05(request):
     """Alias para la función inicio"""
     return inicio(request)
 
+def about_us(request):
+    """Vista para la página About Us / Nosotros"""
+    from apps.productos.models import Categoria
+    
+    # Obtener categorías con subcategorías para el menú de navegación
+    categorias_menu = (
+        Categoria.objects
+        .filter(estado=True, padre__isnull=True)
+        .prefetch_related('subcategorias')
+        .order_by('nombre')
+    )
+    
+    context = {
+        'categorias_menu': categorias_menu,
+    }
+    return render(request, 'about-us.html', context)
+
 def shop_collection_sub(request):
     """Lista de productos para la plantilla `shop-collection-sub.html`.
 
@@ -1404,10 +1421,18 @@ def checkout_process(request):
         
         # Crear los detalles del pedido
         for item in cart:
+            # Obtener la variante para guardar la referencia correcta
+            variante_obj = None
+            if item['variante_id']:
+                try:
+                    variante_obj = Variante.objects.get(id=item['variante_id'])
+                except Variante.DoesNotExist:
+                    pass
+            
             DetallePedido.objects.create(
                 pedido=pedido,
                 producto=item['producto'],
-                variante_id=item['variante_id'],
+                variante=variante_obj,  # Usar el objeto variante en lugar de variante_id
                 nombre_producto=item['nombre'],
                 talla=item.get('talla'),
                 color=item.get('color'),
@@ -1674,3 +1699,206 @@ def admin_order_mark_paid(request, pedido_id):
         'success': True,
         'message': 'Pedido marcado como pagado exitosamente'
     })
+
+@login_required
+@require_POST
+def admin_order_cancel(request, pedido_id):
+    """
+    Vista para cancelar un pedido y devolver el stock.
+    """
+    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
+        return JsonResponse({'success': False, 'message': 'No tienes permiso'}, status=403)
+    
+    from apps.productos.models import Variante
+    
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    
+    # Verificar si ya está cancelado
+    if pedido.estado == 'cancelado':
+        return JsonResponse({
+            'success': False, 
+            'message': 'Este pedido ya está cancelado'
+        }, status=400)
+    
+    # Verificar si ya está pagado
+    if pedido.pagado:
+        return JsonResponse({
+            'success': False, 
+            'message': 'No se puede cancelar un pedido que ya está pagado'
+        }, status=400)
+    
+    stock_returned = []
+    
+    try:
+        # Devolver stock de cada item del pedido
+        for item in pedido.items.all():
+            if item.variante:
+                try:
+                    # Usar la referencia directa a la variante
+                    variante = item.variante
+                    variante.stock += item.cantidad
+                    variante.save()
+                    
+                    stock_returned.append(f"• {item.nombre_producto} ({item.talla or 'Sin talla'}, {item.color or 'Sin color'}): +{item.cantidad} unidades")
+                except Exception as e:
+                    # Si hay algún error, registrar pero continuar
+                    stock_returned.append(f"• {item.nombre_producto}: Error al devolver stock - {str(e)}")
+            elif hasattr(item, 'variante_id') and item.variante_id:
+                # Fallback: usar variante_id si existe (compatibilidad con pedidos antiguos)
+                try:
+                    variante = Variante.objects.get(id=item.variante_id)
+                    variante.stock += item.cantidad
+                    variante.save()
+                    
+                    stock_returned.append(f"• {item.nombre_producto} ({item.talla or 'Sin talla'}, {item.color or 'Sin color'}): +{item.cantidad} unidades")
+                except Variante.DoesNotExist:
+                    stock_returned.append(f"• {item.nombre_producto}: Variante no encontrada (no se pudo devolver stock)")
+            else:
+                stock_returned.append(f"• {item.nombre_producto}: Sin variante asociada (no se pudo devolver stock)")
+        
+        # Marcar pedido como cancelado
+        pedido.estado = 'cancelado'
+        pedido.save()
+        
+        messages.success(request, f'Pedido {pedido.numero_pedido} cancelado y stock devuelto.')
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Pedido cancelado exitosamente',
+            'stock_returned': '\n'.join(stock_returned) if stock_returned else 'No se encontraron productos para devolver stock'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al cancelar el pedido: {str(e)}'
+        }, status=500)
+
+
+# ==================== GESTIÓN DE USUARIOS ====================
+
+@login_required
+def admin_user_list(request):
+    """Lista todos los usuarios del sistema"""
+    from apps.usuarios.models import Usuario
+    
+    # Verificar permisos de administrador
+    if not request.user.is_staff:
+        messages.error(request, 'No tienes permisos para acceder a esta sección.')
+        return redirect('core:inicio')
+    
+    # Obtener parámetros de búsqueda y filtros
+    search_query = request.GET.get('q', '')
+    rol_filtro = request.GET.get('rol', '')
+    estado_filtro = request.GET.get('estado', '')
+    
+    # Construir queryset base
+    usuarios = Usuario.objects.all().order_by('-fecha_registro')
+    
+    # Aplicar filtros de búsqueda
+    if search_query:
+        usuarios = usuarios.filter(
+            Q(email__icontains=search_query) |
+            Q(nombre__icontains=search_query) |
+            Q(apellido__icontains=search_query) |
+            Q(telefono__icontains=search_query) |
+            Q(ciudad__icontains=search_query)
+        )
+    
+    # Aplicar filtro por rol
+    if rol_filtro:
+        usuarios = usuarios.filter(rol=rol_filtro)
+    
+    # Aplicar filtro por estado
+    if estado_filtro == 'activo':
+        usuarios = usuarios.filter(is_active=True)
+    elif estado_filtro == 'inactivo':
+        usuarios = usuarios.filter(is_active=False)
+    
+    # Paginación
+    paginator = Paginator(usuarios, 20)  # 20 usuarios por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Obtener choices para los filtros
+    rol_choices = Usuario.ROLES
+    
+    context = {
+        'usuarios': page_obj,
+        'search_query': search_query,
+        'rol_filtro': rol_filtro,
+        'estado_filtro': estado_filtro,
+        'rol_choices': rol_choices,
+        'total_usuarios': usuarios.count(),
+    }
+    
+    return render(request, 'all-user.html', context)
+
+
+@login_required
+def admin_user_detail(request, user_id):
+    """Vista detallada de un usuario específico"""
+    from apps.usuarios.models import Usuario
+    from django.shortcuts import get_object_or_404
+    
+    # Verificar permisos de administrador
+    if not request.user.is_staff:
+        messages.error(request, 'No tienes permisos para acceder a esta sección.')
+        return redirect('core:inicio')
+    
+    usuario = get_object_or_404(Usuario, id=user_id)
+    
+    # Obtener pedidos del usuario
+    pedidos_usuario = Pedido.objects.filter(
+        Q(email=usuario.email) | 
+        Q(first_name=usuario.nombre, last_name=usuario.apellido)
+    ).order_by('-fecha_pedido')[:10]  # Últimos 10 pedidos
+    
+    context = {
+        'usuario': usuario,
+        'pedidos_usuario': pedidos_usuario,
+        'total_pedidos': pedidos_usuario.count(),
+    }
+    
+    return render(request, 'user-detail.html', context)
+
+
+@login_required
+@require_POST
+def admin_user_delete(request, user_id):
+    """Elimina un usuario del sistema"""
+    from apps.usuarios.models import Usuario
+    from django.shortcuts import get_object_or_404
+    from django.contrib.auth import authenticate, login, logout
+    from django.http import JsonResponse
+    
+    # Verificar permisos de administrador
+    if not request.user.is_staff:
+        return JsonResponse({'success': False, 'message': 'No tienes permisos para realizar esta acción.'}, status=403)
+    
+    try:
+        usuario = get_object_or_404(Usuario, id=user_id)
+        
+        # No permitir eliminar al propio usuario
+        if usuario.id == request.user.id:
+            return JsonResponse({'success': False, 'message': 'No puedes eliminar tu propia cuenta.'}, status=400)
+        
+        # No permitir eliminar otros administradores
+        if usuario.is_staff and usuario.rol == 'admin_tienda':
+            return JsonResponse({'success': False, 'message': 'No se puede eliminar a otros administradores.'}, status=400)
+        
+        email_usuario = usuario.email
+        usuario.delete()
+        
+        messages.success(request, f'Usuario {email_usuario} eliminado exitosamente.')
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Usuario eliminado exitosamente'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al eliminar el usuario: {str(e)}'
+        }, status=500)

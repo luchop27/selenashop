@@ -277,7 +277,7 @@
                                 </li>
 
                                 <li class="menu-item">
-                                    <a href="#" class="item-link">Nosotros</a>
+                                    <a href="{% url 'core:about_us' %}" class="item-link">Nosotros</a>
                                 </li>
                                 <li class="menu-item">
                                     <a href="#" class="item-link">Contacto</a>
@@ -512,10 +512,10 @@
                                 </div>
                                 <ul class="footer-menu-list tf-collapse-content">
                                     <li>
-                                        <a href="#" class="footer-menu_item">Nuestra Historia</a>
+                                        <a href="{% url 'core:about_us' %}" class="footer-menu_item">Nuestra Historia</a>
                                     </li>
                                     <li>
-                                        <a href="#" class="footer-menu_item">Visita Nuestra Tienda</a>
+                                        <a href="{% url 'core:about_us' %}" class="footer-menu_item">Visita Nuestra Tienda</a>
                                     </li>
                                     <li>
                                         <a href="#" class="footer-menu_item">Contáctanos</a>
@@ -712,6 +712,8 @@
                 <div class="mb-body">
                     <ul class="nav-ul-mb" id="wrapper-menu-navigation">
                         
+                        
+                        
                         <li class="nav-mb-item">
                             <a href="#dropdown-menu-two" class="collapsed mb-menu-link current" data-bs-toggle="collapse"
                                 aria-expanded="true" aria-controls="dropdown-menu-two">
@@ -758,6 +760,11 @@
                                     {% endif %}
                                 </ul>
                             </div>
+                        </li>
+                        <li class="nav-mb-item">
+                            <a href="{% url 'core:about_us' %}" class="mb-menu-link">
+                                <span>Nosotros</span>
+                            </a>
                         </li>
                     </ul>
                     <div class="mb-other-content">

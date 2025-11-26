@@ -1,0 +1,256 @@
+{% extends 'baseadmin.html' %}
+{% load static %}
+
+{% block title %}Detalle de Usuario - {{ usuario.get_full_name }} - Panel Admin{% endblock %}
+
+{% block menu_users %}active{% endblock %}
+
+{% block content %}
+<!-- main-content -->
+<div class="main-content">
+    <!-- main-content-wrap -->
+    <div class="main-content-inner">
+        <!-- main-content-wrap -->
+        <div class="main-content-wrap">
+            <div class="flex items-center flex-wrap justify-between gap20 mb-30">
+                <h3>Detalle de Usuario</h3>
+                <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                    <li>
+                        <a href="{% url 'core:admin_index' %}">
+                            <div class="text-tiny">Dashboard</div>
+                        </a>
+                    </li>
+                    <li>
+                        <i class="icon-chevron-right"></i>
+                    </li>
+                    <li>
+                        <a href="{% url 'core:admin_user_list' %}">
+                            <div class="text-tiny">Usuarios</div>
+                        </a>
+                    </li>
+                    <li>
+                        <i class="icon-chevron-right"></i>
+                    </li>
+                    <li>
+                        <div class="text-tiny">{{ usuario.get_full_name }}</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Información del usuario -->
+            <div class="wg-box">
+                <div class="flex items-center justify-between gap10 flex-wrap mb-20">
+                    <h4>Información Personal</h4>
+                    <div class="flex items-center gap10">
+                        {% if usuario.is_active %}
+                            <span class="badge bg-success">✓ Usuario Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger">✗ Usuario Inactivo</span>
+                        {% endif %}
+                        
+                        {% if usuario.rol == 'admin_tienda' %}
+                            <span class="badge bg-primary">{{ usuario.get_rol_display }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ usuario.get_rol_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-20">
+                            <label class="body-title mb-10">Nombre Completo</label>
+                            <div class="body-text">{{ usuario.get_full_name }}</div>
+                        </div>
+                        
+                        <div class="form-group mb-20">
+                            <label class="body-title mb-10">Email</label>
+                            <div class="body-text">{{ usuario.email }}</div>
+                        </div>
+                        
+                        <div class="form-group mb-20">
+                            <label class="body-title mb-10">Teléfono</label>
+                            <div class="body-text">{{ usuario.telefono|default:"No registrado" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group mb-20">
+                            <label class="body-title mb-10">Ciudad</label>
+                            <div class="body-text">{{ usuario.ciudad|default:"No registrada" }}</div>
+                        </div>
+                        
+                        <div class="form-group mb-20">
+                            <label class="body-title mb-10">Fecha de Registro</label>
+                            <div class="body-text">{{ usuario.fecha_registro|date:"d M Y, H:i" }}</div>
+                        </div>
+                        
+                        <div class="form-group mb-20">
+                            <label class="body-title mb-10">Última Modificación</label>
+                            <div class="body-text">{{ usuario.fecha_edicion|date:"d M Y, H:i" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Historial de pedidos -->
+            <div class="wg-box">
+                <div class="flex items-center justify-between gap10 flex-wrap mb-20">
+                    <h4>Historial de Pedidos</h4>
+                    <div class="body-text">Total: {{ total_pedidos }} pedido{{ total_pedidos|pluralize }}</div>
+                </div>
+                
+                {% if pedidos_usuario %}
+                <div class="wg-table table-order-history">
+                    <ul class="table-title flex gap20 mb-14">
+                        <li>
+                            <div class="body-title">Número de Pedido</div>
+                        </li>
+                        <li>
+                            <div class="body-title">Fecha</div>
+                        </li>
+                        <li>
+                            <div class="body-title">Total</div>
+                        </li>
+                        <li>
+                            <div class="body-title">Estado</div>
+                        </li>
+                        <li>
+                            <div class="body-title">Pago</div>
+                        </li>
+                        <li>
+                            <div class="body-title">Acción</div>
+                        </li>
+                    </ul>
+                    
+                    <ul class="flex flex-column">
+                        {% for pedido in pedidos_usuario %}
+                        <li class="wg-product item-row gap20">
+                            <div class="name">
+                                <div class="body-title-2">{{ pedido.numero_pedido }}</div>
+                            </div>
+                            <div>
+                                <div class="body-text">{{ pedido.fecha_pedido|date:"d M Y" }}</div>
+                            </div>
+                            <div>
+                                <div class="body-text">${{ pedido.total }}</div>
+                            </div>
+                            <div>
+                                {% if pedido.estado == 'pendiente' %}
+                                    <span class="badge bg-warning">{{ pedido.get_estado_display }}</span>
+                                {% elif pedido.estado == 'procesando' %}
+                                    <span class="badge bg-info">{{ pedido.get_estado_display }}</span>
+                                {% elif pedido.estado == 'enviado' %}
+                                    <span class="badge bg-primary">{{ pedido.get_estado_display }}</span>
+                                {% elif pedido.estado == 'entregado' %}
+                                    <span class="badge bg-success">{{ pedido.get_estado_display }}</span>
+                                {% elif pedido.estado == 'cancelado' %}
+                                    <span class="badge bg-danger">{{ pedido.get_estado_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if pedido.pagado %}
+                                    <span class="badge bg-success">✓ Pagado</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No Pagado</span>
+                                {% endif %}
+                            </div>
+                            <div class="list-icon-function">
+                                <a href="{% url 'core:admin_order_detail' pedido.id %}" class="item edit">
+                                    <i class="icon-eye"></i>
+                                </a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <div class="body-text text-secondary">Este usuario no ha realizado pedidos aún.</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Acciones -->
+            <div class="wg-box">
+                <div class="flex items-center gap10">
+                    <a href="{% url 'core:admin_user_list' %}" class="tf-button style-3">
+                        <i class="icon-arrow-left"></i> Volver a la lista
+                    </a>
+                    
+                    {% if usuario.id != request.user.id and not usuario.is_staff %}
+                    <button type="button" 
+                            class="tf-button style-1 bg-danger" 
+                            onclick="deleteUser({{ usuario.id }}, '{{ usuario.email }}')">
+                        <i class="icon-trash-2"></i> Eliminar Usuario
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- /main-content-wrap -->
+    </div>
+    <!-- /main-content-wrap -->
+</div>
+<!-- /main-content -->
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function deleteUser(userId, userEmail) {
+    if (!confirm(`¿Estás seguro de que deseas eliminar al usuario "${userEmail}"?\n\nEsta acción no se puede deshacer y eliminará toda la información del usuario.`)) {
+        return;
+    }
+    
+    const btn = event.target;
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="icon-spinner"></i> Eliminando...';
+    btn.style.opacity = '0.7';
+
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch(`{% url "core:admin_user_delete" 0 %}`.replace('0', userId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Usuario eliminado exitosamente.');
+            window.location.href = '{% url "core:admin_user_list" %}';
+        } else {
+            alert('Error: ' + data.message);
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+            btn.style.opacity = '1';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al eliminar el usuario:\n\n' + error.message);
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+        btn.style.opacity = '1';
+    });
+}
+</script>
+{% endblock %}
