@@ -1,5 +1,64 @@
 from django.contrib import admin
-from .models import DeliveryReturnInfo, Pedido, DetallePedido, CodigoDescuento
+from .models import AboutUs, AboutUsImage, DeliveryReturnInfo, Pedido, DetallePedido, CodigoDescuento
+
+
+# ==================== ABOUT US ADMIN ====================
+
+class AboutUsImageInline(admin.TabularInline):
+    """Inline para gestionar imágenes del slider de About Us"""
+    model = AboutUs.imagenes_slider.through
+    extra = 1
+    verbose_name = 'Imagen'
+    verbose_name_plural = 'Imágenes del Slider'
+
+
+@admin.register(AboutUsImage)
+class AboutUsImageAdmin(admin.ModelAdmin):
+    list_display = ['titulo', 'posicion', 'activo', 'fecha_creacion']
+    list_filter = ['activo', 'posicion', 'fecha_creacion']
+    search_fields = ['titulo']
+    ordering = ['posicion']
+    
+    fieldsets = (
+        ('Información', {
+            'fields': ('titulo', 'imagen')
+        }),
+        ('Configuración', {
+            'fields': ('posicion', 'activo')
+        }),
+    )
+
+
+@admin.register(AboutUs)
+class AboutUsAdmin(admin.ModelAdmin):
+    list_display = ['get_titulo', 'activo', 'fecha_modificacion']
+    list_filter = ['activo', 'fecha_modificacion']
+    search_fields = ['mision_titulo', 'mision_texto']
+    readonly_fields = ['fecha_modificacion']
+    
+    fieldsets = (
+        ('Sección: Misión', {
+            'fields': ('mision_titulo', 'mision_texto')
+        }),
+        ('Slider de Imágenes', {
+            'fields': ('imagenes_slider',),
+            'description': 'Selecciona las imágenes que deseas mostrar en el slider. Puedes crear nuevas imágenes desde la sección "Imágenes About Us".'
+        }),
+        ('Estado', {
+            'fields': ('activo', 'fecha_modificacion'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_titulo(self, obj):
+        return f"Página {obj.mision_titulo}"
+    get_titulo.short_description = 'Página'
+    
+    def has_delete_permission(self, request, obj=None):
+        """Permitir eliminar solo si hay más de un registro"""
+        if AboutUs.objects.count() <= 1:
+            return False
+        return super().has_delete_permission(request, obj)
 
 
 # ==================== CÓDIGOS DE DESCUENTO ADMIN ====================

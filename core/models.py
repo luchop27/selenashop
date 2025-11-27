@@ -1,6 +1,84 @@
 from django.db import models
 from django.conf import settings
 
+# ==================== PÁGINA ABOUT US ====================
+
+class AboutUs(models.Model):
+    """Modelo para la página About Us / Nosotros editable desde admin"""
+    
+    # Sección: Misión
+    mision_titulo = models.CharField(
+        max_length=100,
+        default='Our mission',
+        help_text='Título de la sección de misión'
+    )
+    mision_texto = models.TextField(
+        default='Our mission is to empower people through sustainable fashion. We want everyone to look and feel good, while also doing our part to help the environment. We believe that fashion should be stylish, affordable and accessible to everyone. Body positivity and inclusivity are values that are at the heart of our brand.',
+        help_text='Texto descriptivo de la misión'
+    )
+    
+    # Imágenes del slider
+    imagenes_slider = models.ManyToManyField(
+        'AboutUsImage',
+        related_name='about_us_slider',
+        help_text='Imágenes que aparecerán en el slider (en orden de posición)',
+        blank=True
+    )
+    
+    # Control
+    activo = models.BooleanField(
+        default=True,
+        help_text='Solo puede haber un registro activo'
+    )
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Página About Us'
+        verbose_name_plural = 'Página About Us'
+    
+    def __str__(self):
+        return f"About Us - {'Activo' if self.activo else 'Inactivo'}"
+    
+    def save(self, *args, **kwargs):
+        """Asegura que solo haya un registro activo"""
+        if self.activo:
+            # Desactivar todos los demás registros
+            AboutUs.objects.filter(activo=True).exclude(pk=self.pk).update(activo=False)
+        super().save(*args, **kwargs)
+
+
+class AboutUsImage(models.Model):
+    """Modelo para almacenar imágenes del slider de About Us"""
+    
+    titulo = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Título o nombre de la imagen (opcional)'
+    )
+    imagen = models.ImageField(
+        upload_to='about-us/',
+        help_text='Imagen para el slider'
+    )
+    posicion = models.PositiveIntegerField(
+        default=0,
+        help_text='Orden en que aparecerá en el slider (0 = primera)'
+    )
+    activo = models.BooleanField(
+        default=True,
+        help_text='Mostrar esta imagen en el slider'
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['posicion']
+        verbose_name = 'Imagen About Us'
+        verbose_name_plural = 'Imágenes About Us'
+    
+    def __str__(self):
+        return self.titulo or f"Imagen #{self.posicion}"
+
+
 class DeliveryReturnInfo(models.Model):
     """Modelo para gestionar la información de Delivery & Return editable desde el admin"""
     

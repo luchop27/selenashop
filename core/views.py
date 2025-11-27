@@ -367,6 +367,21 @@ def home_05(request):
 def about_us(request):
     """Vista para la página About Us / Nosotros"""
     from apps.productos.models import Categoria
+    from .models import AboutUs
+    
+    # Obtener la configuración activa de About Us
+    about_us_config = AboutUs.objects.filter(activo=True).first()
+    
+    # Si no existe, crear valores por defecto
+    if not about_us_config:
+        about_us_config = AboutUs.objects.create(
+            mision_titulo='Our mission',
+            mision_texto='Our mission is to empower people through sustainable fashion. We want everyone to look and feel good, while also doing our part to help the environment. We believe that fashion should be stylish, affordable and accessible to everyone. Body positivity and inclusivity are values that are at the heart of our brand.',
+            activo=True
+        )
+    
+    # Obtener imágenes del slider en orden
+    imagenes_slider = about_us_config.imagenes_slider.filter(activo=True).order_by('posicion')
     
     # Obtener categorías con subcategorías para el menú de navegación
     categorias_menu = (
@@ -378,6 +393,8 @@ def about_us(request):
     
     context = {
         'categorias_menu': categorias_menu,
+        'about_us': about_us_config,
+        'imagenes_slider': imagenes_slider,
     }
     return render(request, 'about-us.html', context)
 
