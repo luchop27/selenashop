@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Min, Sum, Q
+from django.core.paginator import Paginator
 
 # Import Producto model to build the shop listing
 from apps.productos.models import Producto

@@ -159,7 +159,9 @@
                                 </a>
                                 {% if usuario.id != request.user.id and not usuario.is_staff %}
                                 <button type="button" class="item text-danger delete-user-btn" 
-                                        onclick="deleteUser({{ usuario.id }}, '{{ usuario.email }}')"
+                                        data-user-id="{{ usuario.id }}"
+                                        data-user-email="{{ usuario.email|escapejs }}"
+                                        onclick="deleteUser(this.dataset.userId, this.dataset.userEmail)"
                                         title="Eliminar usuario">
                                     <i class="icon-trash-2"></i>
                                 </button>
