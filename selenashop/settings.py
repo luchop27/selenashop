@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
-    # Apps locales
+    'django.contrib.humanize',  # Para filtros como intcomma
+    # Apps propias
     'apps.usuarios',
     'apps.productos',
     'apps.resenas',

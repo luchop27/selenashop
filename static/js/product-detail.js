@@ -1,7 +1,7 @@
 // static/js/product-detail.js
 // Funcionalidad para la página de detalle del producto
 
-(function() {
+(function () {
     'use strict';
 
     // Objeto para almacenar el stock de cada variante
@@ -10,9 +10,9 @@
     let maxStock = 999; // Stock máximo por defecto
 
     // Inicializar cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Pequeño delay para asegurar que main.js termine de ejecutarse
-        setTimeout(function() {
+        setTimeout(function () {
             initializeVariantsStock();
             setupVariantSelectors();
             setupQuantityControls();
@@ -23,12 +23,12 @@
     // Inicializar el stock de las variantes desde los atributos data
     function initializeVariantsStock() {
         const variantElements = document.querySelectorAll('.variant-data');
-        variantElements.forEach(function(element) {
+        variantElements.forEach(function (element) {
             const variantId = element.dataset.variantId;
             const stock = parseInt(element.dataset.variantStock) || 0;
             const talla = element.dataset.variantSize || '';
             const color = element.dataset.variantColor || '';
-            
+
             const key = `${color}_${talla}`.toLowerCase();
             variantesStock[key] = {
                 id: variantId,
@@ -37,7 +37,7 @@
                 color: color
             };
         });
-        
+
         console.log('Variantes cargadas:', variantesStock);
     }
 
@@ -45,8 +45,8 @@
     function setupVariantSelectors() {
         // Selectores de color
         const colorInputs = document.querySelectorAll('input[name="color1"]');
-        colorInputs.forEach(function(input) {
-            input.addEventListener('change', function() {
+        colorInputs.forEach(function (input) {
+            input.addEventListener('change', function () {
                 updateSelectedVariant();
                 updateStockInfo();
             });
@@ -54,8 +54,8 @@
 
         // Selectores de talla
         const sizeInputs = document.querySelectorAll('input[name="size1"]');
-        sizeInputs.forEach(function(input) {
-            input.addEventListener('change', function() {
+        sizeInputs.forEach(function (input) {
+            input.addEventListener('change', function () {
                 updateSelectedVariant();
                 updateStockInfo();
             });
@@ -66,7 +66,7 @@
     function updateSelectedVariant() {
         const selectedColor = document.querySelector('input[name="color1"]:checked');
         const selectedSize = document.querySelector('input[name="size1"]:checked');
-        
+
         let color = '';
         let talla = '';
 
@@ -82,7 +82,7 @@
 
         const key = `${color}_${talla}`.toLowerCase();
         selectedVariant = variantesStock[key] || null;
-        
+
         // Actualizar el stock máximo
         if (selectedVariant) {
             maxStock = selectedVariant.stock;
@@ -111,8 +111,8 @@
         if (decreaseBtn) {
             const newDecreaseBtn = decreaseBtn.cloneNode(true);
             decreaseBtn.parentNode.replaceChild(newDecreaseBtn, decreaseBtn);
-            
-            newDecreaseBtn.addEventListener('click', function(e) {
+
+            newDecreaseBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (quantityInput) {
@@ -128,8 +128,8 @@
         if (increaseBtn) {
             const newIncreaseBtn = increaseBtn.cloneNode(true);
             increaseBtn.parentNode.replaceChild(newIncreaseBtn, increaseBtn);
-            
-            newIncreaseBtn.addEventListener('click', function(e) {
+
+            newIncreaseBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 if (quantityInput) {
@@ -148,7 +148,7 @@
 
         // Validar entrada manual en el input
         if (quantityInput) {
-            quantityInput.addEventListener('change', function() {
+            quantityInput.addEventListener('change', function () {
                 let value = parseInt(this.value) || 1;
                 if (value < 1) {
                     this.value = 1;
@@ -159,7 +159,7 @@
                 updateTotalPrice();
             });
 
-            quantityInput.addEventListener('keypress', function(e) {
+            quantityInput.addEventListener('keypress', function (e) {
                 // Solo permitir números
                 if (e.which < 48 || e.which > 57) {
                     e.preventDefault();
@@ -201,7 +201,7 @@
             const quantity = parseInt(quantityInput.value) || 1;
             const priceText = priceElement.textContent.replace('$', '').trim();
             const price = parseFloat(priceText);
-            
+
             if (!isNaN(price)) {
                 const total = (price * quantity).toFixed(2);
                 totalPriceElement.textContent = `$${total}`;
@@ -215,9 +215,9 @@
         if (stockInfoElement && selectedVariant) {
             const originalHTML = stockInfoElement.innerHTML;
             stockInfoElement.innerHTML = `<span class="text-danger"><i class="icon-warning"></i> Maximum quantity available: ${maxStock}</span>`;
-            
+
             // Restaurar el mensaje original después de 3 segundos
-            setTimeout(function() {
+            setTimeout(function () {
                 updateStockInfo();
             }, 3000);
         } else {
@@ -228,10 +228,10 @@
 
     // Exponer funciones globalmente si es necesario
     window.productDetail = {
-        getSelectedVariant: function() {
+        getSelectedVariant: function () {
             return selectedVariant;
         },
-        getMaxStock: function() {
+        getMaxStock: function () {
             return maxStock;
         },
         updateStockInfo: updateStockInfo
