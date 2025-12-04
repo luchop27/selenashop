@@ -13,16 +13,8 @@ class AboutUs(models.Model):
         help_text='Título de la sección de misión'
     )
     mision_texto = models.TextField(
-        default='Our mission is to empower people through sustainable fashion. We want everyone to look and feel good, while also doing our part to help the environment. We believe that fashion should be stylish, affordable and accessible to everyone. Body positivity and inclusivity are values that are at the heart of our brand.',
+        default='Our mission is to empower people through sustainable fashion...',
         help_text='Texto descriptivo de la misión'
-    )
-    
-    # Imágenes del slider
-    imagenes_slider = models.ManyToManyField(
-        'AboutUsImage',
-        related_name='about_us_slider',
-        help_text='Imágenes que aparecerán en el slider (en orden de posición)',
-        blank=True
     )
     
     # Control
@@ -42,14 +34,24 @@ class AboutUs(models.Model):
     def save(self, *args, **kwargs):
         """Asegura que solo haya un registro activo"""
         if self.activo:
-            # Desactivar todos los demás registros
             AboutUs.objects.filter(activo=True).exclude(pk=self.pk).update(activo=False)
         super().save(*args, **kwargs)
+    
+    def get_imagenes_activas(self):
+        """Método helper para obtener imágenes activas ordenadas"""
+        return self.imagenes_slider.filter(activo=True).order_by('posicion')
 
 
 class AboutUsImage(models.Model):
     """Modelo para almacenar imágenes del slider de About Us"""
     
+    # Relación ForeignKey en lugar de ManyToMany
+    about_us = models.ForeignKey(
+        AboutUs,
+        on_delete=models.CASCADE,
+        related_name='imagenes_slider',  # ✓ Ahora sí funciona
+        help_text='Página About Us a la que pertenece'
+    )
     titulo = models.CharField(
         max_length=100,
         blank=True,
@@ -77,7 +79,6 @@ class AboutUsImage(models.Model):
     
     def __str__(self):
         return self.titulo or f"Imagen #{self.posicion}"
-
 
 class DeliveryReturnInfo(models.Model):
     """Modelo para gestionar la información de Delivery & Return editable desde el admin"""

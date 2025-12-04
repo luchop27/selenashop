@@ -2,6 +2,45 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.utils import timezone
 
+
+# ==================== PROVINCIA ====================
+class Provincia(models.Model):
+    """Modelo para almacenar las provincias del Ecuador"""
+    nombre = models.CharField(max_length=100, unique=True)
+    codigo = models.CharField(max_length=10, blank=True, null=True)
+    activa = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['nombre']
+        verbose_name = 'Provincia'
+        verbose_name_plural = 'Provincias'
+    
+    def __str__(self):
+        return self.nombre
+
+
+# ==================== CIUDAD ====================
+class Ciudad(models.Model):
+    """Modelo para almacenar las ciudades del Ecuador"""
+    nombre = models.CharField(max_length=100)
+    provincia = models.ForeignKey(
+        Provincia,
+        on_delete=models.CASCADE,
+        related_name='ciudades'
+    )
+    codigo_postal = models.CharField(max_length=10, blank=True, null=True)
+    activa = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['nombre']
+        verbose_name = 'Ciudad'
+        verbose_name_plural = 'Ciudades'
+        unique_together = ('nombre', 'provincia')
+    
+    def __str__(self):
+        return f"{self.nombre} ({self.provincia.nombre})"
+
+
 class UsuarioManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -29,7 +68,20 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     nombre = models.CharField(max_length=50, blank=True, null=True)
     apellido = models.CharField(max_length=50, blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
-    ciudad = models.CharField(max_length=50, blank=True, null=True)
+    provincia = models.ForeignKey(
+        Provincia,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='usuarios'
+    )
+    ciudad = models.ForeignKey(
+        Ciudad,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='usuarios'
+    )
     email = models.EmailField(unique=True)
     rol = models.CharField(max_length=20, choices=ROLES, default='cliente')
 

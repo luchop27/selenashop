@@ -9,6 +9,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
+from django.http import JsonResponse
 from .models import Usuario
 
 
@@ -62,6 +63,9 @@ def registrar_usuario(request):
         nombre = request.POST.get('nombre', '').strip()
         apellido = request.POST.get('apellido', '').strip()
         email = request.POST.get('email', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        provincia_id = request.POST.get('provincia')
+        ciudad_id = request.POST.get('ciudad')
         password = request.POST.get('password', '').strip()
         password_confirm = request.POST.get('password_confirm', '').strip()
         
@@ -71,7 +75,12 @@ def registrar_usuario(request):
             return render(request, 'register.html', {
                 'nombre': nombre,
                 'apellido': apellido,
-                'email': email
+                'email': email,
+                'telefono': telefono,
+                'provincia_id': provincia_id,
+                'ciudad_id': ciudad_id,
+                'provincias': obtener_provincias(),
+                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
             })
         
         if password != password_confirm:
@@ -79,7 +88,12 @@ def registrar_usuario(request):
             return render(request, 'register.html', {
                 'nombre': nombre,
                 'apellido': apellido,
-                'email': email
+                'email': email,
+                'telefono': telefono,
+                'provincia_id': provincia_id,
+                'ciudad_id': ciudad_id,
+                'provincias': obtener_provincias(),
+                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
             })
         
         if len(password) < 6:
@@ -87,7 +101,12 @@ def registrar_usuario(request):
             return render(request, 'register.html', {
                 'nombre': nombre,
                 'apellido': apellido,
-                'email': email
+                'email': email,
+                'telefono': telefono,
+                'provincia_id': provincia_id,
+                'ciudad_id': ciudad_id,
+                'provincias': obtener_provincias(),
+                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
             })
         
         # Verificar si el email ya existe
@@ -95,16 +114,38 @@ def registrar_usuario(request):
             messages.error(request, 'Este email ya está registrado.')
             return render(request, 'register.html', {
                 'nombre': nombre,
-                'apellido': apellido
+                'apellido': apellido,
+                'provincias': obtener_provincias(),
+                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
             })
         
         try:
+            # Obtener provincia y ciudad si fueron seleccionadas
+            from .models import Provincia, Ciudad
+            provincia = None
+            ciudad = None
+            
+            if provincia_id:
+                try:
+                    provincia = Provincia.objects.get(id=provincia_id)
+                except Provincia.DoesNotExist:
+                    provincia = None
+            
+            if ciudad_id:
+                try:
+                    ciudad = Ciudad.objects.get(id=ciudad_id)
+                except Ciudad.DoesNotExist:
+                    ciudad = None
+            
             # Crear el usuario con rol de cliente
             user = Usuario.objects.create_user(
                 email=email,
                 password=password,
                 nombre=nombre,
                 apellido=apellido,
+                telefono=telefono,
+                provincia=provincia,
+                ciudad=ciudad,
                 rol='cliente'  # Por defecto todos los registros desde la web son clientes
             )
             
@@ -120,11 +161,36 @@ def registrar_usuario(request):
             return render(request, 'register.html', {
                 'nombre': nombre,
                 'apellido': apellido,
-                'email': email
+                'email': email,
+                'telefono': telefono,
+                'provincia_id': provincia_id,
+                'ciudad_id': ciudad_id,
+                'provincias': obtener_provincias(),
+                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
             })
     
     # GET request
-    return render(request, 'register.html')
+    return render(request, 'register.html', {
+        'provincias': obtener_provincias(),
+        'ciudades': []
+    })
+
+
+def obtener_provincias():
+    """Helper para obtener todas las provincias activas"""
+    from .models import Provincia
+    return Provincia.objects.filter(activa=True).order_by('nombre')
+
+
+def obtener_ciudades_por_provincia(provincia_id):
+    """Helper para obtener ciudades de una provincia específica"""
+    from .models import Ciudad
+    if provincia_id:
+        try:
+            return Ciudad.objects.filter(provincia_id=provincia_id, activa=True).order_by('nombre')
+        except:
+            return []
+    return []
 
 
 def logout_usuario(request):
@@ -298,3 +364,27 @@ def password_reset_confirm(request, uidb64, token):
         # Token inválido o expirado
         messages.error(request, 'El enlace de restablecimiento es inválido o ha expirado.')
         return redirect('usuarios:login')
+
+
+# ==================== API AJAX ====================
+
+def api_ciudades_por_provincia(request, provincia_id):
+    """API para obtener ciudades por provincia (AJAX)"""
+    from .models import Ciudad
+    
+    try:
+        ciudades = Ciudad.objects.filter(
+            provincia_id=provincia_id,
+            activa=True
+        ).values('id', 'nombre').order_by('nombre')
+        
+        return JsonResponse({
+            'success': True,
+            'ciudades': list(ciudades)
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+

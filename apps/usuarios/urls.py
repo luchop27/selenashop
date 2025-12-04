@@ -9,6 +9,9 @@ urlpatterns = [
     path('register/', views.registrar_usuario, name='register'),
     path('logout/', views.logout_usuario, name='logout'),
     
+    # API para ciudades por provincia (AJAX)
+    path('api/ciudades-por-provincia/<int:provincia_id>/', views.api_ciudades_por_provincia, name='api_ciudades_por_provincia'),
+    
     # Recuperación de contraseña
     path('password-reset/', views.password_reset_request, name='password_reset_request'),
     path('password-reset-confirm/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),

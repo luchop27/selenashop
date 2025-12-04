@@ -1,0 +1,175 @@
+# 🚀 REGISTRO CON PROVINCIAS Y CIUDADES - INSTRUCCIONES RÁPIDAS
+
+## ⚡ OPCIÓN 1: AUTOMÁTICA (RECOMENDADA)
+
+Abre terminal en la raíz del proyecto y ejecuta:
+
+```bash
+python setup_provincias_ciudades_auto.py
+```
+
+Eso es todo. Se ejecutarán:
+✓ Migraciones
+✓ Población de datos
+✓ Verificación
+
+---
+
+## 📋 OPCIÓN 2: MANUAL
+
+### Paso 1: Crear migraciones
+```bash
+python manage.py makemigrations
+```
+
+### Paso 2: Ejecutar migraciones
+```bash
+python manage.py migrate
+```
+
+### Paso 3: Poblar provincias y ciudades
+```bash
+python manage.py shell < setup_provincias_ciudades.py
+```
+
+---
+
+## ✅ VERIFICACIÓN
+
+### 1. Reinicia servidor
+```bash
+python manage.py runserver
+```
+
+### 2. Abre navegador
+Ve a: `http://localhost:8000/register/`
+
+### 3. Deberías ver:
+- ✓ Campo Nombre
+- ✓ Campo Apellido
+- ✓ Campo Email
+- ✓ Campo Teléfono
+- ✓ **Combobox PROVINCIA** (nuevo) con ~22 provincias
+- ✓ **Combobox CIUDAD** (nuevo) - vacío inicialmente
+- ✓ Al seleccionar provincia → Se llena el combobox de ciudades
+
+### 4. Prueba:
+1. Selecciona una provincia (ej: "Guayas")
+2. Verás que el combobox de ciudades se llena (Guayaquil, Durán, Milagro, etc.)
+3. Selecciona una ciudad
+4. Completa el resto del formulario y registrate
+5. Verifica en admin que se guardó correctamente
+
+---
+
+## 🧪 VER DATOS EN EL ADMIN
+
+```bash
+python manage.py runserver
+```
+
+Ve a: `http://localhost:8000/admin/`
+
+- **Provincias**: Ver todas las ~22 provincias del Ecuador
+- **Ciudades**: Ver todas las ~100 ciudades
+- **Usuarios**: Ver usuarios registrados con su provincia y ciudad
+
+---
+
+## 📊 ESTRUCTURA
+
+```
+ANTES:
+- Ciudad era CharField (texto simple)
+- Todas las ciudades se mostraban en un combobox grande
+
+AHORA:
+- Provincia (nuevo modelo)
+- Ciudad (relacionado a Provincia)
+- Usuario tiene: provincia + ciudad (ambos ForeignKey)
+- Combobox de ciudad se filtra automáticamente por provincia
+```
+
+---
+
+## 🌍 PROVINCIAS INCLUIDAS
+
+Todas las 22 provincias del Ecuador:
+
+Azuay, Bolívar, Cañar, Carchi, Chimborazo, Cotopaxi, El Oro, Esmeraldas, 
+Guayas, Imbabura, Loja, Los Ríos, Manabí, Morona Santiago, Napo, Pastaza, 
+Pichincha, Santa Elena, Santo Domingo, Sucumbíos, Tungurahua, Orellana
+
+Con ~4-6 ciudades principales en cada provincia.
+
+---
+
+## ⚠️ TROUBLESHOOTING
+
+### Error: "No such table: usuarios_provincia"
+```bash
+python manage.py migrate
+```
+
+### Error: "No such column: usuarios_usuario.provincia_id"
+```bash
+python manage.py migrate
+```
+
+### Combobox de ciudades no se llena
+1. Abre Developer Tools (F12)
+2. Ve a Network
+3. Selecciona una provincia y verifica que se hace la petición AJAX
+4. Si ves error 404 → las rutas no están registradas (verifica urls.py)
+5. Si ves error en la API → ejecuta las migraciones
+
+### Provincias vacías
+```bash
+python setup_provincias_ciudades.py
+```
+
+---
+
+## 📝 ARCHIVOS IMPORTANTES
+
+**Documentación completa:**
+- `GUIA_PROVINCIAS_CIUDADES.md` - Documentación detallada
+
+**Scripts:**
+- `setup_provincias_ciudades_auto.py` ⭐ - TODO automático
+- `setup_provincias_ciudades.py` - Manual
+
+**Código modificado:**
+- `apps/usuarios/models.py` - Nuevos modelos
+- `apps/usuarios/views.py` - Nueva lógica
+- `apps/usuarios/urls.py` - Nueva ruta API
+- `templates/register.html` - Nuevo formulario con AJAX
+- `apps/usuarios/migrations/0003_*` - Migración
+
+---
+
+## ✨ CÓMO FUNCIONA
+
+1. **Usuario accede a /register/**
+2. Ve combobox de Provincia (sin ciudades)
+3. **Selecciona Provincia**
+4. JavaScript dispara AJAX a `/api/ciudades-por-provincia/<id>/`
+5. Servidor retorna JSON con ciudades de esa provincia
+6. Combobox de Ciudad se llena dinámicamente
+7. Usuario selecciona Ciudad
+8. Completa registro
+9. Se guarda: nombre, email, teléfono, **provincia**, **ciudad**
+
+---
+
+## 🎯 RESULTADO FINAL
+
+El formulario ahora tiene:
+✅ Teléfono (campo nuevo)
+✅ Provincia (combobox nuevo - todas las provincias del Ecuador)
+✅ Ciudad (combobox dinámico - se filtra por provincia)
+✅ Carga dinámica (AJAX - sin recargar página)
+✅ Se guardan correctamente en BD
+✅ Se muestran en admin
+
+¡LISTO PARA USAR! 🚀

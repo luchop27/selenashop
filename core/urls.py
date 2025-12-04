@@ -49,4 +49,5 @@ urlpatterns = [
     # Páginas estáticas
     path('about-us/', views.about_us, name='about_us'),
     path('nosotros/', views.about_us, name='nosotros'),
+    path('contacto/', views.contacto, name='contacto'),
 ]

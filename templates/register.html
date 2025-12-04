@@ -48,6 +48,40 @@
                                 <label class="tf-field-label fw-4 text_black-2" for="email">Email *</label>
                             </div>
                             <div class="tf-field style-1 mb_15">
+                                <input class="tf-field-input tf-input" placeholder=" " type="tel" id="telefono"
+                                    name="telefono" value="{{ telefono|default:'' }}">
+                                <label class="tf-field-label fw-4 text_black-2" for="telefono">Phone</label>
+                            </div>
+                            
+                            <!-- Combobox Provincia -->
+                            <div class="tf-field style-1 mb_15">
+                                <select class="tf-field-input tf-input" id="provincia" name="provincia" onchange="cargarCiudades()">
+                                    <option value="">-- Select Province --</option>
+                                    {% for provincia in provincias %}
+                                        <option value="{{ provincia.id }}" {% if provincia.id|stringformat:"s" == provincia_id|stringformat:"s" %}selected{% endif %}>
+                                            {{ provincia.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label class="tf-field-label fw-4 text_black-2" for="provincia">Province</label>
+                            </div>
+                            
+                            <!-- Combobox Ciudad (se llena dinámicamente) -->
+                            <div class="tf-field style-1 mb_15">
+                                <select class="tf-field-input tf-input" id="ciudad" name="ciudad">
+                                    <option value="">-- Select City --</option>
+                                    {% if ciudades %}
+                                        {% for ciudad in ciudades %}
+                                            <option value="{{ ciudad.id }}" {% if ciudad.id|stringformat:"s" == ciudad_id|stringformat:"s" %}selected{% endif %}>
+                                                {{ ciudad.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                                <label class="tf-field-label fw-4 text_black-2" for="ciudad">City</label>
+                            </div>
+                            
+                            <div class="tf-field style-1 mb_15">
                                 <input class="tf-field-input tf-input" placeholder=" " type="password" id="password"
                                     name="password" required>
                                 <label class="tf-field-label fw-4 text_black-2" for="password">Password *</label>
@@ -67,6 +101,44 @@
                             </div>
                         </form>
                     </div>
+                    
+                    <!-- JavaScript para cargar ciudades dinámicamente -->
+                    <script>
+                    function cargarCiudades() {
+                        const provinciaSelect = document.getElementById('provincia');
+                        const ciudadSelect = document.getElementById('ciudad');
+                        const provinciaId = provinciaSelect.value;
+                        
+                        // Limpiar el select de ciudades
+                        ciudadSelect.innerHTML = '<option value="">-- Select City --</option>';
+                        
+                        if (provinciaId) {
+                            // Hacer petición AJAX
+                            fetch(`/api/ciudades-por-provincia/${provinciaId}/`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        // Llenar el select con las ciudades
+                                        data.ciudades.forEach(ciudad => {
+                                            const option = document.createElement('option');
+                                            option.value = ciudad.id;
+                                            option.textContent = ciudad.nombre;
+                                            ciudadSelect.appendChild(option);
+                                        });
+                                    }
+                                })
+                                .catch(error => console.error('Error:', error));
+                        }
+                    }
+                    
+                    // Cargar ciudades al cargar la página si hay provincia seleccionada
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const provinciaSelect = document.getElementById('provincia');
+                        if (provinciaSelect.value) {
+                            cargarCiudades();
+                        }
+                    });
+                    </script>
                 </div>
             </div>
         </section>

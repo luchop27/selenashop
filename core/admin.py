@@ -5,60 +5,62 @@ from .models import AboutUs, AboutUsImage, DeliveryReturnInfo, Pedido, DetallePe
 # ==================== ABOUT US ADMIN ====================
 
 class AboutUsImageInline(admin.TabularInline):
-    """Inline para gestionar imágenes del slider de About Us"""
-    model = AboutUs.imagenes_slider.through
+    """Inline para gestionar imágenes del slider desde AboutUs"""
+    model = AboutUsImage  # ✓ Cambiado: ahora es directo, no .through
     extra = 1
-    verbose_name = 'Imagen'
+    fields = ('imagen', 'titulo', 'posicion', 'activo')
+    verbose_name = 'Imagen del Slider'
     verbose_name_plural = 'Imágenes del Slider'
-
-
-@admin.register(AboutUsImage)
-class AboutUsImageAdmin(admin.ModelAdmin):
-    list_display = ['titulo', 'posicion', 'activo', 'fecha_creacion']
-    list_filter = ['activo', 'posicion', 'fecha_creacion']
-    search_fields = ['titulo']
-    ordering = ['posicion']
-    
-    fieldsets = (
-        ('Información', {
-            'fields': ('titulo', 'imagen')
-        }),
-        ('Configuración', {
-            'fields': ('posicion', 'activo')
-        }),
-    )
 
 
 @admin.register(AboutUs)
 class AboutUsAdmin(admin.ModelAdmin):
-    list_display = ['get_titulo', 'activo', 'fecha_modificacion']
-    list_filter = ['activo', 'fecha_modificacion']
-    search_fields = ['mision_titulo', 'mision_texto']
-    readonly_fields = ['fecha_modificacion']
+    """Administración de la página About Us"""
+    list_display = ('__str__', 'activo', 'fecha_modificacion')
+    list_filter = ('activo',)
+    search_fields = ('mision_titulo', 'mision_texto')
     
     fieldsets = (
         ('Sección: Misión', {
             'fields': ('mision_titulo', 'mision_texto')
         }),
-        ('Slider de Imágenes', {
-            'fields': ('imagenes_slider',),
-            'description': 'Selecciona las imágenes que deseas mostrar en el slider. Puedes crear nuevas imágenes desde la sección "Imágenes About Us".'
-        }),
-        ('Estado', {
-            'fields': ('activo', 'fecha_modificacion'),
-            'classes': ('collapse',)
+        ('Control', {
+            'fields': ('activo',),
+            'description': 'Solo puede haber una configuración activa a la vez'
         }),
     )
     
-    def get_titulo(self, obj):
-        return f"Página {obj.mision_titulo}"
-    get_titulo.short_description = 'Página'
+    inlines = [AboutUsImageInline]
+    
+    def has_add_permission(self, request):
+        """Limita a solo un registro activo"""
+        # Permitir agregar solo si no hay ningún registro activo
+        return not AboutUs.objects.filter(activo=True).exists()
     
     def has_delete_permission(self, request, obj=None):
-        """Permitir eliminar solo si hay más de un registro"""
-        if AboutUs.objects.count() <= 1:
+        """Previene eliminar el registro activo"""
+        if obj and obj.activo:
             return False
-        return super().has_delete_permission(request, obj)
+        return True
+
+
+@admin.register(AboutUsImage)
+class AboutUsImageAdmin(admin.ModelAdmin):
+    """Administración individual de imágenes About Us"""
+    list_display = ('__str__', 'about_us', 'posicion', 'activo', 'fecha_creacion')
+    list_filter = ('activo', 'about_us')
+    list_editable = ('posicion', 'activo')
+    search_fields = ('titulo',)
+    ordering = ('about_us', 'posicion')
+    
+    fieldsets = (
+        (None, {
+            'fields': ('about_us', 'titulo', 'imagen')
+        }),
+        ('Configuración', {
+            'fields': ('posicion', 'activo')
+        }),
+    )
 
 
 # ==================== CÓDIGOS DE DESCUENTO ADMIN ====================
