@@ -10,7 +10,41 @@ from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
-from .models import Usuario
+from .models import Usuario, EmailVerificationToken
+
+
+def enviar_email_verificacion(request, usuario):
+    """Envía el correo de verificación de email"""
+    # Crear token de verificación
+    token_obj = EmailVerificationToken.objects.create(usuario=usuario)
+    
+    # Construir URL de verificación
+    verify_url = request.build_absolute_uri(
+        f'/usuarios/verificar-email/{token_obj.token}/'
+    )
+    
+    # Preparar el correo
+    subject = 'Verifica tu email - Selena Shop'
+    message = render_to_string('emails/email_verification.html', {
+        'user': usuario,
+        'verify_url': verify_url,
+        'domain': request.get_host(),
+    })
+    
+    # Enviar correo
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [usuario.email],
+            html_message=message,
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print(f"Error enviando email de verificación: {e}")
+        return False
 
 
 def login_usuario(request):
@@ -146,14 +180,28 @@ def registrar_usuario(request):
                 telefono=telefono,
                 provincia=provincia,
                 ciudad=ciudad,
-                rol='cliente'  # Por defecto todos los registros desde la web son clientes
+                rol='cliente',  # Por defecto todos los registros desde la web son clientes
+                email_verificado=False  # El email no está verificado aún
             )
             
-            # Autenticar y hacer login automáticamente
+            # Enviar email de verificación
+            if enviar_email_verificacion(request, user):
+                messages.success(
+                    request, 
+                    f'¡Cuenta creada exitosamente! Te hemos enviado un correo a {email} para verificar tu cuenta. '
+                    'Por favor revisa tu bandeja de entrada (y spam).'
+                )
+            else:
+                messages.warning(
+                    request,
+                    f'Cuenta creada, pero hubo un problema al enviar el correo de verificación. '
+                    'Puedes solicitar un nuevo correo desde tu perfil.'
+                )
+            
+            # Autenticar y hacer login automáticamente (aunque el email no esté verificado)
             user = authenticate(request, username=email, password=password)
             if user:
                 login(request, user)
-                messages.success(request, f'¡Bienvenido {nombre}! Tu cuenta ha sido creada exitosamente.')
                 return redirect('usuarios:my_account')
             
         except Exception as e:
@@ -387,4 +435,72 @@ def api_ciudades_por_provincia(request, provincia_id):
             'success': False,
             'error': str(e)
         }, status=400)
+
+
+# ==================== VERIFICACIÓN DE EMAIL ====================
+
+def verificar_email(request, token):
+    """Vista para verificar el email del usuario"""
+    try:
+        token_obj = EmailVerificationToken.objects.get(token=token)
+        
+        if not token_obj.es_valido():
+            messages.error(
+                request, 
+                'El enlace de verificación ha expirado o ya fue utilizado. '
+                'Solicita un nuevo correo de verificación.'
+            )
+            return redirect('usuarios:login')
+        
+        # Marcar el email como verificado
+        usuario = token_obj.usuario
+        usuario.email_verificado = True
+        usuario.save()
+        
+        # Marcar el token como usado
+        token_obj.usado = True
+        token_obj.save()
+        
+        messages.success(
+            request, 
+            '¡Tu email ha sido verificado exitosamente! Ya puedes disfrutar de todas las funciones.'
+        )
+        
+        # Si el usuario está logueado, redirigir a su cuenta
+        if request.user.is_authenticated:
+            return redirect('usuarios:my_account')
+        
+        return redirect('usuarios:login')
+        
+    except EmailVerificationToken.DoesNotExist:
+        messages.error(request, 'El enlace de verificación no es válido.')
+        return redirect('usuarios:login')
+
+
+@login_required(login_url='/')
+def reenviar_verificacion(request):
+    """Vista para reenviar el correo de verificación"""
+    usuario = request.user
+    
+    if usuario.email_verificado:
+        messages.info(request, 'Tu email ya está verificado.')
+        return redirect('usuarios:my_account')
+    
+    # Invalidar tokens anteriores
+    EmailVerificationToken.objects.filter(usuario=usuario, usado=False).update(usado=True)
+    
+    # Enviar nuevo correo
+    if enviar_email_verificacion(request, usuario):
+        messages.success(
+            request, 
+            f'Hemos enviado un nuevo correo de verificación a {usuario.email}. '
+            'Por favor revisa tu bandeja de entrada (y spam).'
+        )
+    else:
+        messages.error(
+            request,
+            'Hubo un problema al enviar el correo. Por favor intenta más tarde.'
+        )
+    
+    return redirect('usuarios:my_account')
 

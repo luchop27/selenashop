@@ -148,21 +148,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CART_SESSION_ID = 'cart'
 
 # Email Configuration
-# Durante desarrollo, los correos se imprimen en la consola
-# Para producción, cambiar a un backend SMTP real
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Usar SMTP de Gmail para envío real de correos
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
-# Para usar Gmail en producción (descomentar y configurar):
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'tu-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'tu-app-password'
-# DEFAULT_FROM_EMAIL = 'Selena Shop <tu-email@gmail.com>'
+# IMPORTANTE: Configurar estas variables con tus credenciales de Gmail
+# Para EMAIL_HOST_PASSWORD, debes generar una "Contraseña de aplicación" en:
+# https://myaccount.google.com/apppasswords (requiere verificación en 2 pasos activada)
+EMAIL_HOST_USER = 'marcojaramillo0142@gmail.com'  # Cambiar por tu email de Gmail
+EMAIL_HOST_PASSWORD = 'vckw tnfr ekag rhsn'  # Cambiar por tu contraseña de aplicación (16 caracteres sin espacios)
 
-# Para desarrollo:
-DEFAULT_FROM_EMAIL = 'Selena Shop <noreply@selenashop.com>'
+DEFAULT_FROM_EMAIL = 'Selena Shop <marcojaramillo0142@gmail.com>'  # Cambiar por tu email
 
-# Tiempo de expiración del token de restablecimiento (en días)
-PASSWORD_RESET_TIMEOUT = 86400  # 24 horas en segundos
+# Para desarrollo (solo imprime en consola, descomentar si no quieres enviar emails reales):
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Tiempo de expiración del token de restablecimiento (en segundos)
+PASSWORD_RESET_TIMEOUT = 86400  # 24 horas
+
+# Tiempo de expiración del token de verificación de email (en horas)
+EMAIL_VERIFICATION_TIMEOUT_HOURS = 48

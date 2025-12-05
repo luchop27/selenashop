@@ -111,3 +111,62 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.email} ({self.rol})"
+    
+
+
+
+# ==================== EMAIL VERIFICATION TOKEN ====================
+class EmailVerificationToken(models.Model):
+    """Token para verificación de email"""
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='email_tokens')
+    token = models.CharField(max_length=100, unique=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    usado = models.BooleanField(default=False)
+    
+    class Meta:
+        verbose_name = 'Token de verificacion'
+        verbose_name_plural = 'Tokens de verificacion'
+    
+    def __str__(self):
+        return f"Token para {self.usuario.email}"
+    
+    def es_valido(self):
+        from datetime import timedelta
+        if self.usado:
+            return False
+        horas = 48
+        return timezone.now() <= self.creado + timedelta(hours=horas)
+    
+    @staticmethod
+    def generar_token():
+        import uuid
+        return str(uuid.uuid4())
+
+
+# ==================== PASSWORD RESET CODE ====================
+class PasswordResetCode(models.Model):
+    """Código de 6 caracteres para recuperar contraseña"""
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='reset_codes')
+    codigo = models.CharField(max_length=6)
+    creado = models.DateTimeField(auto_now_add=True)
+    usado = models.BooleanField(default=False)
+    
+    class Meta:
+        verbose_name = 'Codigo de recuperacion'
+        verbose_name_plural = 'Codigos de recuperacion'
+    
+    def __str__(self):
+        return f"Codigo para {self.usuario.email}"
+    
+    @staticmethod
+    def generar_codigo():
+        import random
+        import string
+        caracteres = string.ascii_uppercase + string.digits
+        return ''.join(random.choices(caracteres, k=6))
+    
+    def es_valido(self):
+        from datetime import timedelta
+        if self.usado:
+            return False
+        return timezone.now() <= self.creado + timedelta(minutes=15)

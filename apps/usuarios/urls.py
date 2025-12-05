@@ -16,6 +16,10 @@ urlpatterns = [
     path('password-reset/', views.password_reset_request, name='password_reset_request'),
     path('password-reset-confirm/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
     
+    # Verificación de email
+    path('verificar-email/<uuid:token>/', views.verificar_email, name='verificar_email'),
+    path('reenviar-verificacion/', views.reenviar_verificacion, name='reenviar_verificacion'),
+    
     # Panel de usuario
     path('my-account/', views.my_account, name='my_account'),
     path('my-account/orders/', views.my_account_orders, name='my_account_orders'),

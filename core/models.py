@@ -4,7 +4,7 @@ from django.conf import settings
 # ==================== PÁGINA ABOUT US ====================
 
 class AboutUs(models.Model):
-    """Modelo para la página About Us / Nosotros editable desde admin"""
+    """Modelo para la página About Us / Nosdotros editable desde admin"""
     
     # Sección: Misión
     mision_titulo = models.CharField(
