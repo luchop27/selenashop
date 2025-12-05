@@ -41,6 +41,7 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/process/', views.checkout_process, name='checkout_process'),
     path('checkout/validate-discount/', views.validate_discount_code, name='validate_discount_code'),
+    path('checkout/calculate-shipping/', views.calculate_shipping, name='calculate_shipping'),
     path('order/confirmation/<int:pedido_id>/', views.order_confirmation, name='order_confirmation'),
     
     # Endpoint AJAX para cargar más productos nuevos

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
 from django.db.models import Min, Sum, Q
 from django.core.paginator import Paginator
 
@@ -1464,6 +1465,7 @@ def checkout(request):
     Vista para mostrar la página de checkout
     """
     from apps.productos.models import Variante, Producto
+    from apps.usuarios.models import Ciudad, Provincia
     
     cart = Cart(request)
     
@@ -1489,14 +1491,116 @@ def checkout(request):
             'color': item.get('color'),
         })
     
+    # Obtener todas las provincias y ciudades de la BD
+    provincias = Provincia.objects.all().order_by('nombre')
+    ciudades = Ciudad.objects.select_related('provincia').all().order_by('provincia__nombre', 'nombre')
+    
+    # Obtener datos del usuario registrado si existe
+    user_provincia = None
+    user_ciudad = None
+    user_nombre = None
+    user_apellido = None
+    user_email = None
+    user_telefono = None
+    
+    if request.user.is_authenticated:
+        if hasattr(request.user, 'provincia') and request.user.provincia:
+            user_provincia = request.user.provincia.id
+        if hasattr(request.user, 'ciudad') and request.user.ciudad:
+            user_ciudad = request.user.ciudad.nombre
+        if hasattr(request.user, 'nombre') and request.user.nombre:
+            user_nombre = request.user.nombre
+        if hasattr(request.user, 'apellido') and request.user.apellido:
+            user_apellido = request.user.apellido
+        if hasattr(request.user, 'email') and request.user.email:
+            user_email = request.user.email
+        if hasattr(request.user, 'telefono') and request.user.telefono:
+            user_telefono = request.user.telefono
+    
     context = {
         'cart_items': cart_items,
         'cart': cart,
+        'provincias': provincias,
+        'ciudades': ciudades,
+        'user_provincia_id': user_provincia,
+        'user_ciudad_name': user_ciudad,
+        'user_nombre': user_nombre,
+        'user_apellido': user_apellido,
+        'user_email': user_email,
+        'user_telefono': user_telefono,
         'note': cart.get_note(),
         'has_gift_wrap': cart.has_gift_wrap(),
     }
     
     return render(request, 'checkout.html', context)
+
+
+def calculate_shipping(request):
+    """
+    Vista AJAX para calcular el costo de envío según la ciudad seleccionada y el total del carrito.
+    
+    Lógica:
+    - Machala + total > $50 = Envío gratis
+    - Machala + total <= $50 = Envío $3
+    - Otra ciudad + total >= $90 = Envío gratis
+    - Otra ciudad + total < $90 = Envío $7
+    """
+    from decimal import Decimal
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        city = request.POST.get('city', '').strip()
+        cart_total_str = request.POST.get('cart_total', '0')
+        cart_total = Decimal(cart_total_str)
+        
+        logger.info(f'📦 ENVÍO: city={city}, cart_total_str={cart_total_str}, cart_total={cart_total}')
+        
+        if not city:
+            return JsonResponse({'error': 'Ciudad no especificada'}, status=400)
+        
+        shipping_cost = Decimal('0')
+        free_shipping = False
+        
+        if city.lower() == 'machala':
+            # Machala: gratis si > $50, sino $3
+            if cart_total > Decimal('50'):
+                shipping_cost = Decimal('0')
+                free_shipping = True
+                logger.info(f'✅ Machala: {cart_total} > $50 → Gratis')
+            else:
+                shipping_cost = Decimal('3')
+                logger.info(f'✅ Machala: {cart_total} <= $50 → $3')
+        else:
+            # Otras ciudades: gratis si >= $90, sino $7
+            if cart_total >= Decimal('90'):
+                shipping_cost = Decimal('0')
+                free_shipping = True
+                logger.info(f'✅ {city}: {cart_total} >= $90 → Gratis')
+            else:
+                shipping_cost = Decimal('7')
+                logger.info(f'✅ {city}: {cart_total} < $90 → $7')
+        
+        total_with_shipping = cart_total + shipping_cost
+        
+        return JsonResponse({
+            'success': True,
+            'shipping_cost': float(shipping_cost),
+            'free_shipping': free_shipping,
+            'total_with_shipping': float(total_with_shipping),
+            'message': 'Envío gratis' if free_shipping else f'Envío: ${shipping_cost}'
+        })
+    
+    except Exception as e:
+        logger.error(f'❌ Error al calcular envío: {str(e)}', exc_info=True)
+        return JsonResponse({
+            'error': f'Error al calcular envío: {str(e)}'
+        }, status=400)
+
 
 
 def checkout_process(request):

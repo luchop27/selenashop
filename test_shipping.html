@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Shipping Calculation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        input, select { padding: 8px; margin: 5px 0; width: 100%; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .results { background: #f8f9fa; padding: 10px; margin-top: 10px; border-radius: 3px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Shipping Calculation</h1>
+
+    <div class="test-section">
+        <h2>Test 1: Machala con $65 (debe ser gratis)</h2>
+        <p>Expected: Free shipping (0)</p>
+        <button onclick="testShipping('Machala', 65)">Run Test</button>
+        <div id="result1" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Machala con $30 (debe ser $3)</h2>
+        <p>Expected: $3 shipping</p>
+        <button onclick="testShipping('Machala', 30)">Run Test</button>
+        <div id="result2" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Quito con $100 (debe ser gratis)</h2>
+        <p>Expected: Free shipping (0)</p>
+        <button onclick="testShipping('Quito', 100)">Run Test</button>
+        <div id="result3" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Quito con $50 (debe ser $7)</h2>
+        <p>Expected: $7 shipping</p>
+        <button onclick="testShipping('Quito', 50)">Run Test</button>
+        <div id="result4" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Manual</h2>
+        <label>Ciudad:</label>
+        <input type="text" id="city" placeholder="Ej: Machala, Quito" value="Machala">
+        <label>Total del carrito:</label>
+        <input type="number" id="total" placeholder="Ej: 65" value="65" step="0.01">
+        <button onclick="testShippingManual()">Test</button>
+        <div id="resultManual" class="results"></div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function testShipping(city, total) {
+            const resultId = `result${[65, 30, 100, 50].indexOf(total) + 1}`;
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.innerHTML = '⏳ Loading...';
+
+            fetch('/checkout/calculate-shipping/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: `city=${encodeURIComponent(city)}&cart_total=${total}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Success!</span><br>
+                        City: ${city}<br>
+                        Cart Total: $${total}<br>
+                        Shipping Cost: $${data.shipping_cost.toFixed(2)}<br>
+                        Free Shipping: ${data.free_shipping ? 'YES' : 'NO'}<br>
+                        Total with Shipping: $${data.total_with_shipping.toFixed(2)}<br>
+                        Message: ${data.message}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Error: ${data.error}</span>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<span class="error">❌ Network Error: ${error.message}</span>`;
+            });
+        }
+
+        function testShippingManual() {
+            const city = document.getElementById('city').value;
+            const total = parseFloat(document.getElementById('total').value);
+            
+            if (!city) {
+                alert('Please enter a city');
+                return;
+            }
+            if (isNaN(total)) {
+                alert('Please enter a valid total');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('resultManual');
+            resultDiv.innerHTML = '⏳ Loading...';
+
+            fetch('/checkout/calculate-shipping/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: `city=${encodeURIComponent(city)}&cart_total=${total}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <span class="success">✅ Success!</span><br>
+                        City: ${city}<br>
+                        Cart Total: $${total}<br>
+                        Shipping Cost: $${data.shipping_cost.toFixed(2)}<br>
+                        Free Shipping: ${data.free_shipping ? 'YES' : 'NO'}<br>
+                        Total with Shipping: $${data.total_with_shipping.toFixed(2)}<br>
+                        Message: ${data.message}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ Error: ${data.error}</span>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<span class="error">❌ Network Error: ${error.message}</span>`;
+            });
+        }
+    </script>
+</body>
+</html>

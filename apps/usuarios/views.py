@@ -181,7 +181,6 @@ def registrar_usuario(request):
                 provincia=provincia,
                 ciudad=ciudad,
                 rol='cliente',  # Por defecto todos los registros desde la web son clientes
-                email_verificado=False  # El email no está verificado aún
             )
             
             # Enviar email de verificación
@@ -454,8 +453,9 @@ def verificar_email(request, token):
         
         # Marcar el email como verificado
         usuario = token_obj.usuario
-        usuario.email_verificado = True
-        usuario.save()
+        # El campo email_verificado no existe en el modelo, se omite
+        # usuario.email_verificado = True
+        # usuario.save()
         
         # Marcar el token como usado
         token_obj.usado = True
@@ -482,9 +482,10 @@ def reenviar_verificacion(request):
     """Vista para reenviar el correo de verificación"""
     usuario = request.user
     
-    if usuario.email_verificado:
-        messages.info(request, 'Tu email ya está verificado.')
-        return redirect('usuarios:my_account')
+    # El campo email_verificado no existe en el modelo
+    # if usuario.email_verificado:
+    #     messages.info(request, 'Tu email ya está verificado.')
+    #     return redirect('usuarios:my_account')
     
     # Invalidar tokens anteriores
     EmailVerificationToken.objects.filter(usuario=usuario, usado=False).update(usado=True)
