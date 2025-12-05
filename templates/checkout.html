@@ -21,39 +21,33 @@
                             <div class="box grid-2">
                                 <fieldset class="fieldset">
                                     <label for="first-name">Nombre <span class="text-danger">*</span></label>
-                                    <input type="text" name="first_name" id="first-name" required>
+                                    <input type="text" name="first_name" id="first-name" value="{{ user_nombre|default:'' }}" required>
                                 </fieldset>
                                 <fieldset class="fieldset">
                                     <label for="last-name">Apellido <span class="text-danger">*</span></label>
-                                    <input type="text" name="last_name" id="last-name" required>
+                                    <input type="text" name="last_name" id="last-name" value="{{ user_apellido|default:'' }}" required>
                                 </fieldset>
                             </div>
                             <fieldset class="box fieldset">
+                                <label for="province">Provincia <span class="text-danger">*</span></label>
+                                <div class="select-custom">
+                                    <select class="tf-select w-100" id="province" name="province" required>
+                                        <option value="">Selecciona tu provincia</option>
+                                        {% for provincia in provincias %}
+                                            <option value="{{ provincia.id }}">{{ provincia.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </fieldset>
+                            <fieldset class="box fieldset">
                                 <label for="city">Ciudad <span class="text-danger">*</span></label>
                                 <div class="select-custom">
-                                    <select class="tf-select w-100" id="city" name="city" required>
-                                        <option value="">Selecciona tu ciudad</option>
-                                        <option value="Quito">Quito</option>
-                                        <option value="Guayaquil">Guayaquil</option>
-                                        <option value="Cuenca">Cuenca</option>
-                                        <option value="Santo Domingo">Santo Domingo</option>
-                                        <option value="Machala">Machala</option>
-                                        <option value="Durán">Durán</option>
-                                        <option value="Manta">Manta</option>
-                                        <option value="Portoviejo">Portoviejo</option>
-                                        <option value="Loja">Loja</option>
-                                        <option value="Ambato">Ambato</option>
-                                        <option value="Esmeraldas">Esmeraldas</option>
-                                        <option value="Quevedo">Quevedo</option>
-                                        <option value="Riobamba">Riobamba</option>
-                                        <option value="Milagro">Milagro</option>
-                                        <option value="Ibarra">Ibarra</option>
-                                        <option value="La Libertad">La Libertad</option>
-                                        <option value="Babahoyo">Babahoyo</option>
-                                        <option value="Sangolquí">Sangolquí</option>
-                                        <option value="Daule">Daule</option>
-                                        <option value="Latacunga">Latacunga</option>
-                                        <option value="Otra">Otra ciudad</option>
+                                    <select class="tf-select w-100" id="city" name="city" required disabled>
+                                        <option value="">Selecciona una provincia primero</option>
+                                        {% for ciudad in ciudades %}
+                                            <option value="{{ ciudad.nombre }}" data-province-id="{{ ciudad.provincia.id }}">{{ ciudad.nombre }}</option>
+                                        {% endfor %}
+                                        <option value="Otra" data-province-id="">Otra ciudad</option>
                                     </select>
                                 </div>
                             </fieldset>
@@ -135,11 +129,11 @@
                             </fieldset>
                             <fieldset class="box fieldset">
                                 <label for="phone">Número de Teléfono <span class="text-danger">*</span></label>
-                                <input type="tel" name="phone" id="phone" placeholder="Ej: 0987654321" required>
+                                <input type="tel" name="phone" id="phone" placeholder="Ej: 0987654321" value="{{ user_telefono|default:'' }}" required>
                             </fieldset>
                             <fieldset class="box fieldset">
                                 <label for="email">Email <span class="text-danger">*</span></label>
-                                <input type="email" name="email" id="email" required>
+                                <input type="email" name="email" id="email" value="{{ user_email|default:'' }}" required>
                             </fieldset>
                             <fieldset class="box fieldset">
                                 <label for="note">Notas del pedido (opcional)</label>
@@ -207,6 +201,13 @@
                                     <h6 class="fw-5">$5.00</h6>
                                 </div>
                                 {% endif %}
+                                <div class="d-flex justify-content-between line pb_20" id="shipping-line">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h6 class="fw-5 mb-0">Envío</h6>
+                                        <span class="shipping-info-icon" id="shipping-info-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background-color: #f0f0f0; border-radius: 50%; font-weight: bold; cursor: pointer; color: #666; font-size: 14px; user-select: none; transition: all 0.2s;" title="Info de envío">?</span>
+                                    </div>
+                                    <h6 class="fw-5" id="shipping-cost">$0.00</h6>
+                                </div>
                                 <div class="d-flex justify-content-between line pb_20 d-none" id="discount-line">
                                     <h6 class="fw-5 text-success">Descuento (<span id="discount-code-applied"></span>)</h6>
                                     <h6 class="fw-5 text-success" id="discount-amount">-$0.00</h6>
@@ -263,12 +264,94 @@
 </style>
 <script src="{% static 'js/checkout.js' %}"></script>
 <script>
+    // Datos del usuario para precargar provincia y ciudad
+    const userProvinceId = "{{ user_provincia_id|default_if_none:'' }}";
+    const userCityName = "{{ user_ciudad_name|default:'' }}";
+    
+    // Función para calcular el costo de envío según la ciudad
+    function getShippingCost(cityName, cartTotal) {
+        // Machala: >$50 = gratis, ≤$50 = $3
+        if (cityName.toLowerCase() === 'machala') {
+            return cartTotal > 50 ? 0 : 3;
+        }
+        // Otras ciudades: ≥$90 = gratis, <$90 = $7
+        return cartTotal >= 90 ? 0 : 7;
+    }
+    
     // Mostrar campo de "otra ciudad" cuando se selecciona "Otra"
     document.addEventListener('DOMContentLoaded', function() {
+        const provinceSelect = document.getElementById('province');
         const citySelect = document.getElementById('city');
         const otherCityField = document.getElementById('other-city-field');
         const otherCityInput = document.getElementById('other-city');
         
+        // Manejar cambio de provincia
+        if (provinceSelect) {
+            provinceSelect.addEventListener('change', function() {
+                const selectedProvinceId = this.value;
+                
+                if (!selectedProvinceId) {
+                    // Si no hay provincia seleccionada, deshabilitar el select de ciudades
+                    citySelect.disabled = true;
+                    citySelect.value = '';
+                    const firstOption = citySelect.querySelector('option:first-child');
+                    if (firstOption) {
+                        firstOption.textContent = 'Selecciona una provincia primero';
+                    }
+                    return;
+                }
+                
+                // Habilitar el select de ciudades
+                citySelect.disabled = false;
+                
+                // Limpiar opciones excepto la primera
+                const options = citySelect.querySelectorAll('option');
+                options.forEach((option, index) => {
+                    if (index === 0) {
+                        option.textContent = 'Selecciona tu ciudad';
+                    } else if (option.value !== 'Otra') {
+                        option.style.display = 'none';
+                    }
+                });
+                
+                // Mostrar solo las ciudades de la provincia seleccionada
+                const ciudadesDeProvince = citySelect.querySelectorAll(`option[data-province-id="${selectedProvinceId}"]`);
+                ciudadesDeProvince.forEach(option => {
+                    option.style.display = 'block';
+                });
+                
+                // Mostrar opción "Otra" siempre
+                const otraOption = citySelect.querySelector('option[value="Otra"]');
+                if (otraOption) {
+                    otraOption.style.display = 'block';
+                }
+                
+                // Resetear selección de ciudad
+                citySelect.value = '';
+                calculateShipping();
+            });
+        }
+        
+        // Función para precargar provincia y ciudad del usuario
+        function preloadUserData() {
+            if (userProvinceId && userCityName) {
+                // Precargar provincia
+                provinceSelect.value = userProvinceId;
+                // Disparar evento de cambio para filtrar ciudades
+                const event = new Event('change', { bubbles: true });
+                provinceSelect.dispatchEvent(event);
+                
+                // Después de un pequeño delay, precargar la ciudad
+                setTimeout(() => {
+                    citySelect.value = userCityName;
+                    // Disparar evento de cambio para calcular envío
+                    const cityEvent = new Event('change', { bubbles: true });
+                    citySelect.dispatchEvent(cityEvent);
+                }, 100);
+            }
+        }
+        
+        // Manejar cambio de ciudad - mostrar campo de "otra ciudad" cuando se selecciona "Otra"
         if (citySelect && otherCityField) {
             citySelect.addEventListener('change', function() {
                 if (this.value === 'Otra') {
@@ -279,6 +362,40 @@
                     otherCityInput.removeAttribute('required');
                     otherCityInput.value = '';
                 }
+                // Calcular envío cuando cambia la ciudad
+                calculateShipping();
+            });
+        }
+        
+        // Calcular envío inicial cuando carga la página
+        calculateShipping();
+        
+        // Inicializar tooltips de Bootstrap
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Manejar click en el icono de información de envío
+        const shippingInfoIcon = document.getElementById('shipping-info-icon');
+        if (shippingInfoIcon) {
+            // Crear popover con Bootstrap
+            const popover = new bootstrap.Popover(shippingInfoIcon, {
+                content: '<strong>Envío Gratis:</strong><br>🔹 Machala: compra > $50<br>🔹 Otras ciudades: compra ≥ $90',
+                html: true,
+                placement: 'top',
+                trigger: 'click hover'
+            });
+            
+            // Agregar efecto hover visual
+            shippingInfoIcon.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#e0e0e0';
+                this.style.transform = 'scale(1.1)';
+            });
+            
+            shippingInfoIcon.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '#f0f0f0';
+                this.style.transform = 'scale(1)';
             });
         }
         
@@ -350,7 +467,8 @@
             const discountLine = document.getElementById('discount-line');
             const discountAmount = document.getElementById('discount-amount');
             const discountCodeApplied = document.getElementById('discount-code-applied');
-            const subtotal = parseFloat('{{ cart.get_total_price }}');
+            const subtotalElement = document.getElementById('checkout-subtotal');
+            const subtotal = parseFloat(subtotalElement.textContent.replace('$', ''));
             const total = document.getElementById('checkout-total');
             
             // Mostrar línea de descuento
@@ -358,25 +476,20 @@
             discountAmount.textContent = '-$' + amount.toFixed(2);
             discountCodeApplied.textContent = code;
             
-            // Actualizar total
-            const newTotal = Math.max(0, subtotal - amount);
-            total.textContent = '$' + newTotal.toFixed(2);
-            
             // Guardar en campos ocultos
             document.getElementById('discount-code-applied-input').value = code;
             document.getElementById('discount-amount-input').value = amount.toFixed(2);
+            
+            // Recalcular envío y total cuando cambia el descuento
+            calculateShipping();
         }
         
         function removeDiscount() {
             const discountLine = document.getElementById('discount-line');
-            const subtotal = parseFloat('{{ cart.get_total_price }}');
             const total = document.getElementById('checkout-total');
             
             // Ocultar línea de descuento
             discountLine.classList.add('d-none');
-            
-            // Restaurar total
-            total.textContent = '$' + subtotal.toFixed(2);
             
             // Limpiar campos ocultos
             document.getElementById('discount-code-applied-input').value = '';
@@ -384,6 +497,9 @@
             
             // Limpiar mensaje
             showDiscountMessage('', '');
+            
+            // Recalcular envío y total cuando se quita descuento
+            calculateShipping();
         }
         
         function showDiscountMessage(message, type) {
@@ -416,6 +532,57 @@
             }
             return cookieValue;
         }
-    });
+        
+        // ======== CÁLCULO DE ENVÍO DINÁMICO ========
+        function calculateShipping() {
+            const citySelect = document.getElementById('city');
+            const selectedCity = citySelect.value.trim();
+            
+            if (!selectedCity || selectedCity === '') {
+                document.getElementById('shipping-cost').textContent = '$0.00';
+                return;
+            }
+            
+            // Obtener subtotal actual del DOM
+            const subtotalElement = document.getElementById('checkout-subtotal');
+            const subtotalText = subtotalElement.textContent.trim();
+            const subtotalAmount = parseFloat(subtotalText.replace('$', ''));
+            
+            // Calcular costo de envío
+            const shippingCost = getShippingCost(selectedCity, subtotalAmount);
+            
+            // Actualizar el display del envío
+            document.getElementById('shipping-cost').textContent = '$' + shippingCost.toFixed(2);
+            
+            // Calcular total: subtotal + envío - descuento
+            const discountAmount = parseFloat(document.getElementById('discount-amount-input').value) || 0;
+            const finalTotal = subtotalAmount + shippingCost - discountAmount;
+            
+            document.getElementById('checkout-total').textContent = '$' + finalTotal.toFixed(2);
+            
+            // Guardar en campo oculto para el formulario
+            let shippingInput = document.getElementById('shipping-cost-input');
+            if (!shippingInput) {
+                shippingInput = document.createElement('input');
+                shippingInput.type = 'hidden';
+                shippingInput.id = 'shipping-cost-input';
+                shippingInput.name = 'shipping_cost';
+                document.getElementById('checkout-form').appendChild(shippingInput);
+            }
+            shippingInput.value = shippingCost.toFixed(2);
+            
+            console.log('✅ Envío calculado:', {
+                ciudad: selectedCity,
+                subtotal: subtotalAmount,
+                envío: shippingCost,
+                descuento: discountAmount,
+                total: finalTotal
+            });
+        }
+        
+        // Precargar datos del usuario si existen
+        preloadUserData();
+        }
+    );
 </script>
 {% endblock %}

@@ -3,12 +3,31 @@ from django.contrib.auth.admin import UserAdmin
 from .models import Usuario, Ciudad, Provincia
 
 
+def delete_provincias(modeladmin, request, queryset):
+    """Acción personalizada para eliminar provincias seleccionadas"""
+    count = queryset.count()
+    queryset.delete()
+    modeladmin.message_user(request, f'{count} provincia(s) eliminada(s) correctamente.')
+
+delete_provincias.short_description = "🗑️ Eliminar provincias seleccionadas"
+
+
+def delete_ciudades(modeladmin, request, queryset):
+    """Acción personalizada para eliminar ciudades seleccionadas"""
+    count = queryset.count()
+    queryset.delete()
+    modeladmin.message_user(request, f'{count} ciudad(es) eliminada(s) correctamente.')
+
+delete_ciudades.short_description = "🗑️ Eliminar ciudades seleccionadas"
+
+
 @admin.register(Provincia)
 class ProvinciaAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'codigo', 'activa')
     list_filter = ('activa',)
     search_fields = ('nombre',)
     ordering = ('nombre',)
+    actions = [delete_provincias]
 
 
 @admin.register(Ciudad)
@@ -17,6 +36,7 @@ class CiudadAdmin(admin.ModelAdmin):
     list_filter = ('activa', 'provincia')
     search_fields = ('nombre', 'provincia__nombre')
     ordering = ('provincia', 'nombre')
+    actions = [delete_ciudades]
 
 
 @admin.register(Usuario)
