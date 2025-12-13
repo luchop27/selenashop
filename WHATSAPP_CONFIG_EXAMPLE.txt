@@ -1,0 +1,41 @@
+# Ejemplo de configuración de WhatsApp
+# Este archivo muestra cómo deben lucir las credenciales cuando estén completas
+
+# ==================== CONFIGURACIÓN WHATSAPP BUSINESS API (META) ====================
+# 
+# Ejemplo de cómo se vería con datos reales:
+# (NO USAR ESTOS VALORES, SON SOLO EJEMPLOS)
+
+WHATSAPP_ACCESS_TOKEN = 'EAABsbCS1iHgBAOZCZBu2kP7PNZBz...'
+WHATSAPP_PHONE_NUMBER_ID = '102345678901234'
+WHATSAPP_BUSINESS_ACCOUNT_ID = '123456789012345'
+WHATSAPP_ADMIN_NUMBER = '593979607739'
+
+# ==================== NOTAS IMPORTANTES ====================
+#
+# 1. NUNCA dejar credenciales reales en el código
+# 2. Usar variables de entorno (.env) en producción
+# 3. Las credenciales son personales y secretas
+# 4. Si se exponen, cambiarlas inmediatamente en Meta
+#
+# ==================== UBICACIÓN EN SETTINGS.PY ====================
+#
+# Este bloque debe ir al FINAL de selenashop/settings.py
+# Después de todas las demás configuraciones
+#
+# ==================== ALTERNATIVA SEGURA CON .ENV ====================
+#
+# En .env (gitignore):
+# WHATSAPP_ACCESS_TOKEN=tu_token_real
+# WHATSAPP_PHONE_NUMBER_ID=tu_phone_id_real
+# WHATSAPP_BUSINESS_ACCOUNT_ID=tu_business_id_real
+#
+# En settings.py:
+# import os
+# from dotenv import load_dotenv
+# load_dotenv()
+# 
+# WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN', '')
+# WHATSAPP_PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_NUMBER_ID', '')
+# WHATSAPP_BUSINESS_ACCOUNT_ID = os.getenv('WHATSAPP_BUSINESS_ACCOUNT_ID', '')
+# WHATSAPP_ADMIN_NUMBER = os.getenv('WHATSAPP_ADMIN_NUMBER', '593979607739')

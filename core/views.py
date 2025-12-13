@@ -1730,6 +1730,23 @@ def checkout_process(request):
         # Limpiar el carrito
         cart.clear()
         
+        # ==================== ENVIAR NOTIFICACIÓN POR WHATSAPP ====================
+        # Preparar datos del pedido para el mensaje de WhatsApp
+        detalles_whatsapp = []
+        for detalle in pedido.items.all():
+            detalles_whatsapp.append({
+                'nombre': detalle.nombre_producto,
+                'cantidad': detalle.cantidad,
+                'precio_unitario': detalle.precio_unitario,
+                'subtotal': detalle.subtotal,
+                'talla': detalle.talla or '',
+                'color': detalle.color or ''
+            })
+        
+        # Enviar notificación
+        from .whatsapp import enviar_notificacion_pedido
+        enviar_notificacion_pedido(pedido, detalles_whatsapp)
+        
         # Mensaje de éxito
         messages.success(
             request,
