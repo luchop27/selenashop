@@ -18,6 +18,7 @@ urlpatterns = [
     path('admin-panel/orders/tracking/', views.admin_order_tracking_select, name='admin_order_tracking_select'),
     path('admin-panel/orders/tracking/<int:pedido_id>/', views.admin_order_tracking, name='admin_order_tracking'),
     path('admin-panel/orders/<int:pedido_id>/mark-paid/', views.admin_order_mark_paid, name='admin_order_mark_paid'),
+    path('admin-panel/orders/<int:pedido_id>/update-status/', views.admin_order_update_status, name='admin_order_update_status'),
     path('admin-panel/orders/<int:pedido_id>/cancel/', views.admin_order_cancel, name='admin_order_cancel'),
     
     # User Management URLs
@@ -43,6 +44,7 @@ urlpatterns = [
     path('checkout/validate-discount/', views.validate_discount_code, name='validate_discount_code'),
     path('checkout/calculate-shipping/', views.calculate_shipping, name='calculate_shipping'),
     path('order/confirmation/<int:pedido_id>/', views.order_confirmation, name='order_confirmation'),
+    path('api/order/<int:pedido_id>/status/', views.get_order_status, name='get_order_status'),  # AJAX: obtener estado del pedido
     
     # Endpoint AJAX para cargar más productos nuevos
     path('api/productos-nuevos/', views.api_productos_nuevos, name='api_productos_nuevos'),

@@ -21606,4 +21606,61 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
   width: auto;
   height: auto;
   object-fit: contain;
+  
 }
+#snow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; /* no bloquea clicks */
+  overflow: hidden;
+  z-index: 9999;
+}
+
+#snow div {
+  position: absolute;
+  top: -40px;
+  animation-name: nieve, copos;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.copos {
+  color: #a8dcff;
+  font-size: 1.2em;
+}
+
+.copos.f1 {
+  left: 10%;
+  animation-duration: 6s;
+}
+
+.copos.f2 {
+  left: 30%;
+  font-size: 1.8em;
+  animation-duration: 8s;
+}
+
+.copos.f3 {
+  left: 55%;
+  animation-duration: 10s;
+}
+
+.copos.f4 {
+  left: 80%;
+  font-size: 1.5em;
+  animation-duration: 7s;
+}
+
+@keyframes nieve {
+  from { top: -50px; }
+  to { top: 110vh; }
+}
+
+@keyframes copos {
+  from { transform: translateX(0) rotate(0deg); }
+  to { transform: translateX(40px) rotate(360deg); }
+}
+

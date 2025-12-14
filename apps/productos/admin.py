@@ -13,6 +13,7 @@ from .models import (
 	GlobalProductContent,
 	ShippingInfo,
 	ReturnPolicy,
+	CarritoItem,
 )
 
 
@@ -576,3 +577,34 @@ class ReturnPolicyAdmin(admin.ModelAdmin):
 			'fields': ('dias_devolucion', 'orden', 'activo')
 		}),
 	)
+
+# =========================
+#  CARRITO PERSISTENTE
+# =========================
+@admin.register(CarritoItem)
+class CarritoItemAdmin(admin.ModelAdmin):
+	list_display = ('usuario', 'producto', 'variante', 'cantidad', 'precio', 'fecha_agregado')
+	list_filter = ('usuario', 'fecha_agregado', 'fecha_actualizado')
+	search_fields = ('usuario__email', 'producto__nombre')
+	readonly_fields = ('fecha_agregado', 'fecha_actualizado', 'total_precio')
+	
+	fieldsets = (
+		('Usuario y Producto', {
+			'fields': ('usuario', 'producto', 'variante')
+		}),
+		('Cantidad y Precio', {
+			'fields': ('cantidad', 'precio', 'total_precio')
+		}),
+		('Detalles de Variante', {
+			'fields': ('color', 'talla_codigo', 'talla_nombre', 'imagen_url'),
+			'classes': ('collapse',)
+		}),
+		('Fechas', {
+			'fields': ('fecha_agregado', 'fecha_actualizado'),
+			'classes': ('collapse',)
+		}),
+	)
+	
+	def total_precio(self, obj):
+		return f"${obj.total_precio:.2f}"
+	total_precio.short_description = "Total"

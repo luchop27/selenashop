@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.CartPersistenceMiddleware',  # Sincronizar carrito a BD
 ]
 
 ROOT_URLCONF = 'selenashop.urls'
@@ -171,25 +172,22 @@ PASSWORD_RESET_TIMEOUT = 86400  # 24 horas
 # Tiempo de expiración del token de verificación de email (en horas)
 EMAIL_VERIFICATION_TIMEOUT_HOURS = 48
 
-# ==================== CONFIGURACIÓN WHATSAPP BUSINESS API (META) ====================
-# IMPORTANTE: Configurar estas variables con tus credenciales de Meta/WhatsApp Business
-# 
-# Pasos para obtener las credenciales:
-# 1. Ir a https://developers.facebook.com/
-# 2. Crear una app y activar WhatsApp Business API
-# 3. Obtener el Access Token desde la sección de Tokens
-# 4. Obtener el Phone Number ID de tu número de WhatsApp Business
-# 5. Obtener el Business Account ID
-#
-# Variables de configuración:
-WHATSAPP_ACCESS_TOKEN = ''  # Reemplazar con tu Access Token
-WHATSAPP_PHONE_NUMBER_ID = ''  # Reemplazar con tu Phone Number ID
-WHATSAPP_BUSINESS_ACCOUNT_ID = ''  # Reemplazar con tu Business Account ID
-WHATSAPP_ADMIN_NUMBER = '593979607739'  # Número del admin (en formato internacional, sin +)
+# ==================== CONFIGURACIÓN META WHATSAPP BUSINESS API ====================
+# IMPORTANTE: Obtener estas credenciales desde Meta Business Console
+# 1. Phone Number ID: https://business.facebook.com → WhatsApp Manager → Phone Numbers
+# 2. Access Token: https://developers.facebook.com/apps → Settings → Tokens
+# 3. Admin Phone: Número telefónico del administrador (formato internacional: +593979607739)
 
-# Para desarrollo/pruebas, puedes usar variables de entorno:
+# Tokens y IDs de Meta WhatsApp API
+WHATSAPP_PHONE_NUMBER_ID = 'YOUR_PHONE_NUMBER_ID'  # Reemplazar con tu Phone Number ID
+WHATSAPP_BUSINESS_ACCOUNT_ID = 'YOUR_BUSINESS_ACCOUNT_ID'  # ID de cuenta de negocio
+WHATSAPP_ACCESS_TOKEN = 'YOUR_ACCESS_TOKEN'  # Token de acceso Meta
+WHATSAPP_ADMIN_NUMBER = '+593979607739'  # Número del admin (formato internacional)
+WHATSAPP_API_URL = 'https://graph.instagram.com/v18.0'  # URL base de la API
+
+# Para desarrollo, puede usar variables de entorno:
 # import os
-# WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN', '')
 # WHATSAPP_PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_NUMBER_ID', '')
-# WHATSAPP_BUSINESS_ACCOUNT_ID = os.getenv('WHATSAPP_BUSINESS_ACCOUNT_ID', '')
-# WHATSAPP_ADMIN_NUMBER = os.getenv('WHATSAPP_ADMIN_NUMBER', '593979607739')
+# WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN', '')
+# WHATSAPP_ADMIN_NUMBER = os.getenv('WHATSAPP_ADMIN_NUMBER', '+593979607739')
+

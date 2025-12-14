@@ -17,6 +17,14 @@
             // Manejar el envío del formulario
             checkoutForm.on('submit', function(e) {
                 const termsCheckbox = $('#check-agree');
+                const provinceSelect = $('#province');
+                const citySelect = $('#city');
+                
+                // ⚠️ IMPORTANTE: Habilitar el campo city ANTES de validar/enviar
+                // Esto asegura que se incluya en el POST del formulario
+                if (citySelect.prop('disabled')) {
+                    citySelect.prop('disabled', false);
+                }
                 
                 // Verificar que se aceptaron los términos
                 if (!termsCheckbox.is(':checked')) {
@@ -25,12 +33,19 @@
                     return false;
                 }
                 
-                // Validar campos requeridos
+                // Validar campos requeridos (EXCEPTO los deshabilitados)
                 let isValid = true;
                 const requiredFields = checkoutForm.find('[required]');
                 
                 requiredFields.each(function() {
                     const field = $(this);
+                    
+                    // IMPORTANTE: No validar campos deshabilitados
+                    if (field.prop('disabled')) {
+                        field.removeClass('is-invalid');
+                        return; // Continuar con el siguiente campo
+                    }
+                    
                     if (!field.val() || field.val().trim() === '' || field.val() === '---') {
                         isValid = false;
                         field.addClass('is-invalid');
@@ -44,6 +59,29 @@
                         field.next('.invalid-feedback').remove();
                     }
                 });
+                
+                // Validación adicional específica para provincia y ciudad
+                if (!provinceSelect.val()) {
+                    isValid = false;
+                    provinceSelect.addClass('is-invalid');
+                    if (!provinceSelect.next('.invalid-feedback').length) {
+                        provinceSelect.after('<div class="invalid-feedback">Debes seleccionar una provincia.</div>');
+                    }
+                } else {
+                    provinceSelect.removeClass('is-invalid');
+                    provinceSelect.next('.invalid-feedback').remove();
+                }
+                
+                if (!citySelect.val()) {
+                    isValid = false;
+                    citySelect.addClass('is-invalid');
+                    if (!citySelect.next('.invalid-feedback').length) {
+                        citySelect.after('<div class="invalid-feedback">Debes seleccionar una ciudad.</div>');
+                    }
+                } else {
+                    citySelect.removeClass('is-invalid');
+                    citySelect.next('.invalid-feedback').remove();
+                }
                 
                 if (!isValid) {
                     e.preventDefault();

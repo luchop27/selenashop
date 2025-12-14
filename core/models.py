@@ -222,6 +222,7 @@ class Pedido(models.Model):
     
     # Totales
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Costo de envío')
     gift_wrap = models.BooleanField(default=False, verbose_name='Envoltura de regalo')
     gift_wrap_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount_code = models.CharField(max_length=50, blank=True, null=True, verbose_name='Código de descuento')

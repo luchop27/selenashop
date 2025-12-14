@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Min, Sum, Q
 from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_protect
 
 # Import Producto model to build the shop listing
 from apps.productos.models import Producto
@@ -1648,6 +1650,9 @@ def checkout_process(request):
         gift_wrap = cart.has_gift_wrap()
         gift_wrap_cost = Decimal('5.00') if gift_wrap else Decimal('0.00')
         
+        # Obtener costo de envío (puede venir del formulario)
+        shipping_cost = Decimal(request.POST.get('shipping_cost', '0'))
+        
         # Aplicar código de descuento si existe
         discount_code = request.POST.get('discount_code_applied', '').strip()
         discount_amount = Decimal(request.POST.get('discount_amount', '0'))
@@ -1671,7 +1676,8 @@ def checkout_process(request):
                 discount_amount = Decimal('0')
                 discount_code = ''
         
-        total = subtotal + gift_wrap_cost - discount_amount
+        # Total = subtotal + envío + regalo - descuento
+        total = subtotal + shipping_cost + gift_wrap_cost - discount_amount
         
         # Crear el pedido
         pedido = Pedido.objects.create(
@@ -1686,6 +1692,7 @@ def checkout_process(request):
             order_note=order_note,
             metodo_pago=payment_method,
             subtotal=subtotal,
+            shipping_cost=shipping_cost,
             gift_wrap=gift_wrap,
             gift_wrap_cost=gift_wrap_cost,
             discount_code=discount_code if discount_code else None,
@@ -1730,33 +1737,28 @@ def checkout_process(request):
         # Limpiar el carrito
         cart.clear()
         
-        # ==================== ENVIAR NOTIFICACIÓN POR WHATSAPP ====================
-        # Preparar datos del pedido para el mensaje de WhatsApp
-        detalles_whatsapp = []
-        for detalle in pedido.items.all():
-            detalles_whatsapp.append({
-                'nombre': detalle.nombre_producto,
-                'cantidad': detalle.cantidad,
-                'precio_unitario': detalle.precio_unitario,
-                'subtotal': detalle.subtotal,
-                'talla': detalle.talla or '',
-                'color': detalle.color or ''
-            })
+        # 📱 Enviar notificación a WhatsApp del administrador
+        from .whatsapp_utils import enviar_notificacion_pedido
+        resultado_whatsapp = enviar_notificacion_pedido(pedido)
         
-        # Enviar notificación
-        from .whatsapp import enviar_notificacion_pedido
-        enviar_notificacion_pedido(pedido, detalles_whatsapp)
-        
-        # Mensaje de éxito
-        messages.success(
-            request,
-            f'¡Pedido realizado con éxito! Tu número de pedido es: {pedido.numero_pedido}'
-        )
+        if resultado_whatsapp.get('success'):
+            messages.success(
+                request,
+                f'✅ ¡Pedido realizado! #{pedido.numero_pedido} | Notificación enviada al admin'
+            )
+        else:
+            messages.success(
+                request,
+                f'✅ ¡Pedido realizado! #{pedido.numero_pedido}'
+            )
         
         # Redirigir a página de confirmación
         return redirect('core:order_confirmation', pedido_id=pedido.id)
         
     except Exception as e:
+        import traceback
+        print(f'❌ ERROR EN CHECKOUT_PROCESS: {str(e)}')
+        print(f'Traceback: {traceback.format_exc()}')
         messages.error(request, f'Error al procesar el pedido: {str(e)}')
         return redirect('core:checkout')
 
@@ -1780,6 +1782,46 @@ def order_confirmation(request, pedido_id):
     }
     
     return render(request, 'order-confirmation.html', context)
+
+
+def get_order_status(request, pedido_id):
+    """
+    Endpoint AJAX para obtener el estado actual de un pedido sin recargar la página
+    
+    Retorna JSON con:
+    - estado: estado actual del pedido
+    - pagado: boolean si está pagado
+    - estado_display: nombre legible del estado
+    - fecha_pago: fecha del pago si existe
+    """
+    from django.shortcuts import get_object_or_404
+    from django.http import JsonResponse
+    from .models import Pedido
+    
+    try:
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        
+        # Verificar permisos
+        if request.user.is_authenticated and pedido.usuario and pedido.usuario != request.user:
+            return JsonResponse({
+                'success': False,
+                'message': 'No tienes permiso para ver este pedido.'
+            }, status=403)
+        
+        # Retornar estado actual del pedido
+        return JsonResponse({
+            'success': True,
+            'estado': pedido.estado,
+            'estado_display': pedido.get_estado_display(),
+            'pagado': pedido.pagado,
+            'fecha_pago': pedido.fecha_pago.isoformat() if pedido.fecha_pago else None,
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
 
 
 @require_POST
@@ -1949,6 +1991,7 @@ def admin_order_tracking_select(request):
     })
 
 @login_required
+@login_required
 def admin_order_tracking(request, pedido_id):
     """
     Vista para el seguimiento de un pedido específico.
@@ -1991,6 +2034,65 @@ def admin_order_mark_paid(request, pedido_id):
         'success': True,
         'message': 'Pedido marcado como pagado exitosamente'
     })
+
+@csrf_protect
+@require_POST
+def admin_order_update_status(request, pedido_id):
+    """
+    Vista para actualizar el estado del pedido (procesando, enviado, entregado).
+    Solo accessible para staff/admin.
+    """
+    # Verificar que el usuario sea staff o admin
+    if not (request.user.is_authenticated and (request.user.is_staff or (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'))):
+        return JsonResponse({'success': False, 'message': 'No tienes permiso'}, status=403)
+    
+    import json
+    from django.utils import timezone
+    
+    try:
+        data = json.loads(request.body)
+        nuevo_estado = data.get('estado')
+        
+        # Validar estado
+        estados_validos = ['procesando', 'enviado', 'entregado']
+        if nuevo_estado not in estados_validos:
+            return JsonResponse({
+                'success': False,
+                'message': 'Estado inválido. Debe ser: procesando, enviado o entregado'
+            }, status=400)
+        
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        
+        # Validar transición de estados
+        transiciones = {
+            'pendiente': ['procesando', 'cancelado'],
+            'procesando': ['enviado', 'cancelado'],
+            'enviado': ['entregado'],
+            'entregado': [],
+            'cancelado': []
+        }
+        
+        if nuevo_estado not in transiciones.get(pedido.estado, []):
+            return JsonResponse({
+                'success': False,
+                'message': f'No se puede cambiar de {pedido.get_estado_display()} a {dict(Pedido.ESTADO_CHOICES).get(nuevo_estado, nuevo_estado)}'
+            }, status=400)
+        
+        # Cambiar estado
+        pedido.estado = nuevo_estado
+        pedido.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Estado actualizado a {pedido.get_estado_display()}',
+            'nuevo_estado': nuevo_estado,
+            'nuevo_estado_display': pedido.get_estado_display()
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=500)
 
 @login_required
 @require_POST

@@ -527,3 +527,50 @@ class ReturnPolicy(models.Model):
     
     def __str__(self):
         return self.titulo
+
+# ==================== CARRITO PERSISTENTE ====================
+class CarritoItem(models.Model):
+    """
+    Modelo para almacenar los items del carrito de forma persistente en la BD.
+    Permite que los usuarios mantengan su carrito incluso después de cerrar sesión.
+    """
+    usuario = models.ForeignKey(
+        'usuarios.Usuario',
+        on_delete=models.CASCADE,
+        related_name='carrito_items'
+    )
+    producto = models.ForeignKey(
+        'Producto',
+        on_delete=models.CASCADE
+    )
+    variante = models.ForeignKey(
+        'Variante',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    cantidad = models.PositiveIntegerField(default=1)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Metadatos para mostrar el item sin necesidad de queries adicionales
+    color = models.CharField(max_length=50, blank=True, null=True)
+    talla_codigo = models.CharField(max_length=10, blank=True, null=True)
+    talla_nombre = models.CharField(max_length=50, blank=True, null=True)
+    imagen_url = models.URLField(blank=True, null=True)
+    
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+    fecha_actualizado = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-fecha_agregado']
+        verbose_name = "Item del Carrito"
+        verbose_name_plural = "Items del Carrito"
+        unique_together = ('usuario', 'producto', 'variante')
+    
+    def __str__(self):
+        return f"{self.usuario.email} - {self.producto.nombre} x {self.cantidad}"
+    
+    @property
+    def total_precio(self):
+        """Calcular el precio total del item"""
+        return self.precio * self.cantidad

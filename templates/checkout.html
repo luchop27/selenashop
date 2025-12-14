@@ -265,7 +265,7 @@
 <script src="{% static 'js/checkout.js' %}"></script>
 <script>
     // Datos del usuario para precargar provincia y ciudad
-    const userProvinceId = "{{ user_provincia_id|default_if_none:'' }}";
+    const userProvinceId = JSON.parse('{{ user_provincia_id|default_if_none:"null" }}');
     const userCityName = "{{ user_ciudad_name|default:'' }}";
     
     // Función para calcular el costo de envío según la ciudad

@@ -1,245 +1,127 @@
-# 🚀 GUÍA RÁPIDA - ACTIVAR WHATSAPP EN 5 MINUTOS
+# ✨ Integración WhatsApp Business API - RESUMEN RÁPIDO
 
-**Última actualización**: 8 de Diciembre 2024
+## 📍 Archivos Creados/Modificados
 
----
+| Archivo | Cambio | Descripción |
+|---------|--------|-------------|
+| `selenashop/settings.py` | ✏️ Modificado | Agregadas credenciales de Meta WhatsApp |
+| `core/whatsapp_utils.py` | ✨ Creado | Funciones para enviar mensajes a WhatsApp |
+| `core/views.py` | ✏️ Modificado | Integración en `checkout_process()` |
+| `test_whatsapp.py` | ✨ Creado | Script para probar la configuración |
+| `WHATSAPP_SETUP.md` | ✨ Creado | Guía completa de configuración |
 
-## ✅ Lo que ya está hecho
+## 🚀 Inicio Rápido (3 Pasos)
 
-El sistema completo está implementado y listo. Solo necesitas configurar credenciales.
+### Paso 1️⃣: Obtén los Tokens de Meta
+1. Ve a [Meta Business Console](https://business.facebook.com)
+2. WhatsApp Manager → Copia **Phone Number ID**
+3. Desarrolladores → Copia **Access Token**
 
-```
-✅ Módulo de WhatsApp creado
-✅ Integración en checkout lista
-✅ Tests completados y pasados
-✅ Documentación incluida
-```
-
----
-
-## 🎯 Tarea: Obtener Credenciales de Meta
-
-### Paso 1: Acceder a Meta Developers
-
-1. Ir a: **https://developers.facebook.com/**
-2. Click en "Mis apps" en la esquina superior derecha
-3. Click en "Crear app"
-
-### Paso 2: Crear la App
-
-1. Tipo: Seleccionar **"Comercio"**
-2. Click en "Siguiente"
-3. Llenar información básica
-4. Click en "Crear app"
-
-### Paso 3: Agregar WhatsApp
-
-1. En el dashboard, buscar **"WhatsApp"**
-2. Click en **"Configurar"** o **"Agregar producto"**
-3. Seguir el flujo de setup de WhatsApp
-
-### Paso 4: Obtener Credenciales
-
-En el panel de WhatsApp, encontrarás:
-
-```
-1. ACCESS TOKEN
-   - Ir a: "Configuración" → "Credenciales"
-   - Click "Generar Token"
-   - Copiar el token completo
-
-2. PHONE NUMBER ID
-   - Ir a: "Números de teléfono"
-   - Buscar tu número de WhatsApp Business
-   - Copiar "ID del número de teléfono"
-
-3. BUSINESS ACCOUNT ID
-   - Ir a: "Configuración"
-   - Buscar "ID de cuenta de empresa"
-   - Copiar el ID
-```
-
-**Ejemplo de cómo lucen:**
-```
-ACCESS_TOKEN: EAABsbCS1iHgBAOZCZBu2kP7PNZBz...
-PHONE_NUMBER_ID: 102345678901234
-BUSINESS_ACCOUNT_ID: 123456789012345
-```
-
----
-
-## ⚙️ Configurar el Sistema
-
-### Paso 1: Abrir settings.py
-
-Abrir archivo: `selenashop/settings.py`
-
-Ir al **final del archivo** y buscar:
-```python
-# ==================== CONFIGURACIÓN WHATSAPP BUSINESS API (META) ====================
-
-WHATSAPP_ACCESS_TOKEN = ''
-WHATSAPP_PHONE_NUMBER_ID = ''
-WHATSAPP_BUSINESS_ACCOUNT_ID = ''
-WHATSAPP_ADMIN_NUMBER = '593979607739'
-```
-
-### Paso 2: Pegar Credenciales
+### Paso 2️⃣: Configura Django
+Edita `selenashop/settings.py` y reemplaza:
 
 ```python
-WHATSAPP_ACCESS_TOKEN = 'EAABsbCS1iHgBAOZCZBu2kP7PNZBz...'  # ← TU TOKEN AQUI
-WHATSAPP_PHONE_NUMBER_ID = '102345678901234'  # ← TU PHONE ID AQUI
-WHATSAPP_BUSINESS_ACCOUNT_ID = '123456789012345'  # ← TU BUSINESS ID AQUI
-WHATSAPP_ADMIN_NUMBER = '593979607739'  # ← DEJAR IGUAL
+WHATSAPP_PHONE_NUMBER_ID = 'TU_PHONE_NUMBER_ID_AQUI'
+WHATSAPP_ACCESS_TOKEN = 'TU_ACCESS_TOKEN_AQUI'
+WHATSAPP_ADMIN_NUMBER = '+593979607739'
 ```
 
-### Paso 3: Guardar
-
-- Guardar el archivo (Ctrl+S)
-- No necesitas reiniciar Django
-- ¡Listo!
-
----
-
-## 🧪 Probar que Funciona
-
-En terminal, ejecutar:
-
+### Paso 3️⃣: ¡Prueba!
 ```bash
-python test_whatsapp_complete.py
+python test_whatsapp.py
 ```
 
-Si ves esto, está correctamente configurado:
+## 📱 ¿Cómo Funciona?
+
 ```
-✅ TODOS LOS TESTS PASARON - SISTEMA LISTO PARA PRODUCCIÓN
+Cliente → Llena Checkout → Presiona "Realizar Pedido"
+    ↓
+Django Backend:
+  • Crea el Pedido
+  • Formatea el mensaje
+  • Envía a WhatsApp API de Meta
+  ↓
+Admin recibe en WhatsApp:
+  "✨ NUEVO PEDIDO #ORD-20250214-ABCD ✨
+   👤 Nombre: Luis Alberto Vasquez
+   📊 Detalles del producto...
+   💰 Total: $40.00"
 ```
 
-Si no, probablemente algo en la configuración no está bien. Revisar credenciales.
+## 🎯 Características
 
----
+✅ **Automático** - Sin intervención del usuario
+✅ **Seguro** - Usa API oficial de Meta
+✅ **Personalizable** - Edita el formato en `whatsapp_utils.py`
+✅ **Robusto** - Manejo de errores completo
+✅ **Fallback** - Genera links de WhatsApp Web si falla API
 
-## 🧪 Prueba Real
+## 🔧 Personalización
 
-1. Acceder a: `http://localhost:8000/checkout/`
-2. Completa el formulario con datos de prueba
-3. Click en **"Realizar Pedido"**
-4. Verifica que el mensaje llegue a tu WhatsApp
+### Cambiar el Formato del Mensaje
 
-**Ejemplo de lo que debería llegar:**
-```
-✨ *Pedido ORD-20240108-ABCD - Vórtice Ecuador* ✨
---------------------------------------
-📋 *Datos del Cliente:*
-👤 Nombre: Tu Nombre
-📧 Correo: tu@email.com
+Edita la función `formatear_mensaje_pedido()` en `core/whatsapp_utils.py`:
+
+```python
+def formatear_mensaje_pedido(pedido):
+    mensaje = f"""✨ *NUEVO PEDIDO #{pedido.numero_pedido}* ✨
 ...
 ```
 
----
+Puedes agregar:
+- Emojis personalizados
+- Links de seguimiento
+- Horarios de atención
+- Información adicional
 
-## 🔒 Seguridad (IMPORTANTE)
+### Enviar a Múltiples Admin
 
-### NO hagas esto:
+Edita `checkout_process()` en `core/views.py`:
+
 ```python
-# ❌ NO COMMITS CON CREDENCIALES REALES
-WHATSAPP_ACCESS_TOKEN = 'EAABsbCS1iHgBAOZCZBu2kP7...'
+# Enviar a admin principal
+resultado1 = enviar_notificacion_pedido(pedido)
+
+# Enviar a segundo admin
+resultado2 = enviar_mensaje_whatsapp(
+    '+593987654321',  # Otro admin
+    formatear_mensaje_pedido(pedido)
+)
 ```
 
-### Para Producción, usa .env:
+## 🐛 Debugging
 
-1. Crear archivo `.env` en la raíz:
-   ```
-   WHATSAPP_ACCESS_TOKEN=tu_token_aqui
-   WHATSAPP_PHONE_NUMBER_ID=tu_phone_id_aqui
-   WHATSAPP_BUSINESS_ACCOUNT_ID=tu_business_id_aqui
-   ```
+Ver logs en la consola del servidor:
 
-2. Agregar `.env` a `.gitignore`
+```
+✅ WhatsApp: Mensaje enviado exitosamente. ID: wamid.xxxx
+❌ WhatsApp: Error 401. Token inválido
+```
 
-3. En `settings.py`:
-   ```python
-   import os
-   from dotenv import load_dotenv
-   
-   load_dotenv()
-   
-   WHATSAPP_ACCESS_TOKEN = os.getenv('WHATSAPP_ACCESS_TOKEN', '')
-   WHATSAPP_PHONE_NUMBER_ID = os.getenv('WHATSAPP_PHONE_NUMBER_ID', '')
-   WHATSAPP_BUSINESS_ACCOUNT_ID = os.getenv('WHATSAPP_BUSINESS_ACCOUNT_ID', '')
-   ```
+## ⚠️ Problemas Comunes
 
-4. Instalar:
-   ```bash
-   pip install python-dotenv
-   ```
+| Problema | Solución |
+|----------|----------|
+| "No configurado" | Verifica `settings.py` no tenga valores `YOUR_*` |
+| "Error 401" | Access Token expiró, genera uno nuevo en Meta |
+| "Error 400" | Número sin formato internacional (+593...) |
+| "Mensaje no llega" | Espera 24h, requiere que el admin haya abierto chat antes |
 
----
+## 📞 Soporte
 
-## ❓ Problemas Comunes
+- **Documentación Completa**: Revisa `WHATSAPP_SETUP.md`
+- **Script de Prueba**: Ejecuta `python test_whatsapp.py`
+- **Logs**: Revisa consola del servidor Django
 
-### "Credenciales no configuradas"
-→ Revisar que los valores en settings.py no estén vacíos
+## 📝 Próximos Pasos Opcionales
 
-### "El mensaje no llega"
-→ 1. Verificar credenciales en Meta
-→ 2. Validar número en WhatsApp Business
-→ 3. Ejecutar: `python test_whatsapp_complete.py`
-
-### "Error 401 Unauthorized"
-→ Token expiró, generar uno nuevo en Meta
-
-### "Invalid recipient"
-→ Número no validado, ir a Meta y validarlo
+- [ ] Agregar notificación cuando se actualiza estado del pedido
+- [ ] Enviar comprobante de pago por WhatsApp
+- [ ] Agregar seguimiento de envío en tiempo real
+- [ ] Responder automáticamente algunas preguntas frecuentes
 
 ---
 
-## 📞 Números de Teléfono Validados
+**¿Todo configurado?** 🎉
 
-En Meta, necesitas validar el número de teléfono del admin:
-
-1. Ir a: "Números de teléfono" en Meta
-2. Buscar el número: **0979607739**
-3. Si no está, agregar uno
-4. WhatsApp enviará código de verificación
-5. Confirmar código en la app de WhatsApp
-
----
-
-## ✅ Checklist Final
-
-- [ ] Accedí a Meta Developers
-- [ ] Creé una app
-- [ ] Agregué WhatsApp Business
-- [ ] Obtuve Access Token
-- [ ] Obtuve Phone Number ID
-- [ ] Obtuve Business Account ID
-- [ ] Actualicé settings.py
-- [ ] Ejecuté test_whatsapp_complete.py
-- [ ] Realicé pedido de prueba
-- [ ] Recibí mensaje en WhatsApp
-
----
-
-## 📚 Documentación Completa
-
-Para más detalles:
-- `WHATSAPP_IMPLEMENTATION.md` - Guía completa
-- `WHATSAPP_SETUP_GUIDE.md` - Configuración técnica
-- `README_WHATSAPP.md` - Visión general
-
----
-
-## 🎉 ¡Listo!
-
-Una vez configurado, el sistema enviará automáticamente mensajes de WhatsApp cada vez que:
-- ✅ Un cliente realiza un pedido
-- ✅ Incluye todos los detalles
-- ✅ Con formato bonito y emojis
-- ✅ Sin intervención manual
-
-**¡No hay nada más que hacer! El sistema funciona automáticamente.** 🚀
-
----
-
-**Tiempo estimado**: 5 minutos  
-**Dificultad**: Fácil ⭐
+Realiza un pedido de prueba en el checkout y verifica que recibes el mensaje en WhatsApp.

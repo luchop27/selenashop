@@ -29,80 +29,80 @@
                     <div class="col-lg-9">
                         <div class="my-account-content account-order">
                             <div class="wrap-account-order">
+                                {% if ordenes %}
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th class="fw-6">Order</th>
-                                            <th class="fw-6">Date</th>
-                                            <th class="fw-6">Status</th>
+                                            <th class="fw-6">Pedido</th>
+                                            <th class="fw-6">Fecha</th>
+                                            <th class="fw-6">Estado</th>
                                             <th class="fw-6">Total</th>
-                                            <th class="fw-6">Actions</th>
+                                            <th class="fw-6">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        {% for orden in ordenes %}
                                         <tr class="tf-order-item">
                                             <td>
-                                                #123
+                                                #{{ orden.numero_pedido }}
                                             </td>
                                             <td>
-                                                August 1, 2024
+                                                {{ orden.created_at|date:"d M, Y" }}
                                             </td>
                                             <td>
-                                                On hold
+                                                <span class="badge {% if orden.estado == 'entregado' %}bg-success{% elif orden.estado == 'cancelado' %}bg-danger{% elif orden.estado == 'enviado' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                                                    {{ orden.get_estado_display }}
+                                                </span>
                                             </td>
                                             <td>
-                                                $200.0 for 1 items
+                                                ${{ orden.total }}
                                             </td>
                                             <td>
-                                                <a href="my-account-orders-details.html"
+                                                <a href="{% url 'usuarios:my_account_orders_details' orden.id %}"
                                                     class="tf-btn btn-fill animate-hover-btn rounded-0 justify-content-center">
-                                                    <span>View</span>
+                                                    <span>Ver</span>
                                                 </a>
                                             </td>
                                         </tr>
-                                        <tr class="tf-order-item">
-                                            <td>
-                                                #345
-                                            </td>
-                                            <td>
-                                                August 2, 2024
-                                            </td>
-                                            <td>
-                                                On hold
-                                            </td>
-                                            <td>
-                                                $300.0 for 1 items
-                                            </td>
-                                            <td>
-                                                <a href="my-account-orders-details.html"
-                                                    class="tf-btn btn-fill animate-hover-btn rounded-0 justify-content-center">
-                                                    <span>View</span>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        <tr class="tf-order-item">
-                                            <td>
-                                                #567
-                                            </td>
-                                            <td>
-                                                August 3, 2024
-                                            </td>
-                                            <td>
-                                                On hold
-                                            </td>
-                                            <td>
-                                                $400.0 for 1 items
-                                            </td>
-                                            <td>
-                                                <a href="my-account-orders-details.html"
-                                                    class="tf-btn btn-fill animate-hover-btn rounded-0 justify-content-center">
-                                                    <span>View</span>
-                                                </a>
-                                            </td>
-                                        </tr>
-
+                                        {% endfor %}
                                     </tbody>
                                 </table>
+                                
+                                <!-- Paginación -->
+                                {% if ordenes.has_other_pages %}
+                                <div class="mt-4 d-flex justify-content-center">
+                                    <nav aria-label="Page navigation">
+                                        <ul class="pagination">
+                                            {% if ordenes.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1">Primera</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ ordenes.previous_page_number }}">Anterior</a>
+                                            </li>
+                                            {% endif %}
+                                            
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ ordenes.number }} de {{ ordenes.paginator.num_pages }}</span>
+                                            </li>
+                                            
+                                            {% if ordenes.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ ordenes.next_page_number }}">Siguiente</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ ordenes.paginator.num_pages }}">Última</a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                                {% endif %}
+                                {% else %}
+                                <div class="alert alert-info text-center py-5">
+                                    <p class="mb-0">No tienes pedidos aún. <a href="{% url 'core:shop-collection-sub' %}">¡Comienza a comprar!</a></p>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
