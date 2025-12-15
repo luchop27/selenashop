@@ -154,8 +154,11 @@
                                 <div class="body-text">{{ usuario.fecha_registro|date:"d M Y" }}</div>
                             </div>
                             <div class="list-icon-function">
-                                <a href="{% url 'core:admin_user_detail' usuario.id %}" class="item edit">
+                                <a href="{% url 'core:admin_user_detail' usuario.id %}" class="item" title="Ver detalles">
                                     <i class="icon-eye"></i>
+                                </a>
+                                <a href="{% url 'core:admin_user_edit' usuario.id %}" class="item edit" title="Editar usuario">
+                                    <i class="icon-edit-2"></i>
                                 </a>
                                 {% if usuario.id != request.user.id and not usuario.is_staff %}
                                 <button type="button" class="item text-danger delete-user-btn" 

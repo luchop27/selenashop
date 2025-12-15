@@ -1,24 +1,130 @@
 # core/cart.py
 from decimal import Decimal
 from django.conf import settings
-from apps.productos.models import Producto, Variante
+from apps.productos.models import Producto, Variante, CarritoItem
 
 
 class Cart:
     """
-    Clase para manejar el carrito de compras en la sesión
+    Clase para manejar el carrito de compras en la sesión y BD.
+    Si el usuario está autenticado, sincroniza con CarritoItem en la BD.
+    Si no está autenticado, usa sessionStorage (sesión de servidor).
     """
     
     def __init__(self, request):
         """
         Inicializar el carrito
         """
+        self.request = request
         self.session = request.session
-        cart = self.session.get(settings.CART_SESSION_ID)
-        if not cart:
-            # Guardar un carrito vacío en la sesión
-            cart = self.session[settings.CART_SESSION_ID] = {}
-        self.cart = cart
+        self.user = request.user
+        
+        # Si el usuario está autenticado, cargar carrito de la BD
+        if self.user.is_authenticated:
+            self._load_from_db()
+        else:
+            # Si no está autenticado, usar sesión
+            cart = self.session.get(settings.CART_SESSION_ID)
+            if not cart:
+                # Guardar un carrito vacío en la sesión
+                cart = self.session[settings.CART_SESSION_ID] = {}
+            self.cart = cart
+    
+    def _load_from_db(self):
+        """
+        Cargar el carrito desde la BD para usuarios autenticados.
+        La sesión se usa solo como caché.
+        """
+        # Cargar items de la BD
+        items_db = CarritoItem.objects.filter(usuario=self.user)
+        
+        # Construir el carrito en formato de sesión
+        self.cart = {}
+        for item in items_db:
+            # Crear una clave única (igual que en add())
+            if item.variante_id:
+                product_key = f"{item.producto_id}_{item.variante_id}"
+            else:
+                product_key = str(item.producto_id)
+            
+            self.cart[product_key] = {
+                'producto_id': item.producto_id,
+                'variante_id': item.variante_id,
+                'nombre': item.producto.nombre,
+                'precio': str(item.precio),
+                'quantity': item.cantidad,
+                'imagen': item.imagen_url,
+                'color': item.color,
+                'talla': item.talla_codigo,
+                'talla_nombre': item.talla_nombre,
+                '_db_id': item.id  # Guardar ID para actualizaciones
+            }
+    
+    def _save_to_db(self):
+        """
+        Sincronizar el carrito de sesión a la BD para usuarios autenticados.
+        """
+        if not self.user.is_authenticated:
+            return
+        
+        # Obtener items válidos del carrito (ignorar metadatos)
+        valid_items = {k: v for k, v in self.cart.items() if not k.startswith('_') and isinstance(v, dict)}
+        
+        # Obtener IDs de DB que ya existen
+        existing_db_ids = {item['_db_id'] for item in valid_items.values() if '_db_id' in item}
+        
+        # Eliminar items que no están en el carrito actual
+        CarritoItem.objects.filter(usuario=self.user).exclude(id__in=existing_db_ids).delete()
+        
+        # Actualizar o crear items en la BD
+        for product_key, item_data in valid_items.items():
+            producto_id = item_data['producto_id']
+            variante_id = item_data.get('variante_id')
+            cantidad = item_data['quantity']
+            precio = Decimal(item_data['precio'])
+            
+            # Preparar datos adicionales
+            color = item_data.get('color')
+            talla_codigo = item_data.get('talla')
+            talla_nombre = item_data.get('talla_nombre')
+            imagen_url = item_data.get('imagen')
+            
+            if '_db_id' in item_data:
+                # Actualizar item existente
+                try:
+                    carrito_item = CarritoItem.objects.get(id=item_data['_db_id'])
+                    carrito_item.cantidad = cantidad
+                    carrito_item.save()
+                except CarritoItem.DoesNotExist:
+                    # Si el item fue eliminado desde otra sesión, recréalo
+                    CarritoItem.objects.get_or_create(
+                        usuario=self.user,
+                        producto_id=producto_id,
+                        variante_id=variante_id,
+                        defaults={
+                            'cantidad': cantidad,
+                            'precio': precio,
+                            'color': color,
+                            'talla_codigo': talla_codigo,
+                            'talla_nombre': talla_nombre,
+                            'imagen_url': imagen_url,
+                        }
+                    )
+            else:
+                # Crear nuevo item
+                CarritoItem.objects.get_or_create(
+                    usuario=self.user,
+                    producto_id=producto_id,
+                    variante_id=variante_id,
+                    defaults={
+                        'cantidad': cantidad,
+                        'precio': precio,
+                        'color': color,
+                        'talla_codigo': talla_codigo,
+                        'talla_nombre': talla_nombre,
+                        'imagen_url': imagen_url,
+                    }
+                )
     
     def add(self, producto, variante_id=None, quantity=1, override_quantity=False):
         """
@@ -77,9 +183,14 @@ class Cart:
     
     def save(self):
         """
-        Marcar la sesión como "modificada" para asegurar que se guarde
+        Marcar la sesión como "modificada" para asegurar que se guarde.
+        Si el usuario está autenticado, también sincroniza con la BD.
         """
         self.session.modified = True
+        
+        # Sincronizar con BD si está autenticado
+        if self.user.is_authenticated:
+            self._save_to_db()
     
     def remove(self, product_id):
         """
@@ -89,6 +200,13 @@ class Cart:
             product_id: Clave del producto en el carrito (puede incluir variante)
         """
         if product_id in self.cart:
+            # Si está autenticado y el item tiene ID de BD, eliminar de BD también
+            if self.user.is_authenticated and '_db_id' in self.cart[product_id]:
+                try:
+                    CarritoItem.objects.get(id=self.cart[product_id]['_db_id']).delete()
+                except CarritoItem.DoesNotExist:
+                    pass
+            
             del self.cart[product_id]
             self.save()
     
@@ -135,9 +253,15 @@ class Cart:
     
     def clear(self):
         """
-        Eliminar el carrito de la sesión
+        Eliminar el carrito de la sesión y de la BD si está autenticado.
         """
-        del self.session[settings.CART_SESSION_ID]
+        # Eliminar de la BD si está autenticado
+        if self.user.is_authenticated:
+            CarritoItem.objects.filter(usuario=self.user).delete()
+        
+        # Limpiar la sesión
+        if settings.CART_SESSION_ID in self.session:
+            del self.session[settings.CART_SESSION_ID]
         self.save()
     
     def update_quantity(self, product_id, quantity):

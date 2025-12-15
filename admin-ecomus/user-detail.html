@@ -53,6 +53,16 @@
                         {% else %}
                             <span class="badge bg-secondary">{{ usuario.get_rol_display }}</span>
                         {% endif %}
+                        
+                        <a href="{% url 'core:admin_user_edit' usuario.id %}" class="tf-button">
+                            <i class="icon-edit-2"></i> Editar
+                        </a>
+                    </div>
+                </div>
+                            <span class="badge bg-primary">{{ usuario.get_rol_display }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ usuario.get_rol_display }}</span>
+                        {% endif %}
                     </div>
                 </div>
                 

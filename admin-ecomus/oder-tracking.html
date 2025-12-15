@@ -44,62 +44,86 @@
                         <div class="body-title-2 mb-10">Estado Actual del Pedido</div>
                         <div class="flex items-center gap10">
                             {% if pedido.estado == 'pendiente' %}
-                                <span class="badge bg-warning">{{ pedido.get_estado_display }}</span>
+                                <span class="badge bg-warning" style="font-size: 14px; padding: 8px 12px;">Pendiente</span>
                             {% elif pedido.estado == 'procesando' %}
-                                <span class="badge bg-info">{{ pedido.get_estado_display }}</span>
+                                <span class="badge bg-info" style="font-size: 14px; padding: 8px 12px;">En Proceso</span>
                             {% elif pedido.estado == 'enviado' %}
-                                <span class="badge bg-primary">{{ pedido.get_estado_display }}</span>
+                                <span class="badge bg-primary" style="font-size: 14px; padding: 8px 12px;">Enviado</span>
                             {% elif pedido.estado == 'entregado' %}
-                                <span class="badge bg-success">{{ pedido.get_estado_display }}</span>
+                                <span class="badge bg-success" style="font-size: 14px; padding: 8px 12px;">Entregado</span>
                             {% elif pedido.estado == 'cancelado' %}
-                                <span class="badge bg-danger">{{ pedido.get_estado_display }}</span>
+                                <span class="badge bg-danger" style="font-size: 14px; padding: 8px 12px;">Cancelado</span>
                             {% else %}
-                                <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
-                            {% endif %}
-                            {% if pedido.pagado %}
-                                <span class="badge bg-success">✓ Pagado</span>
-                                {% if pedido.fecha_pago %}
-                                    <span class="text-tiny text-muted">({{ pedido.fecha_pago|date:"d M Y, H:i" }})</span>
-                                {% endif %}
-                            {% else %}
-                                <span class="badge bg-secondary">No Pagado</span>
+                                <span class="badge bg-secondary" style="font-size: 14px; padding: 8px 12px;">{{ pedido.get_estado_display }}</span>
                             {% endif %}
                         </div>
-                    </div>
-                    <div class="flex items-center gap10">
-                        {% if pedido.estado != 'cancelado' %}
-                            {% if not pedido.pagado %}
-                            <button type="button" 
-                                    class="tf-button style-1" 
-                                    id="mark-paid-btn"
-                                    onclick="markAsPaid({{ pedido.id }})"
-                                    style="background-color: #28a745; color: white; font-weight: bold;">
-                                <i class="icon-check"></i> Marcar como Pagado
-                            </button>
-                            {% else %}
-                            <div class="body-text text-success" style="padding: 10px;">
-                                <i class="icon-check-circle"></i> Este pedido ya está marcado como pagado
-                                {% if pedido.fecha_pago %}
-                                    ({{ pedido.fecha_pago|date:"d M Y, H:i" }})
-                                {% endif %}
-                            </div>
+                        {% if pedido.pagado %}
+                        <div class="flex items-center gap10 mt-2">
+                            <span class="badge bg-success" style="font-size: 12px; padding: 6px 10px;">✓ Pagado</span>
+                            {% if pedido.fecha_pago %}
+                                <span class="text-tiny text-muted">({{ pedido.fecha_pago|date:"d M Y, H:i" }})</span>
                             {% endif %}
-                            
-                            {% if not pedido.pagado %}
-                            <button type="button" 
-                                    class="tf-button style-1" 
-                                    id="cancel-order-btn"
-                                    onclick="cancelOrder({{ pedido.id }})"
-                                    style="background-color: #dc3545; color: white; font-weight: bold;">
-                                <i class="icon-x"></i> Cancelar Pedido
-                            </button>
-                            {% endif %}
+                        </div>
                         {% else %}
-                        <div class="body-text text-danger" style="padding: 10px;">
-                            <i class="icon-x-circle"></i> Este pedido ha sido cancelado
+                        <div class="flex items-center gap10 mt-2">
+                            <span class="badge bg-secondary" style="font-size: 12px; padding: 6px 10px;">No Pagado</span>
                         </div>
                         {% endif %}
+                    </div>
+                    <div class="flex items-center gap10 flex-wrap">
+                        <!-- Botón Marcar como Pagado -->
+                        {% if not pedido.pagado and pedido.estado != 'cancelado' %}
+                        <button type="button" 
+                                class="tf-button style-1" 
+                                id="mark-paid-btn"
+                                onclick="markAsPaid({{ pedido.id }})"
+                                style="background-color: #28a745; color: white; font-weight: bold;">
+                            <i class="icon-check"></i> Marcar como Pagado
+                        </button>
+                        {% endif %}
+
+                        <!-- Botones de Cambio de Estado -->
+                        {% if pedido.pagado and pedido.estado != 'cancelado' %}
+                            {% if pedido.estado == 'pendiente' %}
+                            <button type="button" 
+                                    class="tf-button style-1" 
+                                    onclick="updateOrderStatus({{ pedido.id }}, 'procesando')"
+                                    style="background-color: #17a2b8; color: white; font-weight: bold;">
+                                <i class="icon-settings"></i> Marcar En Proceso
+                            </button>
+                            {% endif %}
+
+                            {% if pedido.estado == 'procesando' %}
+                            <button type="button" 
+                                    class="tf-button style-1" 
+                                    onclick="updateOrderStatus({{ pedido.id }}, 'enviado')"
+                                    style="background-color: #007bff; color: white; font-weight: bold;">
+                                <i class="icon-truck"></i> Marcar Enviado
+                            </button>
+                            {% endif %}
+
+                            {% if pedido.estado == 'enviado' %}
+                            <button type="button" 
+                                    class="tf-button style-1" 
+                                    onclick="updateOrderStatus({{ pedido.id }}, 'entregado')"
+                                    style="background-color: #28a745; color: white; font-weight: bold;">
+                                <i class="icon-check-circle"></i> Marcar Entregado
+                            </button>
+                            {% endif %}
+                        {% endif %}
                         
+                        <!-- Botón Cancelar Pedido -->
+                        {% if not pedido.pagado and pedido.estado != 'cancelado' %}
+                        <button type="button" 
+                                class="tf-button style-1" 
+                                id="cancel-order-btn"
+                                onclick="cancelOrder({{ pedido.id }})"
+                                style="background-color: #dc3545; color: white; font-weight: bold;">
+                            <i class="icon-x"></i> Cancelar Pedido
+                        </button>
+                        {% endif %}
+                        
+                        <!-- Botones de Navegación -->
                         <a href="{% url 'core:admin_order_detail' pedido.id %}" class="tf-button style-3">
                             <i class="icon-arrow-left"></i> Volver al detalle
                         </a>
@@ -395,21 +419,121 @@ function cancelOrder(pedidoId) {
     })
     .then(data => {
         if (data.success) {
-            alert('✓ Pedido cancelado exitosamente.\n\n📦 Stock devuelto:\n' + data.stock_returned + '\n\nLa página se recargará automáticamente.');
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
+            alert('Pedido cancelado exitosamente');
+            location.reload();
         } else {
-            throw new Error(data.message || 'Error desconocido');
+            alert('Error: ' + (data.message || 'No se pudo cancelar el pedido'));
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error al cancelar el pedido:\n\n' + error.message);
+        alert('Error: ' + error.message);
+    })
+    .finally(() => {
         btn.disabled = originalDisabled;
         btn.innerHTML = originalText;
         btn.style.opacity = '1';
     });
 }
+
+function updateOrderStatus(pedidoId, nuevoEstado) {
+    const estadosTexto = {
+        'procesando': 'En Proceso',
+        'enviado': 'Enviado',
+        'entregado': 'Entregado'
+    };
+    
+    console.log('Updating order status:', pedidoId, nuevoEstado);
+    
+    if (!confirm(`¿Cambiar estado del pedido a "${estadosTexto[nuevoEstado]}"?`)) {
+        return;
+    }
+    
+    // Obtener el token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    
+    console.log('CSRF Token:', csrftoken ? 'Found' : 'Not found');
+    
+    if (!csrftoken) {
+        alert('Error: No se pudo obtener el token de seguridad.');
+        return;
+    }
+    
+    const url = '{% url "core:admin_order_update_status" 999 %}'.replace('999', pedidoId);
+    console.log('Sending request to:', url);
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            estado: nuevoEstado
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            return response.json().then(data => {
+                console.error('Error response:', data);
+                throw new Error(data.message || 'Error en la respuesta del servidor');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Success response:', data);
+        if (data.success) {
+            alert('Estado actualizado exitosamente a: ' + data.nuevo_estado_display);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'No se pudo actualizar el estado'));
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('Error: ' + error.message);
+    });
+}
+
+// Debug: Check if user is authenticated
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('===== DEBUG INFORMACIÓN =====');
+    console.log('Usuario autenticado:', {% if user.is_authenticated %}'Sí ({{ user.username }})'{% else %}'No'{% endif %});
+    console.log('Usuario es staff:', {% if user.is_staff %}'Sí'{% else %}'No'{% endif %});
+    console.log('CSRF Token presente:', document.querySelector('[name="csrfmiddlewaretoken"]') ? 'Sí' : 'No');
+    
+    // Check if CSRF token is in cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    console.log('CSRF Cookie presente:', getCookie('csrftoken') ? 'Sí' : 'No');
+    console.log('============================');
+});
 </script>
 {% endblock %}

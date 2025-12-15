@@ -258,19 +258,33 @@ def my_account(request):
 @login_required(login_url='/')
 def my_account_orders(request):
     """Historial de órdenes del usuario"""
-    # TODO: Obtener órdenes del usuario desde el modelo de Pedidos
+    # Obtener órdenes del usuario actual
+    ordenes = request.user.pedidos.all().order_by('-created_at')
+    
+    # Paginar si hay muchas órdenes (10 por página)
+    from django.core.paginator import Paginator
+    paginator = Paginator(ordenes, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     return render(request, 'my-account-orders.html', {
-        'user': request.user
+        'user': request.user,
+        'ordenes': page_obj,
     })
 
 
 @login_required(login_url='/')
 def my_account_orders_details(request, order_id):
     """Detalles de una orden específica"""
-    # TODO: Obtener detalles de la orden desde el modelo de Pedidos
+    # Obtener la orden del usuario
+    from django.shortcuts import get_object_or_404
+    from core.models import Pedido
+    
+    orden = get_object_or_404(Pedido, id=order_id, usuario=request.user)
+    
     return render(request, 'my-account-orders-details.html', {
         'user': request.user,
-        'order_id': order_id
+        'orden': orden,
     })
 
 

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.utils.html import format_html
 from .models import Usuario, Ciudad, Provincia
 
 
@@ -19,6 +20,31 @@ def delete_ciudades(modeladmin, request, queryset):
     modeladmin.message_user(request, f'{count} ciudad(es) eliminada(s) correctamente.')
 
 delete_ciudades.short_description = "🗑️ Eliminar ciudades seleccionadas"
+
+
+def activate_usuarios(modeladmin, request, queryset):
+    """Acción personalizada para activar usuarios seleccionados"""
+    count = queryset.update(is_active=True)
+    modeladmin.message_user(request, f'{count} usuario(s) activado(s) correctamente.')
+
+activate_usuarios.short_description = "✓ Activar usuarios seleccionados"
+
+
+def deactivate_usuarios(modeladmin, request, queryset):
+    """Acción personalizada para desactivar usuarios seleccionados"""
+    count = queryset.update(is_active=False)
+    modeladmin.message_user(request, f'{count} usuario(s) desactivado(s) correctamente.')
+
+deactivate_usuarios.short_description = "✗ Desactivar usuarios seleccionados"
+
+
+def delete_usuarios(modeladmin, request, queryset):
+    """Acción personalizada para eliminar usuarios seleccionados"""
+    count = queryset.count()
+    queryset.delete()
+    modeladmin.message_user(request, f'{count} usuario(s) eliminado(s) correctamente.')
+
+delete_usuarios.short_description = "🗑️ Eliminar usuarios seleccionados"
 
 
 @admin.register(Provincia)
@@ -42,21 +68,75 @@ class CiudadAdmin(admin.ModelAdmin):
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
     model = Usuario
-    list_display = ('email', 'nombre', 'apellido', 'telefono', 'provincia', 'ciudad', 'rol', 'is_active', 'fecha_registro')
-    list_filter = ('rol', 'is_active', 'provincia', 'ciudad')
+    list_display = ('email', 'nombre_completo', 'telefono', 'ciudad', 'rol_badge', 'estado_badge', 'fecha_registro')
+    list_filter = ('rol', 'is_active', 'provincia', 'ciudad', 'fecha_registro')
     ordering = ('-fecha_registro',)
     search_fields = ('email', 'nombre', 'apellido', 'telefono')
+    actions = [activate_usuarios, deactivate_usuarios, delete_usuarios]
+    date_hierarchy = 'fecha_registro'
 
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Información personal', {'fields': ('nombre', 'apellido', 'telefono', 'provincia', 'ciudad')}),
-        ('Permisos', {'fields': ('rol', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Fechas', {'fields': ('fecha_registro', 'fecha_edicion')}),
+        (None, {
+            'fields': ('email', 'password'),
+            'description': 'Credenciales de acceso del usuario'
+        }),
+        ('Información personal', {
+            'fields': ('nombre', 'apellido', 'telefono', 'provincia', 'ciudad'),
+            'description': 'Datos personales del usuario'
+        }),
+        ('Permisos y Estado', {
+            'fields': ('rol', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+            'description': 'Control de permisos y estado de la cuenta'
+        }),
+        ('Información del Sistema', {
+            'fields': ('fecha_registro', 'fecha_edicion', 'last_login'),
+            'classes': ('collapse',),
+        }),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'rol', 'is_staff', 'is_superuser'),
+            'fields': ('email', 'password1', 'password2'),
+            'description': 'Ingresa el email y contraseña del nuevo usuario'
+        }),
+        ('Información personal', {
+            'fields': ('nombre', 'apellido', 'telefono', 'provincia', 'ciudad'),
+        }),
+        ('Configuración', {
+            'fields': ('rol', 'is_active', 'is_staff', 'is_superuser'),
         }),
     )
+
+    readonly_fields = ('fecha_registro', 'fecha_edicion', 'last_login')
+
+    def nombre_completo(self, obj):
+        """Muestra el nombre completo del usuario"""
+        return obj.get_full_name()
+    nombre_completo.short_description = 'Nombre Completo'
+
+    def rol_badge(self, obj):
+        """Muestra el rol del usuario con colores"""
+        if obj.rol == 'admin_tienda':
+            return format_html(
+                '<span style="background-color: #3498db; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">{}</span>',
+                obj.get_rol_display()
+            )
+        else:
+            return format_html(
+                '<span style="background-color: #95a5a6; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">{}</span>',
+                obj.get_rol_display()
+            )
+    rol_badge.short_description = 'Rol'
+
+    def estado_badge(self, obj):
+        """Muestra el estado del usuario con colores"""
+        if obj.is_active:
+            return format_html(
+                '<span style="background-color: #27ae60; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">✓ Activo</span>'
+            )
+        else:
+            return format_html(
+                '<span style="background-color: #e74c3c; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">✗ Inactivo</span>'
+            )
+    estado_badge.short_description = 'Estado'

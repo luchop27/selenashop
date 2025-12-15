@@ -52,9 +52,22 @@
                                         <p class="text-secondary mb-0">{{ pedido.get_metodo_pago_display }}</p>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <h6 class="fw-5 mb-2">Estado</h6>
-                                        <span class="badge bg-warning text-dark">{{ pedido.get_estado_display }}</span>
+                                        <h6 class="fw-5 mb-2">Estado del Pedido</h6>
+                                        <span id="order-status-badge" class="badge bg-warning text-dark">
+                                            {{ pedido.get_estado_display }}
+                                        </span>
                                     </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6 class="fw-5 mb-2">Estado de Pago</h6>
+                                        <span id="payment-status-badge" class="badge {% if pedido.pagado %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                            {% if pedido.pagado %}
+                                                ✅ Pagado
+                                            {% else %}
+                                                ⏳ Pendiente
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    
                                 </div>
                             </div>
 
@@ -149,4 +162,123 @@
         </section>
         <!-- /page-confirmation -->
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📱 Script de actualización de pedido iniciado');
+    
+    const pedidoId = "{{ pedido.id }}";
+    const statusBadge = document.getElementById('order-status-badge');
+    const paymentBadge = document.getElementById('payment-status-badge');
+    let checkInterval;
+    
+    console.log('Buscando elementos:', { statusBadge, paymentBadge });
+    
+    function actualizarEstadoPedido() {
+        console.log('🔄 Verificando estado del pedido...');
+        
+        fetch(`/api/order/${pedidoId}/status/`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ Respuesta recibida:', data);
+                
+                if (data.success) {
+                    // Actualizar estado del pedido
+                    if (statusBadge) {
+                        const estadoActual = statusBadge.textContent.trim();
+                        console.log('Estado actual:', estadoActual, 'Nuevo estado:', data.estado_display);
+                        
+                        if (estadoActual !== data.estado_display) {
+                            console.log('✅ ACTUALIZANDO Estado del pedido:', data.estado_display);
+                            statusBadge.textContent = data.estado_display;
+                            
+                            // Cambiar color según estado
+                            statusBadge.className = 'badge';
+                            switch(data.estado) {
+                                case 'pendiente':
+                                    statusBadge.classList.add('bg-warning', 'text-dark');
+                                    break;
+                                case 'procesando':
+                                    statusBadge.classList.add('bg-info', 'text-white');
+                                    break;
+                                case 'enviado':
+                                    statusBadge.classList.add('bg-primary', 'text-white');
+                                    break;
+                                case 'entregado':
+                                    statusBadge.classList.add('bg-success', 'text-white');
+                                    break;
+                                case 'cancelado':
+                                    statusBadge.classList.add('bg-danger', 'text-white');
+                                    break;
+                                default:
+                                    statusBadge.classList.add('bg-secondary', 'text-white');
+                            }
+                        }
+                    }
+                    
+                    // Actualizar estado del pago
+                    if (paymentBadge) {
+                        const pagadoActual = paymentBadge.textContent.includes('✅');
+                        console.log('Pagado actual:', pagadoActual, 'Nuevo pagado:', data.pagado);
+                        
+                        if (data.pagado && !pagadoActual) {
+                            console.log('💰 PAGO CONFIRMADO!');
+                            paymentBadge.className = 'badge bg-success';
+                            paymentBadge.innerHTML = '✅ Pagado';
+                            mostrarNotificacion('¡Tu pago ha sido confirmado!', 'success');
+                        } else if (!data.pagado && pagadoActual) {
+                            console.log('❌ Estado de pago cambió a pendiente');
+                            paymentBadge.className = 'badge bg-warning text-dark';
+                            paymentBadge.innerHTML = '⏳ Pendiente';
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('❌ Error al actualizar estado:', error));
+    }
+    
+    function mostrarNotificacion(mensaje, tipo) {
+        console.log('🔔 Mostrando notificación:', mensaje);
+        
+        // Crear elemento de notificación
+        const notificacion = document.createElement('div');
+        notificacion.className = `alert alert-${tipo} alert-dismissible fade show`;
+        notificacion.innerHTML = `
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insertar al inicio del contenedor
+        const container = document.querySelector('.tf-page-cart-checkout');
+        if (container) {
+            container.insertBefore(notificacion, container.firstChild);
+            
+            // Auto cerrar después de 5 segundos
+            setTimeout(() => {
+                notificacion.remove();
+            }, 5000);
+        }
+    }
+    
+    // Verificar estado inicial inmediatamente
+    console.log('🚀 Primera verificación...');
+    actualizarEstadoPedido();
+    
+    // Verificar cada 5 segundos
+    console.log('⏱️ Iniciando verificación cada 5 segundos...');
+    checkInterval = setInterval(function() {
+        console.log('⏰ Verificación periódica...');
+        actualizarEstadoPedido();
+    }, 5000);
+    
+    // Detener verificación después de 5 minutos
+    setTimeout(() => {
+        clearInterval(checkInterval);
+        console.log('✅ Verificación automática detenida (timeout de 5 minutos)');
+    }, 300000);
+    
+    console.log('✅ Script completamente inicializado');
+});
+</script>
+
 {% endblock %}
+
