@@ -39,22 +39,28 @@
 
   var menuleft = function () {
     if ($('div').hasClass('section-menu-left')) {
-      var bt =$(".section-menu-left").find(".has-children");
-      bt.on("click", function () {
+      var bt = $(".section-menu-left").find(".has-children");
+      
+      // Click en el botón del menú principal (expander/contraer submenu)
+      bt.find("> a.menu-item-button").on("click", function (e) {
+        e.preventDefault();
+        
+        var parent = $(this).closest('.has-children');
         var args = { duration: 200 };
-        if ($(this).hasClass("active")) {
-          $(this).children(".sub-menu").slideUp(args);
-          $(this).removeClass("active");
+        
+        if (parent.hasClass("active")) {
+          parent.children(".sub-menu").slideUp(args);
+          parent.removeClass("active");
         } else {
           $(".sub-menu").slideUp(args);
-          $(this).children(".sub-menu").slideDown(args);
+          parent.children(".sub-menu").slideDown(args);
           $(".menu-item.has-children").removeClass("active");
-          $(this).addClass("active");
+          parent.addClass("active");
         }
       });
-      $('.sub-menu-item').on('click', function(event){
-        event.stopPropagation();
-      });
+      
+      // Los links del submenú deben funcionar normalmente sin prevención
+      // No necesitan manejo especial
     }
   };
 

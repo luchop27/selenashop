@@ -1,0 +1,259 @@
+{% extends 'baseadmin.html' %}
+{% load static %}
+
+{% block title %}Editar Usuario - {{ usuario.get_full_name }} - Panel Admin{% endblock %}
+
+{% block menu_users %}active{% endblock %}
+
+{% block content %}
+<!-- main-content -->
+<div class="main-content">
+    <!-- main-content-wrap -->
+    <div class="main-content-inner">
+        <!-- main-content-wrap -->
+        <div class="main-content-wrap">
+            <div class="flex items-center flex-wrap justify-between gap20 mb-30">
+                <h3>Editar Usuario</h3>
+                <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                    <li>
+                        <a href="{% url 'core:admin_index' %}">
+                            <div class="text-tiny">Dashboard</div>
+                        </a>
+                    </li>
+                    <li>
+                        <i class="icon-chevron-right"></i>
+                    </li>
+                    <li>
+                        <a href="{% url 'core:admin_user_list' %}">
+                            <div class="text-tiny">Usuarios</div>
+                        </a>
+                    </li>
+                    <li>
+                        <i class="icon-chevron-right"></i>
+                    </li>
+                    <li>
+                        <a href="{% url 'core:admin_user_detail' usuario.id %}">
+                            <div class="text-tiny">{{ usuario.get_full_name }}</div>
+                        </a>
+                    </li>
+                    <li>
+                        <i class="icon-chevron-right"></i>
+                    </li>
+                    <li>
+                        <div class="text-tiny">Editar</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Mensajes de estado -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Formulario de edición -->
+            <div class="wg-box">
+                <div class="flex items-center justify-between gap10 flex-wrap mb-20">
+                    <h4>Información del Usuario</h4>
+                    <a href="{% url 'core:admin_user_detail' usuario.id %}" class="tf-button">
+                        <i class="icon-arrow-left"></i> Volver
+                    </a>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="form-edit-user">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Columna izquierda -->
+                        <div class="col-md-6">
+                            <!-- Email (solo lectura) -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Email</label>
+                                <input type="email" class="form-control" value="{{ usuario.email }}" readonly>
+                                <small class="text-muted">El email no puede ser modificado</small>
+                            </div>
+                            
+                            <!-- Nombre -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Nombre</label>
+                                <input type="text" name="nombre" class="form-control" value="{{ usuario.nombre }}" placeholder="Nombre del usuario">
+                            </div>
+                            
+                            <!-- Apellido -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Apellido</label>
+                                <input type="text" name="apellido" class="form-control" value="{{ usuario.apellido }}" placeholder="Apellido del usuario">
+                            </div>
+                            
+                            <!-- Teléfono -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Teléfono</label>
+                                <input type="tel" name="telefono" class="form-control" value="{{ usuario.telefono }}" placeholder="Número de teléfono">
+                            </div>
+                            
+                            <!-- Provincia -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Provincia</label>
+                                <select name="provincia" class="form-control">
+                                    <option value="">-- Seleccionar Provincia --</option>
+                                    {% for provincia in provincias %}
+                                        <option value="{{ provincia.id }}" {% if usuario.provincia.id == provincia.id %}selected{% endif %}>
+                                            {{ provincia.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Ciudad -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Ciudad</label>
+                                <select name="ciudad" class="form-control">
+                                    <option value="">-- Seleccionar Ciudad --</option>
+                                    {% for ciudad in ciudades %}
+                                        <option value="{{ ciudad.id }}" {% if usuario.ciudad.id == ciudad.id %}selected{% endif %}>
+                                            {{ ciudad.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Columna derecha -->
+                        <div class="col-md-6">
+                            <!-- Rol -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Rol</label>
+                                <select name="rol" class="form-control">
+                                    {% for rol_value, rol_display in roles %}
+                                        <option value="{{ rol_value }}" {% if usuario.rol == rol_value %}selected{% endif %}>
+                                            {{ rol_display }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Estado activo -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">
+                                    <input type="checkbox" name="is_active" {% if usuario.is_active %}checked{% endif %}>
+                                    Usuario Activo
+                                </label>
+                                <small class="text-muted d-block">Los usuarios inactivos no pueden acceder a su cuenta</small>
+                            </div>
+                            
+                            <!-- Personal de tienda -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">
+                                    <input type="checkbox" name="is_staff" {% if usuario.is_staff %}checked{% endif %}>
+                                    Personal de Tienda
+                                </label>
+                                <small class="text-muted d-block">Permite acceso al panel de administración</small>
+                            </div>
+                            
+                            <!-- Nueva contraseña -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Nueva Contraseña</label>
+                                <input type="password" name="nueva_password" class="form-control" placeholder="Dejar en blanco para no cambiar">
+                                <small class="text-muted d-block">Solo completa si deseas cambiar la contraseña</small>
+                            </div>
+                            
+                            <!-- Información de registro -->
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Fecha de Registro</label>
+                                <div class="body-text">{{ usuario.fecha_registro|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            
+                            <div class="form-group mb-20">
+                                <label class="body-title mb-10">Última Edición</label>
+                                <div class="body-text">{{ usuario.fecha_edicion|date:"d/m/Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="gap10 flex flex-wrap items-center mt-30">
+                        <button type="submit" class="tf-button w-full">
+                            <i class="icon-save"></i> Guardar Cambios
+                        </button>
+                        <a href="{% url 'core:admin_user_detail' usuario.id %}" class="tf-button style-2 w-full">
+                            <i class="icon-x"></i> Cancelar
+                        </a>
+                        
+                        {% if usuario.id != request.user.id %}
+                            <a href="#" class="tf-button style-3 w-full" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
+                                <i class="icon-trash"></i> Eliminar Usuario
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Modal para confirmar eliminación -->
+            {% if usuario.id != request.user.id %}
+            <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteUserLabel">Confirmar Eliminación</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Estás seguro de que deseas eliminar al usuario <strong>{{ usuario.get_full_name }}</strong> ({{ usuario.email }})?</p>
+                            <p class="text-danger"><i class="icon-alert-circle"></i> Esta acción no se puede deshacer.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <form method="POST" action="{% url 'core:admin_user_delete' usuario.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Eliminar Usuario</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <!-- /main-content-wrap -->
+    </div>
+    <!-- /main-content-inner -->
+</div>
+<!-- /main-content -->
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Validar formulario
+        const form = document.querySelector('.form-edit-user');
+        
+        form.addEventListener('submit', function(e) {
+            const nombre = document.querySelector('input[name="nombre"]').value.trim();
+            const apellido = document.querySelector('input[name="apellido"]').value.trim();
+            
+            if (!nombre || !apellido) {
+                e.preventDefault();
+                alert('Por favor completa el nombre y apellido del usuario');
+                return false;
+            }
+        });
+        
+        // Mostrar alerta si se cambia la contraseña
+        const passwordInput = document.querySelector('input[name="nueva_password"]');
+        const submitBtn = document.querySelector('button[type="submit"]');
+        
+        if (passwordInput) {
+            passwordInput.addEventListener('change', function() {
+                if (this.value) {
+                    submitBtn.innerHTML = '<i class="icon-save"></i> Guardar Cambios (Contraseña actualizada)';
+                } else {
+                    submitBtn.innerHTML = '<i class="icon-save"></i> Guardar Cambios';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

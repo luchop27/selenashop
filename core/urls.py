@@ -24,6 +24,7 @@ urlpatterns = [
     # User Management URLs
     path('admin-panel/users/', views.admin_user_list, name='admin_user_list'),
     path('admin-panel/users/<int:user_id>/', views.admin_user_detail, name='admin_user_detail'),
+    path('admin-panel/users/<int:user_id>/edit/', views.admin_user_edit, name='admin_user_edit'),
     path('admin-panel/users/<int:user_id>/delete/', views.admin_user_delete, name='admin_user_delete'),
     
     # Cart URLs

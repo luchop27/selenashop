@@ -31,6 +31,22 @@
     <link rel="shortcut icon" href="{% static 'panel_admin/images/favicon.png' %}">
     <link rel="apple-touch-icon-precomposed" href="{% static 'panel_admin/images/favicon.png' %}">
 
+    <style>
+        /* Ajustar tamaño del logo en el panel admin */
+        .layout-wrap .section-menu-left > .box-logo {
+            padding: 10px 24px 8px 27px;
+            min-height: 90px;
+        }
+        
+        /* Responsive para móvil */
+        @media (max-width: 768px) {
+            .layout-wrap .section-menu-left > .box-logo {
+                padding: 8px 20px 6px 20px;
+                min-height: 80px;
+            }
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 
 </head>
@@ -54,12 +70,11 @@
                 <!-- section-menu-left -->
                 <div class="section-menu-left">
                     <div class="box-logo">
-                        <a href="{% url 'core:admin_index' %}" id="site-logo-inner">
-
-
+                        <a href="{% url 'core:admin_index' %}" id="site-logo-inner" style="display: flex; align-items: center; justify-content: center; width: 100%;">
                             <img class="" id="logo_header" alt="Selena Store" src="{% static 'panel_admin/images/logo/logo.svg' %}"
                                 data-light="{% static 'panel_admin/images/logo/logo.svg' %}" 
-                                data-dark="{% static 'panel_admin/images/logo/logo-white.svg' %}">
+                                data-dark="{% static 'panel_admin/images/logo/logo-white.svg' %}"
+                                style="max-height: 70px; width: auto; object-fit: contain; padding: 0; margin: 0;">
                         </a>
                         <div class="button-show-hide">
                             <i class="icon-chevron-left"></i>
@@ -677,8 +692,8 @@
                                                     <img src="{% static 'panel_admin/images/avatar/user-1.png' %}" alt="">
                                                 </span>
                                                 <span class="flex flex-column">
-                                                    <span class="body-text text-main-dark">Kristin Watson</span>
-                                                    <span class="text-tiny">Sale Administrator</span>
+                                                    <span class="body-text text-main-dark">{{ user.nombre }} {{ user.apellido }}</span>
+                                                    <span class="text-tiny">{{ user.get_rol_display }}</span>
                                                 </span>
                                             </span>
                                         </button>

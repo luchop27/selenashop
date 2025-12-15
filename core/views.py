@@ -2258,6 +2258,70 @@ def admin_user_detail(request, user_id):
 
 
 @login_required
+def admin_user_edit(request, user_id):
+    """Vista para editar un usuario del sistema"""
+    from apps.usuarios.models import Usuario, Ciudad, Provincia
+    from django.shortcuts import get_object_or_404
+    
+    # Verificar permisos de administrador
+    if not request.user.is_staff:
+        messages.error(request, 'No tienes permisos para acceder a esta sección.')
+        return redirect('core:inicio')
+    
+    usuario = get_object_or_404(Usuario, id=user_id)
+    
+    if request.method == 'POST':
+        # Actualizar información personal
+        usuario.nombre = request.POST.get('nombre', usuario.nombre)
+        usuario.apellido = request.POST.get('apellido', usuario.apellido)
+        usuario.telefono = request.POST.get('telefono', usuario.telefono)
+        usuario.rol = request.POST.get('rol', usuario.rol)
+        usuario.is_active = request.POST.get('is_active') == 'on'
+        usuario.is_staff = request.POST.get('is_staff') == 'on'
+        
+        # Actualizar provincia y ciudad
+        provincia_id = request.POST.get('provincia')
+        ciudad_id = request.POST.get('ciudad')
+        
+        if provincia_id:
+            try:
+                usuario.provincia = Provincia.objects.get(id=provincia_id)
+            except Provincia.DoesNotExist:
+                pass
+        
+        if ciudad_id:
+            try:
+                usuario.ciudad = Ciudad.objects.get(id=ciudad_id)
+            except Ciudad.DoesNotExist:
+                pass
+        
+        # Actualizar contraseña si se proporciona
+        nueva_password = request.POST.get('nueva_password')
+        if nueva_password:
+            usuario.set_password(nueva_password)
+        
+        try:
+            usuario.save()
+            messages.success(request, f'Usuario {usuario.email} actualizado exitosamente.')
+            return redirect('core:admin_user_detail', user_id=usuario.id)
+        except Exception as e:
+            messages.error(request, f'Error al actualizar el usuario: {str(e)}')
+    
+    # Obtener todas las provincias y ciudades para los selectores
+    provincias = Provincia.objects.filter(activa=True).order_by('nombre')
+    ciudades = Ciudad.objects.filter(activa=True).order_by('nombre')
+    
+    context = {
+        'usuario': usuario,
+        'provincias': provincias,
+        'ciudades': ciudades,
+        'roles': Usuario.ROLES,
+    }
+    
+    return render(request, 'edit-user.html', context)
+
+
+@login_required
 @require_POST
 def admin_user_delete(request, user_id):
     """Elimina un usuario del sistema"""
