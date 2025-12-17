@@ -166,6 +166,7 @@ class Cart:
             
             self.cart[product_id] = {
                 'producto_id': producto.id,
+                'producto_slug': producto.slug,
                 'variante_id': variante_id,
                 'nombre': producto.nombre,
                 'precio': str(precio),

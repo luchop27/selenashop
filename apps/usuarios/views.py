@@ -274,13 +274,13 @@ def my_account_orders(request):
 
 
 @login_required(login_url='/')
-def my_account_orders_details(request, order_id):
+def my_account_orders_details(request, numero_pedido):
     """Detalles de una orden específica"""
     # Obtener la orden del usuario
     from django.shortcuts import get_object_or_404
     from core.models import Pedido
     
-    orden = get_object_or_404(Pedido, id=order_id, usuario=request.user)
+    orden = get_object_or_404(Pedido, numero_pedido=numero_pedido, usuario=request.user)
     
     return render(request, 'my-account-orders-details.html', {
         'user': request.user,

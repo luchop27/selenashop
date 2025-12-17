@@ -799,7 +799,7 @@
                                 <div class="swiper-slide" lazy="true">
                                     <div class="card-product">
                                         <div class="card-product-wrapper">
-                                            <a href="{% url 'core:product_detail' producto.id %}" class="product-img">
+                                            <a href="{% url 'core:product_detail' producto.slug %}" class="product-img">
                                                 {% if producto.main_image_src %}
                                                     <img class="lazyload img-product"
                                                         data-src="{{ producto.main_image_src }}"
@@ -848,7 +848,7 @@
                                             {% endif %}
                                         </div>
                                         <div class="card-product-info">
-                                            <a href="{% url 'core:product_detail' producto.id %}" class="title link">{{ producto.nombre }}</a>
+                                            <a href="{% url 'core:product_detail' producto.slug %}" class="title link">{{ producto.nombre }}</a>
                                             <span class="price">${{ producto.display_price }}</span>
                                             {% if producto.colors %}
                                                 <ul class="list-color-product">

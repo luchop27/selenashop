@@ -8,8 +8,8 @@ app_name = 'core'
 urlpatterns = [
     path('', views.inicio, name='inicio'),
     path('collections/', views.shop_collection_sub, name='shop-collection-sub'),
-    path('product/<int:producto_id>/', views.product_detail, name='product_detail'),
-    path('product/', views.product_detail, name='product_detail_demo'),  # Sin ID para ver demo
+    path('producto/<slug:slug>/', views.product_detail, name='product_detail'),
+    path('producto/', views.product_detail, name='product_detail_demo'),  # Sin slug para ver demo
     path('dashboard/', views.dashboard_redirect, name='dashboard'),
     path('admin-panel/', views.admin_index, name='admin_index'),
     path('admin-panel/orders/', views.admin_order_list, name='admin_order_list'),
@@ -44,8 +44,8 @@ urlpatterns = [
     path('checkout/process/', views.checkout_process, name='checkout_process'),
     path('checkout/validate-discount/', views.validate_discount_code, name='validate_discount_code'),
     path('checkout/calculate-shipping/', views.calculate_shipping, name='calculate_shipping'),
-    path('order/confirmation/<int:pedido_id>/', views.order_confirmation, name='order_confirmation'),
-    path('api/order/<int:pedido_id>/status/', views.get_order_status, name='get_order_status'),  # AJAX: obtener estado del pedido
+    path('pedido/confirmacion/<str:numero_pedido>/', views.order_confirmation, name='order_confirmation'),
+    path('api/pedido/<str:numero_pedido>/estado/', views.get_order_status, name='get_order_status'),  # AJAX: obtener estado del pedido
     
     # Endpoint AJAX para cargar más productos nuevos
     path('api/productos-nuevos/', views.api_productos_nuevos, name='api_productos_nuevos'),

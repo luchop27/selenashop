@@ -166,7 +166,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📱 Script de actualización de pedido iniciado');
     
-    const pedidoId = "{{ pedido.id }}";
+    const numeroPedido = "{{ pedido.numero_pedido }}";
     const statusBadge = document.getElementById('order-status-badge');
     const paymentBadge = document.getElementById('payment-status-badge');
     let checkInterval;
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function actualizarEstadoPedido() {
         console.log('🔄 Verificando estado del pedido...');
         
-        fetch(`/api/order/${pedidoId}/status/`)
+        fetch(`/api/pedido/${numeroPedido}/estado/`)
             .then(response => response.json())
             .then(data => {
                 console.log('✅ Respuesta recibida:', data);

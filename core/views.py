@@ -779,12 +779,12 @@ def admin_index(request):
     return render(request, 'pindex.html', context)
 
 
-def product_detail(request, producto_id=None):
+def product_detail(request, slug=None):
     """Vista para mostrar los detalles de un producto"""
     from django.shortcuts import get_object_or_404
     from apps.productos.models import Producto
     
-    if producto_id:
+    if slug:
         # Obtener el producto con todas sus relaciones
         producto = get_object_or_404(
             Producto.objects
@@ -795,7 +795,7 @@ def product_detail(request, producto_id=None):
                 'variantes__talla',
                 'variantes__atributos__valor_atributo__atributo',
             ),
-            id=producto_id,
+            slug=slug,
             activo=True
         )
         
@@ -1753,7 +1753,7 @@ def checkout_process(request):
             )
         
         # Redirigir a página de confirmación
-        return redirect('core:order_confirmation', pedido_id=pedido.id)
+        return redirect('core:order_confirmation', numero_pedido=pedido.numero_pedido)
         
     except Exception as e:
         import traceback
@@ -1763,14 +1763,14 @@ def checkout_process(request):
         return redirect('core:checkout')
 
 
-def order_confirmation(request, pedido_id):
+def order_confirmation(request, numero_pedido):
     """
     Vista para mostrar la confirmación del pedido
     """
     from django.shortcuts import get_object_or_404
     from .models import Pedido
     
-    pedido = get_object_or_404(Pedido, id=pedido_id)
+    pedido = get_object_or_404(Pedido, numero_pedido=numero_pedido)
     
     # Verificar que el pedido pertenece al usuario (si está autenticado)
     if request.user.is_authenticated and pedido.usuario and pedido.usuario != request.user:
@@ -1784,7 +1784,7 @@ def order_confirmation(request, pedido_id):
     return render(request, 'order-confirmation.html', context)
 
 
-def get_order_status(request, pedido_id):
+def get_order_status(request, numero_pedido):
     """
     Endpoint AJAX para obtener el estado actual de un pedido sin recargar la página
     
@@ -1799,7 +1799,7 @@ def get_order_status(request, pedido_id):
     from .models import Pedido
     
     try:
-        pedido = get_object_or_404(Pedido, id=pedido_id)
+        pedido = get_object_or_404(Pedido, numero_pedido=numero_pedido)
         
         # Verificar permisos
         if request.user.is_authenticated and pedido.usuario and pedido.usuario != request.user:

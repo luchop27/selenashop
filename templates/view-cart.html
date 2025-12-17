@@ -36,7 +36,7 @@
                                     {% for item in cart_items %}
                                     <tr class="tf-cart-item" data-product-id="{{ item.product_id }}" data-stock="{{ item.stock }}">
                                         <td class="tf-cart-item_product">
-                                            <a href="{% url 'core:product_detail' item.producto_id %}" class="img-box">
+                                            <a href="{% url 'core:product_detail' item.producto_slug %}" class="img-box">
                                                 {% if item.imagen %}
                                                 <img src="{{ item.imagen }}" alt="{{ item.nombre }}">
                                                 {% else %}
@@ -44,7 +44,7 @@
                                                 {% endif %}
                                             </a>
                                             <div class="cart-info">
-                                                <a href="{% url 'core:product_detail' item.producto_id %}" class="cart-title link">{{ item.nombre }}</a>
+                                                <a href="{% url 'core:product_detail' item.producto_slug %}" class="cart-title link">{{ item.nombre }}</a>
                                                 <div class="cart-meta-variant">
                                                     {% if item.talla %}Talla: {{ item.talla }}{% endif %}
                                                     {% if item.stock %}<span class="text-muted ms-2">(Stock: {{ item.stock }})</span>{% endif %}
@@ -410,7 +410,7 @@
                             <div class="swiper-slide" lazy="true">
                                 <div class="card-product">
                                     <div class="card-product-wrapper">
-                                        <a href="{% url 'core:product_detail' producto.id %}" class="product-img">
+                                        <a href="{% url 'core:product_detail' producto.slug %}" class="product-img">
                                             {% if producto.imagenes.all %}
                                                 <img class="lazyload img-product" data-src="{{ producto.imagenes.first.imagen.url }}"
                                                     src="{{ producto.imagenes.first.imagen.url }}" alt="{{ producto.nombre }}">
@@ -455,7 +455,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="card-product-info">
-                                        <a href="{% url 'core:product_detail' producto.id %}" class="title link">{{ producto.nombre }}</a>
+                                        <a href="{% url 'core:product_detail' producto.slug %}" class="title link">{{ producto.nombre }}</a>
                                         <span class="price">${{ producto.precio }}</span>
                                     </div>
                                 </div>
