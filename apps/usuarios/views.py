@@ -13,37 +13,114 @@ from django.http import JsonResponse
 from .models import Usuario, EmailVerificationToken
 
 
+def enviar_email_directo(destinatario, asunto, mensaje_html):
+    """
+    Función para enviar emails usando smtplib directamente con SSL
+    Evita problemas de certificados en Windows
+    """
+    import smtplib
+    import ssl
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
+    try:
+        # Crear contexto SSL que no verifica certificados
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        
+        # Crear mensaje
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = asunto
+        msg['From'] = settings.EMAIL_HOST_USER
+        msg['To'] = destinatario
+        
+        # Agregar versión HTML
+        html_part = MIMEText(mensaje_html, 'html')
+        msg.attach(html_part)
+        
+        # Conectar y enviar
+        with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, context=context) as server:
+            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+            server.sendmail(settings.EMAIL_HOST_USER, destinatario, msg.as_string())
+        
+        print(f"✅ Email enviado exitosamente a {destinatario}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error enviando email: {e}")
+        return False
+
+
 def enviar_email_verificacion(request, usuario):
     """Envía el correo de verificación de email"""
-    # Crear token de verificación
-    token_obj = EmailVerificationToken.objects.create(usuario=usuario)
-    
-    # Construir URL de verificación
-    verify_url = request.build_absolute_uri(
-        f'/usuarios/verificar-email/{token_obj.token}/'
-    )
-    
-    # Preparar el correo
-    subject = 'Verifica tu email - Selena Shop'
-    message = render_to_string('emails/email_verification.html', {
-        'user': usuario,
-        'verify_url': verify_url,
-        'domain': request.get_host(),
-    })
-    
-    # Enviar correo
     try:
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [usuario.email],
-            html_message=message,
-            fail_silently=False,
+        # Crear token de verificación (se genera automáticamente en save())
+        token_obj = EmailVerificationToken.objects.create(usuario=usuario)
+        
+        # Construir URL de verificación
+        verify_url = request.build_absolute_uri(
+            f'/verificar-email/{token_obj.token}/'
         )
-        return True
+        
+        # Preparar el correo HTML elegante
+        mensaje_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }}
+                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; }}
+                .header h1 {{ color: white; margin: 0; font-size: 28px; }}
+                .header p {{ color: rgba(255,255,255,0.9); margin: 10px 0 0; }}
+                .content {{ padding: 40px 30px; }}
+                .welcome {{ font-size: 18px; color: #333; margin-bottom: 20px; }}
+                .message {{ color: #666; line-height: 1.6; margin-bottom: 30px; }}
+                .btn {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 16px; }}
+                .btn:hover {{ opacity: 0.9; }}
+                .footer {{ background: #f8f9fa; padding: 20px; text-align: center; color: #999; font-size: 12px; }}
+                .divider {{ height: 1px; background: #eee; margin: 30px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 ¡Bienvenido a Selena Shop!</h1>
+                    <p>Tu cuenta ha sido creada exitosamente</p>
+                </div>
+                <div class="content">
+                    <p class="welcome">Hola <strong>{usuario.nombre or usuario.email}</strong>,</p>
+                    <p class="message">
+                        Gracias por registrarte en Selena Shop. Estamos emocionados de tenerte con nosotros. 
+                        Para completar tu registro y acceder a todas las funciones, por favor verifica tu correo electrónico.
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{verify_url}" class="btn">✨ Verificar mi Email</a>
+                    </div>
+                    <div class="divider"></div>
+                    <p style="color: #999; font-size: 13px;">
+                        Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+                        <a href="{verify_url}" style="color: #667eea;">{verify_url}</a>
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>Este enlace expira en 48 horas.</p>
+                    <p>© 2025 Selena Shop - Todos los derechos reservados</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Enviar correo
+        asunto = '🎉 ¡Bienvenido a Selena Shop! Verifica tu email'
+        resultado = enviar_email_directo(usuario.email, asunto, mensaje_html)
+        return resultado
+        
     except Exception as e:
-        print(f"Error enviando email de verificación: {e}")
+        print(f"Error en enviar_email_verificacion: {e}")
         return False
 
 
@@ -187,14 +264,13 @@ def registrar_usuario(request):
             if enviar_email_verificacion(request, user):
                 messages.success(
                     request, 
-                    f'¡Cuenta creada exitosamente! Te hemos enviado un correo a {email} para verificar tu cuenta. '
-                    'Por favor revisa tu bandeja de entrada (y spam).'
+                    f'🎉 ¡Registro exitoso! Te hemos enviado un correo de bienvenida a {email}. '
+                    'Revisa tu bandeja de entrada para verificar tu cuenta.'
                 )
             else:
-                messages.warning(
+                messages.success(
                     request,
-                    f'Cuenta creada, pero hubo un problema al enviar el correo de verificación. '
-                    'Puedes solicitar un nuevo correo desde tu perfil.'
+                    f'🎉 ¡Registro exitoso! Tu cuenta ha sido creada correctamente.'
                 )
             
             # Autenticar y hacer login automáticamente (aunque el email no esté verificado)

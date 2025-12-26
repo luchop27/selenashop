@@ -119,7 +119,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 class EmailVerificationToken(models.Model):
     """Token para verificación de email"""
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='email_tokens')
-    token = models.CharField(max_length=100, unique=True)
+    token = models.CharField(max_length=100, unique=True, blank=True)
     creado = models.DateTimeField(auto_now_add=True)
     usado = models.BooleanField(default=False)
     
@@ -129,6 +129,16 @@ class EmailVerificationToken(models.Model):
     
     def __str__(self):
         return f"Token para {self.usuario.email}"
+    
+    def save(self, *args, **kwargs):
+        if not self.token:
+            # Generar token único
+            import uuid
+            self.token = str(uuid.uuid4())
+            # Asegurarse de que sea único
+            while EmailVerificationToken.objects.filter(token=self.token).exists():
+                self.token = str(uuid.uuid4())
+        super().save(*args, **kwargs)
     
     def es_valido(self):
         from datetime import timedelta
