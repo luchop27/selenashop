@@ -11,44 +11,116 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
 from .models import Usuario, EmailVerificationToken
+import base64
+import os
 
 
-def enviar_email_directo(destinatario, asunto, mensaje_html):
+def obtener_logo_base64():
+    """Convierte el logo a base64 para usar en emails"""
+    try:
+        logo_path = os.path.join(settings.STATIC_ROOT or settings.BASE_DIR, 'static', 'images', 'logo', 'logoselena.png')
+        if not os.path.exists(logo_path):
+            # Intentar ruta alternativa
+            logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo', 'logoselena.png')
+        
+        with open(logo_path, 'rb') as image_file:
+            encoded = base64.b64encode(image_file.read()).decode()
+            return f"data:image/png;base64,{encoded}"
+    except Exception as e:
+        print(f"Error cargando logo: {e}")
+        return ""
+
+
+def enviar_email_directo(destinatario, asunto, mensaje_html, incluir_logo=True):
     """
     Función para enviar emails usando smtplib directamente con SSL
     Evita problemas de certificados en Windows
+    Adjunta el logo como imagen embebida usando Content-ID
     """
     import smtplib
     import ssl
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
+    from email.mime.image import MIMEImage
     
     try:
+        print(f"🔧 Iniciando envío de email a {destinatario}")
+        print(f"📧 Host: {settings.EMAIL_HOST}:{settings.EMAIL_PORT}")
+        print(f"👤 Usuario: {settings.EMAIL_HOST_USER}")
+        
         # Crear contexto SSL que no verifica certificados
         context = ssl.create_default_context()
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         
-        # Crear mensaje
-        msg = MIMEMultipart('alternative')
+        print("✅ Contexto SSL creado (sin verificación de certificados)")
+        
+        # Crear mensaje con partes relacionadas (para imágenes embebidas)
+        msg = MIMEMultipart('related')
         msg['Subject'] = asunto
         msg['From'] = settings.EMAIL_HOST_USER
         msg['To'] = destinatario
         
+        # Crear parte alternativa para HTML
+        msg_alternative = MIMEMultipart('alternative')
+        msg.attach(msg_alternative)
+        
         # Agregar versión HTML
-        html_part = MIMEText(mensaje_html, 'html')
-        msg.attach(html_part)
+        html_part = MIMEText(mensaje_html, 'html', 'utf-8')
+        msg_alternative.attach(html_part)
+        
+        # Adjuntar logo como imagen embebida
+        if incluir_logo:
+            try:
+                logo_path = os.path.join(settings.STATIC_ROOT or settings.BASE_DIR, 'static', 'images', 'logo', 'logoselena.png')
+                if not os.path.exists(logo_path):
+                    logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo', 'logoselena.png')
+                
+                with open(logo_path, 'rb') as img_file:
+                    img_data = img_file.read()
+                    img = MIMEImage(img_data, 'png')
+                    img.add_header('Content-ID', '<logoselena>')
+                    img.add_header('Content-Disposition', 'inline', filename='logoselena.png')
+                    msg.attach(img)
+                    print("✅ Logo adjuntado como imagen embebida")
+            except Exception as e:
+                print(f"⚠️ No se pudo adjuntar el logo: {e}")
+        
+        print("✅ Mensaje creado")
         
         # Conectar y enviar
+        print(f"🔌 Conectando a {settings.EMAIL_HOST}:{settings.EMAIL_PORT}...")
         with smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, context=context) as server:
+            print("✅ Conexión establecida")
+            
+            print("🔐 Autenticando...")
             server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+            print("✅ Autenticación exitosa")
+            
+            print("📤 Enviando mensaje...")
             server.sendmail(settings.EMAIL_HOST_USER, destinatario, msg.as_string())
+            print("✅ Mensaje enviado")
         
-        print(f"✅ Email enviado exitosamente a {destinatario}")
+        print(f"✅✅✅ Email enviado exitosamente a {destinatario}")
         return True
         
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"❌ Error de autenticación: {e}")
+        print("⚠️ Verifica que:")
+        print("   1. La verificación en 2 pasos esté activada en Gmail")
+        print("   2. Hayas generado una 'Contraseña de aplicación' en https://myaccount.google.com/apppasswords")
+        print("   3. La contraseña sea exactamente 16 caracteres SIN ESPACIOS")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"❌ Error SMTP: {e}")
+        return False
+    except ssl.SSLError as e:
+        print(f"❌ Error SSL: {e}")
+        return False
     except Exception as e:
-        print(f"❌ Error enviando email: {e}")
+        print(f"❌ Error general enviando email: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
@@ -63,51 +135,224 @@ def enviar_email_verificacion(request, usuario):
             f'/verificar-email/{token_obj.token}/'
         )
         
-        # Preparar el correo HTML elegante
+        # Usar CID para el logo (Content-ID)
+        logo_src = "cid:logoselena"
+        
+        nombre_usuario = usuario.nombre or usuario.email.split('@')[0]
+        
+        # Preparar el correo HTML profesional con el color de marca #918567
         mensaje_html = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-                body {{ font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }}
-                .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }}
-                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; }}
-                .header h1 {{ color: white; margin: 0; font-size: 28px; }}
-                .header p {{ color: rgba(255,255,255,0.9); margin: 10px 0 0; }}
-                .content {{ padding: 40px 30px; }}
-                .welcome {{ font-size: 18px; color: #333; margin-bottom: 20px; }}
-                .message {{ color: #666; line-height: 1.6; margin-bottom: 30px; }}
-                .btn {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 16px; }}
-                .btn:hover {{ opacity: 0.9; }}
-                .footer {{ background: #f8f9fa; padding: 20px; text-align: center; color: #999; font-size: 12px; }}
-                .divider {{ height: 1px; background: #eee; margin: 30px 0; }}
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                    background-color: #f8f9fa;
+                    margin: 0;
+                    padding: 20px;
+                }}
+                .email-container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background: white;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    box-shadow: 0 10px 40px rgba(145, 133, 103, 0.15);
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #918567 0%, #a89878 100%);
+                    padding: 50px 30px;
+                    text-align: center;
+                }}
+                .logo-container {{
+                    text-align: center;
+                    margin-bottom: 25px;
+                }}
+                .logo {{
+                    max-width: 150px;
+                    height: auto;
+                    background: white;
+                    padding: 15px;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                }}
+                .header-title {{
+                    color: white;
+                    margin: 0;
+                    font-size: 32px;
+                    font-weight: 700;
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }}
+                .header-subtitle {{
+                    color: rgba(255,255,255,0.95);
+                    margin: 10px 0 0;
+                    font-size: 16px;
+                }}
+                .content {{
+                    padding: 50px 40px;
+                }}
+                .greeting {{
+                    font-size: 22px;
+                    color: #333;
+                    margin-bottom: 20px;
+                    font-weight: 600;
+                }}
+                .message {{
+                    color: #555;
+                    line-height: 1.8;
+                    margin-bottom: 30px;
+                    font-size: 16px;
+                }}
+                .btn-container {{
+                    text-align: center;
+                    margin: 40px 0;
+                }}
+                .btn {{
+                    display: inline-block;
+                    background: linear-gradient(135deg, #918567 0%, #a89878 100%);
+                    color: white !important;
+                    padding: 18px 50px;
+                    text-decoration: none;
+                    border-radius: 50px;
+                    font-weight: bold;
+                    font-size: 16px;
+                    box-shadow: 0 8px 20px rgba(145, 133, 103, 0.3);
+                    transition: all 0.3s ease;
+                }}
+                .btn:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 12px 24px rgba(145, 133, 103, 0.4);
+                }}
+                .features {{
+                    background: linear-gradient(to bottom, #faf9f7, #ffffff);
+                    border: 2px solid #f0ebe3;
+                    padding: 30px;
+                    border-radius: 12px;
+                    margin: 30px 0;
+                }}
+                .features h3 {{
+                    color: #918567;
+                    margin: 0 0 20px;
+                    font-size: 18px;
+                }}
+                .feature-item {{
+                    display: flex;
+                    align-items: center;
+                    margin: 15px 0;
+                }}
+                .feature-icon {{
+                    font-size: 24px;
+                    margin-right: 15px;
+                    min-width: 30px;
+                }}
+                .feature-text {{
+                    color: #666;
+                    font-size: 15px;
+                }}
+                .divider {{
+                    height: 1px;
+                    background: linear-gradient(to right, transparent, #d4cfc4, transparent);
+                    margin: 30px 0;
+                }}
+                .footer {{
+                    background: linear-gradient(to bottom, #faf9f7, #f5f3f0);
+                    padding: 30px;
+                    text-align: center;
+                    border-top: 2px solid #e8e3da;
+                }}
+                .footer-text {{
+                    color: #999;
+                    font-size: 13px;
+                    margin: 5px 0;
+                }}
+                .footer-text a {{
+                    color: #918567;
+                    text-decoration: none;
+                }}
+                .link-alternative {{
+                    margin-top: 20px;
+                    padding: 15px;
+                    background: #faf9f7;
+                    border: 1px solid #e8e3da;
+                    border-radius: 8px;
+                    word-break: break-all;
+                }}
+                .link-alternative p {{
+                    color: #888;
+                    font-size: 12px;
+                    margin: 0 0 10px;
+                }}
+                .link-alternative a {{
+                    color: #918567;
+                    font-size: 13px;
+                }}
             </style>
         </head>
         <body>
-            <div class="container">
+            <div class="email-container">
                 <div class="header">
-                    <h1>🎉 ¡Bienvenido a Selena Shop!</h1>
-                    <p>Tu cuenta ha sido creada exitosamente</p>
-                </div>
-                <div class="content">
-                    <p class="welcome">Hola <strong>{usuario.nombre or usuario.email}</strong>,</p>
-                    <p class="message">
-                        Gracias por registrarte en Selena Shop. Estamos emocionados de tenerte con nosotros. 
-                        Para completar tu registro y acceder a todas las funciones, por favor verifica tu correo electrónico.
-                    </p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{verify_url}" class="btn">✨ Verificar mi Email</a>
+                    <div class="logo-container">
+                        <img src="{logo_src}" alt="Selena Shop" class="logo">
                     </div>
+                    <h1 class="header-title">🎉 ¡Bienvenido!</h1>
+                    <p class="header-subtitle">Tu cuenta ha sido creada exitosamente</p>
+                </div>
+                
+                <div class="content">
+                    <p class="greeting">Hola <strong>{nombre_usuario}</strong>,</p>
+                    
+                    <p class="message">
+                        ¡Gracias por unirte a <strong>Selena Shop</strong>! Estamos emocionados de tenerte como parte de nuestra comunidad de moda. 
+                        Para completar tu registro y desbloquear todas las funciones, por favor verifica tu dirección de correo electrónico.
+                    </p>
+                    
+                    <div class="btn-container">
+                        <a href="{verify_url}" class="btn">
+                            ✨ Verificar mi Email
+                        </a>
+                    </div>
+                    
+                    <div class="features">
+                        <h3>🌟 Beneficios de tu cuenta verificada:</h3>
+                        <div class="feature-item">
+                            <span class="feature-icon">🛍️</span>
+                            <span class="feature-text">Acceso completo a nuestro catálogo exclusivo</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📦</span>
+                            <span class="feature-text">Seguimiento de pedidos en tiempo real</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🎁</span>
+                            <span class="feature-text">Ofertas exclusivas y descuentos especiales</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">💳</span>
+                            <span class="feature-text">Proceso de compra rápido y seguro</span>
+                        </div>
+                    </div>
+                    
                     <div class="divider"></div>
-                    <p style="color: #999; font-size: 13px;">
-                        Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
-                        <a href="{verify_url}" style="color: #667eea;">{verify_url}</a>
+                    
+                    <div class="link-alternative">
+                        <p>Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
+                        <a href="{verify_url}">{verify_url}</a>
+                    </div>
+                    
+                    <p style="color: #999; font-size: 13px; margin-top: 30px; text-align: center;">
+                        Este enlace expira en 48 horas.
                     </p>
                 </div>
+                
                 <div class="footer">
-                    <p>Este enlace expira en 48 horas.</p>
-                    <p>© 2025 Selena Shop - Todos los derechos reservados</p>
+                    <p class="footer-text">Este correo fue enviado automáticamente. Por favor no respondas.</p>
+                    <p class="footer-text">© 2026 Selena Shop - Todos los derechos reservados</p>
+                    <p class="footer-text" style="margin-top: 15px;">
+                        ¿Necesitas ayuda? <a href="mailto:soporte@selenashop.com">Contáctanos</a>
+                    </p>
                 </div>
             </div>
         </body>
@@ -121,6 +366,8 @@ def enviar_email_verificacion(request, usuario):
         
     except Exception as e:
         print(f"Error en enviar_email_verificacion: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
@@ -413,34 +660,461 @@ def password_reset_request(request):
             
             # Construir URL de restablecimiento
             reset_url = request.build_absolute_uri(
-                f'/usuarios/password-reset-confirm/{uid}/{token}/'
+                f'/password-reset-confirm/{uid}/{token}/'
             )
             
-            # Preparar el correo
-            subject = 'Restablecimiento de contraseña - Selena Shop'
-            message = render_to_string('emails/password_reset_email.html', {
-                'user': user,
-                'reset_url': reset_url,
-                'domain': request.get_host(),
-            })
+            # Usar CID para el logo (Content-ID)
+            logo_src = "cid:logoselena"
             
-            # Enviar correo
-            try:
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    html_message=message,
-                    fail_silently=False,
+            # Crear email HTML profesional con logo y color de marca #918567
+            nombre_usuario = user.nombre or user.email.split('@')[0]
+            
+            mensaje_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body {{
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                        background-color: #f8f9fa;
+                        margin: 0;
+                        padding: 20px;
+                    }}
+                    .email-container {{
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background: white;
+                        border-radius: 16px;
+                        overflow: hidden;
+                        box-shadow: 0 10px 40px rgba(145, 133, 103, 0.15);
+                    }}
+                    .header {{
+                        background: linear-gradient(135deg, #918567 0%, #a89878 100%);
+                        padding: 50px 30px;
+                        text-align: center;
+                    }}
+                    .logo-container {{
+                        text-align: center;
+                        margin-bottom: 25px;
+                    }}
+                    .logo {{
+                        max-width: 150px;
+                        height: auto;
+                        background: white;
+                        padding: 15px;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    }}
+                    .header-title {{
+                        color: white;
+                        margin: 0;
+                        font-size: 28px;
+                        font-weight: 700;
+                        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }}
+                    .header-subtitle {{
+                        color: rgba(255,255,255,0.95);
+                        margin: 10px 0 0;
+                        font-size: 16px;
+                    }}
+                    .content {{
+                        padding: 50px 40px;
+                    }}
+                    .greeting {{
+                        font-size: 20px;
+                        color: #333;
+                        margin-bottom: 20px;
+                        font-weight: 600;
+                    }}
+                    .message {{
+                        color: #555;
+                        line-height: 1.8;
+                        margin-bottom: 30px;
+                        font-size: 16px;
+                    }}
+                    .btn-container {{
+                        text-align: center;
+                        margin: 40px 0;
+                    }}
+                    .btn {{
+                        display: inline-block;
+                        background: linear-gradient(135deg, #918567 0%, #a89878 100%);
+                        color: white !important;
+                        padding: 18px 50px;
+                        text-decoration: none;
+                        border-radius: 50px;
+                        font-weight: bold;
+                        font-size: 16px;
+                        box-shadow: 0 8px 20px rgba(145, 133, 103, 0.3);
+                        transition: all 0.3s ease;
+                    }}
+                    .btn:hover {{
+                        transform: translateY(-2px);
+                        box-shadow: 0 12px 24px rgba(145, 133, 103, 0.4);
+                    }}
+                    .divider {{
+                        height: 1px;
+                        background: linear-gradient(to right, transparent, #d4cfc4, transparent);
+                        margin: 30px 0;
+                    }}
+                    .security-info {{
+                        background: linear-gradient(to bottom, #faf9f7, #ffffff);
+                        border: 2px solid #e8e3da;
+                        border-left: 4px solid #918567;
+                        padding: 20px;
+                        margin: 30px 0;
+                        border-radius: 8px;
+                    }}
+                    .security-info h3 {{
+                        color: #918567;
+                        margin: 0 0 10px;
+                        font-size: 16px;
+                    }}
+                    .security-info p {{
+                        margin: 5px 0;
+                        color: #666;
+                        font-size: 14px;
+                    }}
+                    .footer {{
+                        background: linear-gradient(to bottom, #faf9f7, #f5f3f0);
+                        padding: 30px;
+                        text-align: center;
+                        border-top: 2px solid #e8e3da;
+                    }}
+                    .footer-text {{
+                        color: #999;
+                        font-size: 13px;
+                        margin: 5px 0;
+                    }}
+                    .footer-text a {{
+                        color: #918567;
+                        text-decoration: none;
+                    }}
+                    .link-alternative {{
+                        margin-top: 20px;
+                        padding: 15px;
+                        background: #faf9f7;
+                        border: 1px solid #e8e3da;
+                        border-radius: 8px;
+                        word-break: break-all;
+                    }}
+                    .link-alternative p {{
+                        color: #888;
+                        font-size: 12px;
+                        margin: 0 0 10px;
+                    }}
+                    .link-alternative a {{
+                        color: #918567;
+                        font-size: 13px;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="header">
+                        <div class="logo-container">
+                            <img src="{logo_src}" alt="Selena Shop" class="logo">
+                        </div>
+                        <h1 class="header-title">🔐 Restablecer Contraseña</h1>
+                        <p class="header-subtitle">Solicitud de cambio de contraseña</p>
+                    </div>
+                    
+                    <div class="content">
+                        <p class="greeting">Hola <strong>{nombre_usuario}</strong>,</p>
+                        
+                        <p class="message">
+                            Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong>Selena Shop</strong>. 
+                            Si realizaste esta solicitud, haz clic en el botón de abajo para crear una nueva contraseña.
+                        </p>
+                        
+                        <div class="btn-container">
+                            <a href="{reset_url}" class="btn">
+                                🔑 Restablecer mi Contraseña
+                            </a>
+                        </div>
+                        
+                        <div class="security-info">
+                            <h3>🛡️ Información de Seguridad</h3>
+                            <p>• Este enlace expira en <strong>24 horas</strong></p>
+                            <p>• Solo funciona una vez</p>
+                            <p>• Si no solicitaste este cambio, ignora este correo y tu contraseña permanecerá segura</p>
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <div class="link-alternative">
+                            <p>Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
+                            <a href="{reset_url}">{reset_url}</a>
+                        </div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p class="footer-text">Este correo fue enviado automáticamente. Por favor no respondas.</p>
+                        <p class="footer-text">© 2026 Selena Shop - Todos los derechos reservados</p>
+                        <p class="footer-text" style="margin-top: 15px;">
+                            ¿No solicitaste este cambio? <a href="mailto:soporte@selenashop.com">Contáctanos</a>
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Enviar correo usando la función personalizada
+            asunto = '🔐 Restablece tu contraseña - Selena Shop'
+            
+            if enviar_email_directo(user.email, asunto, mensaje_html):
+                messages.success(
+                    request, 
+                    '✅ Se ha enviado un correo con las instrucciones para restablecer tu contraseña. '
+                    'Revisa tu bandeja de entrada.'
                 )
-                messages.success(request, 'Se ha enviado un correo con las instrucciones para restablecer tu contraseña.')
-            except Exception as e:
-                messages.error(request, f'Error al enviar el correo: {str(e)}')
+            else:
+                messages.error(
+                    request, 
+                    '❌ Hubo un problema al enviar el correo. Por favor intenta nuevamente.'
+                )
                 
         except Usuario.DoesNotExist:
             # Por seguridad, no revelar si el email existe o no
-            messages.success(request, 'Si el email existe en nuestro sistema, recibirás un correo con las instrucciones.')
+            messages.success(
+                request, 
+                '✅ Si el email existe en nuestro sistema, recibirás un correo con las instrucciones.'
+            )
+        
+        return redirect('usuarios:login')
+    
+    return redirect('usuarios:login')
+    """Vista para solicitar restablecimiento de contraseña"""
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        
+        if not email:
+            messages.error(request, 'Por favor ingresa tu email.')
+            return redirect('usuarios:login')
+        
+        try:
+            user = Usuario.objects.get(email=email)
+            
+            # Generar token de restablecimiento
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Construir URL de restablecimiento
+            reset_url = request.build_absolute_uri(
+                f'/password-reset-confirm/{uid}/{token}/'
+            )
+            
+            # Crear email HTML profesional con logo
+            nombre_usuario = user.nombre or user.email.split('@')[0]
+            
+            mensaje_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body {{
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                        background-color: #f8f9fa;
+                        margin: 0;
+                        padding: 20px;
+                    }}
+                    .email-container {{
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background: white;
+                        border-radius: 16px;
+                        overflow: hidden;
+                        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                    }}
+                    .header {{
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        padding: 50px 30px;
+                        text-align: center;
+                    }}
+                    .logo {{
+                        width: 120px;
+                        height: auto;
+                        margin-bottom: 20px;
+                        background: white;
+                        padding: 10px;
+                        border-radius: 10px;
+                    }}
+                    .header-title {{
+                        color: white;
+                        margin: 0;
+                        font-size: 28px;
+                        font-weight: 700;
+                    }}
+                    .header-subtitle {{
+                        color: rgba(255,255,255,0.9);
+                        margin: 10px 0 0;
+                        font-size: 16px;
+                    }}
+                    .content {{
+                        padding: 50px 40px;
+                    }}
+                    .greeting {{
+                        font-size: 20px;
+                        color: #333;
+                        margin-bottom: 20px;
+                        font-weight: 600;
+                    }}
+                    .message {{
+                        color: #555;
+                        line-height: 1.8;
+                        margin-bottom: 30px;
+                        font-size: 16px;
+                    }}
+                    .btn-container {{
+                        text-align: center;
+                        margin: 40px 0;
+                    }}
+                    .btn {{
+                        display: inline-block;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white !important;
+                        padding: 18px 50px;
+                        text-decoration: none;
+                        border-radius: 50px;
+                        font-weight: bold;
+                        font-size: 16px;
+                        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+                        transition: transform 0.3s;
+                    }}
+                    .btn:hover {{
+                        transform: translateY(-2px);
+                        box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+                    }}
+                    .divider {{
+                        height: 1px;
+                        background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+                        margin: 30px 0;
+                    }}
+                    .security-info {{
+                        background: #f8f9ff;
+                        border-left: 4px solid #667eea;
+                        padding: 20px;
+                        margin: 30px 0;
+                        border-radius: 8px;
+                    }}
+                    .security-info h3 {{
+                        color: #667eea;
+                        margin: 0 0 10px;
+                        font-size: 16px;
+                    }}
+                    .security-info p {{
+                        margin: 5px 0;
+                        color: #666;
+                        font-size: 14px;
+                    }}
+                    .footer {{
+                        background: #f8f9fa;
+                        padding: 30px;
+                        text-align: center;
+                        border-top: 1px solid #eee;
+                    }}
+                    .footer-text {{
+                        color: #999;
+                        font-size: 13px;
+                        margin: 5px 0;
+                    }}
+                    .link-alternative {{
+                        margin-top: 20px;
+                        padding: 15px;
+                        background: #f5f5f5;
+                        border-radius: 8px;
+                        word-break: break-all;
+                    }}
+                    .link-alternative p {{
+                        color: #888;
+                        font-size: 12px;
+                        margin: 0 0 10px;
+                    }}
+                    .link-alternative a {{
+                        color: #667eea;
+                        font-size: 13px;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="header">
+                        <div style="text-align: center;">
+                            <div style="background: white; display: inline-block; padding: 15px 25px; border-radius: 12px;">
+                                <h1 style="margin: 0; color: #667eea; font-size: 32px; font-weight: 800;">Selena Shop</h1>
+                            </div>
+                        </div>
+                        <h1 class="header-title">🔐 Restablecer Contraseña</h1>
+                        <p class="header-subtitle">Solicitud de cambio de contraseña</p>
+                    </div>
+                    
+                    <div class="content">
+                        <p class="greeting">Hola <strong>{nombre_usuario}</strong>,</p>
+                        
+                        <p class="message">
+                            Recibimos una solicitud para restablecer la contraseña de tu cuenta en Selena Shop. 
+                            Si realizaste esta solicitud, haz clic en el botón de abajo para crear una nueva contraseña.
+                        </p>
+                        
+                        <div class="btn-container">
+                            <a href="{reset_url}" class="btn">
+                                🔑 Restablecer mi Contraseña
+                            </a>
+                        </div>
+                        
+                        <div class="security-info">
+                            <h3>🛡️ Información de Seguridad</h3>
+                            <p>• Este enlace expira en <strong>24 horas</strong></p>
+                            <p>• Solo funciona una vez</p>
+                            <p>• Si no solicitaste este cambio, ignora este correo</p>
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <div class="link-alternative">
+                            <p>Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
+                            <a href="{reset_url}">{reset_url}</a>
+                        </div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p class="footer-text">Este correo fue enviado automáticamente. Por favor no respondas.</p>
+                        <p class="footer-text">© 2026 Selena Shop - Todos los derechos reservados</p>
+                        <p class="footer-text" style="margin-top: 15px;">
+                            ¿No solicitaste este cambio? <a href="mailto:soporte@selenashop.com" style="color: #667eea;">Contáctanos</a>
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Enviar correo usando la función personalizada
+            asunto = '🔐 Restablece tu contraseña - Selena Shop'
+            
+            if enviar_email_directo(user.email, asunto, mensaje_html):
+                messages.success(
+                    request, 
+                    '✅ Se ha enviado un correo con las instrucciones para restablecer tu contraseña. '
+                    'Revisa tu bandeja de entrada.'
+                )
+            else:
+                messages.error(
+                    request, 
+                    '❌ Hubo un problema al enviar el correo. Por favor intenta nuevamente.'
+                )
+                
+        except Usuario.DoesNotExist:
+            # Por seguridad, no revelar si el email existe o no
+            messages.success(
+                request, 
+                '✅ Si el email existe en nuestro sistema, recibirás un correo con las instrucciones.'
+            )
         
         return redirect('usuarios:login')
     
@@ -536,16 +1210,13 @@ def verificar_email(request, token):
         if not token_obj.es_valido():
             messages.error(
                 request, 
-                'El enlace de verificación ha expirado o ya fue utilizado. '
-                'Solicita un nuevo correo de verificación.'
+                '⏰ El enlace de verificación ha expirado o ya fue utilizado. '
+                'Por favor solicita un nuevo correo de verificación.'
             )
             return redirect('usuarios:login')
         
         # Marcar el email como verificado
         usuario = token_obj.usuario
-        # El campo email_verificado no existe en el modelo, se omite
-        # usuario.email_verificado = True
-        # usuario.save()
         
         # Marcar el token como usado
         token_obj.usado = True
@@ -553,17 +1224,16 @@ def verificar_email(request, token):
         
         messages.success(
             request, 
-            '¡Tu email ha sido verificado exitosamente! Ya puedes disfrutar de todas las funciones.'
+            '✅ ¡Tu email ha sido verificado exitosamente! Ya puedes disfrutar de todas las funciones de Selena Shop.'
         )
         
-        # Si el usuario está logueado, redirigir a su cuenta
-        if request.user.is_authenticated:
-            return redirect('usuarios:my_account')
-        
-        return redirect('usuarios:login')
+        # Mostrar página de verificación exitosa
+        return render(request, 'email_verificado.html', {
+            'usuario': usuario
+        })
         
     except EmailVerificationToken.DoesNotExist:
-        messages.error(request, 'El enlace de verificación no es válido.')
+        messages.error(request, '❌ El enlace de verificación no es válido o ha expirado.')
         return redirect('usuarios:login')
 
 

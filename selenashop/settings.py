@@ -160,7 +160,7 @@ EMAIL_USE_TLS = False
 # Para EMAIL_HOST_PASSWORD, debes generar una "Contraseña de aplicación" en:
 # https://myaccount.google.com/apppasswords (requiere verificación en 2 pasos activada)
 EMAIL_HOST_USER = 'marcojaramillo0142@gmail.com'  # Cambiar por tu email de Gmail
-EMAIL_HOST_PASSWORD = 'vckw tnfr ekag rhsn'  # Cambiar por tu contraseña de aplicación (16 caracteres sin espacios)
+EMAIL_HOST_PASSWORD = 'vckwtnfrekagrhsn'  # Contraseña de aplicación SIN ESPACIOS
 
 DEFAULT_FROM_EMAIL = 'Selena Shop <marcojaramillo0142@gmail.com>'  # Cambiar por tu email
 

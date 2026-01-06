@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- page-title -->
+<div class="tf-page-title style-2">
+    <div class="container-full">
+        <div class="heading text-center">Verificación de Email</div>
+    </div>
+</div>
+<!-- /page-title -->
+
+<section class="flat-spacing-10">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="tf-login-form text-center">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} mb_30" style="padding: 20px; border-radius: 8px;">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <div class="verification-success" style="padding: 60px 40px;">
+                        <div class="icon-wrapper mb_30">
+                            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="margin: 0 auto;">
+                                <circle cx="40" cy="40" r="38" stroke="#918567" stroke-width="4" fill="none"/>
+                                <path d="M25 40L35 50L55 30" stroke="#918567" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        
+                        <h3 class="mb_20" style="color: #918567; font-size: 28px;">¡Email Verificado!</h3>
+                        <p class="mb_30" style="color: #666; font-size: 16px; line-height: 1.6;">
+                            Tu cuenta ha sido verificada exitosamente. Ya puedes disfrutar de todas las funciones de Selena Shop.
+                        </p>
+                        
+                        <div class="benefits-list text-left mb_30" style="background: linear-gradient(to bottom, #faf9f7, #ffffff); border: 2px solid #e8e3da; border-left: 4px solid #918567; padding: 25px; border-radius: 8px;">
+                            <h5 style="color: #918567; margin-bottom: 15px;">🌟 Beneficios de tu cuenta:</h5>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                <li style="padding: 8px 0; color: #666;">✓ Acceso completo al catálogo exclusivo</li>
+                                <li style="padding: 8px 0; color: #666;">✓ Seguimiento de pedidos en tiempo real</li>
+                                <li style="padding: 8px 0; color: #666;">✓ Ofertas y descuentos especiales</li>
+                                <li style="padding: 8px 0; color: #666;">✓ Proceso de compra rápido y seguro</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="actions">
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'usuarios:my_account' %}" class="tf-btn btn-fill animate-hover-btn radius-3 mb_10" style="display: inline-block; padding: 15px 40px;">
+                                    <span>Ir a Mi Cuenta</span>
+                                    <i class="icon icon-arrow1-top-left"></i>
+                                </a>
+                                <br>
+                                <a href="/" class="tf-btn btn-line mt-3">Explorar Tienda</a>
+                            {% else %}
+                                <a href="{% url 'usuarios:login' %}" class="tf-btn btn-fill animate-hover-btn radius-3 mb_10" style="display: inline-block; padding: 15px 40px;">
+                                    <span>Iniciar Sesión</span>
+                                    <i class="icon icon-arrow1-top-left"></i>
+                                </a>
+                                <br>
+                                <a href="/" class="tf-btn btn-line mt-3">Explorar Tienda</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .verification-success {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(145, 133, 103, 0.1);
+    }
+    
+    .icon-wrapper {
+        animation: checkmark 0.6s ease-in-out;
+    }
+    
+    @keyframes checkmark {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .benefits-list ul li {
+        transition: all 0.3s ease;
+    }
+    
+    .benefits-list ul li:hover {
+        padding-left: 10px;
+        color: #918567 !important;
+    }
+</style>
+{% endblock %}
