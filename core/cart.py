@@ -255,14 +255,23 @@ class Cart:
     def clear(self):
         """
         Eliminar el carrito de la sesión y de la BD si está autenticado.
+        Se asegura de que el carrito esté completamente limpio en ambos lugares.
         """
         # Eliminar de la BD si está autenticado
         if self.user.is_authenticated:
             CarritoItem.objects.filter(usuario=self.user).delete()
         
-        # Limpiar la sesión
+        # Vaciar el diccionario del carrito
+        self.cart = {}
+        
+        # Limpiar la sesión completamente
         if settings.CART_SESSION_ID in self.session:
-            del self.session[settings.CART_SESSION_ID]
+            self.session[settings.CART_SESSION_ID] = {}
+        else:
+            self.session[settings.CART_SESSION_ID] = {}
+        
+        # Marcar sesión como modificada y guardar
+        self.session.modified = True
         self.save()
     
     def update_quantity(self, product_id, quantity):

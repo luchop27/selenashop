@@ -201,18 +201,21 @@
                                         </ul>
                                     {% endif %}
                                     <div class="list-product-btn">
-                                        <a href="#" class="box-icon bg_white wishlist btn-icon-action">
+                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action" 
+                                            data-product-id="{{ producto.id }}"
+                                            {% if producto.in_wishlist %}data-wishlist-id="{{ producto.wishlist_item_id }}"{% endif %}>
                                             <span class="icon icon-heart"></span>
                                             <span class="tooltip">Add to Wishlist</span>
                                             <span class="icon icon-delete"></span>
-                                        </a>
-                                        <a href="#" class="box-icon bg_white wishlist btn-icon-action d-md-none">
+                                        </button>
+                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action d-md-none" 
+                                                data-product-id="{{ producto.id }}">
                                             <span class="icon icon-heart"></span>
                                             <span class="tooltip">Add to Wishlist</span>
                                             <span class="icon icon-delete"></span>
-                                        </a>
+                                        </button>
                                         <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
-                                            data-producto-id="{{ producto.id }}">
+                                            data-producto-id="{{ producto.id }}"
                                             data-product-sizes="{{ producto.sizes|join:',' }}">
                                             <span class="icon icon-view"></span>
                                             <span class="tooltip">Quick View</span>
@@ -285,16 +288,18 @@
                                         {% endif %}
                                     </a>
                                     <div class="list-product-btn">
-                                        <a href="#" class="box-icon bg_white wishlist btn-icon-action">
+                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action" 
+                                                data-product-id="{{ producto.id }}">
                                             <span class="icon icon-heart"></span>
                                             <span class="tooltip">Add to Wishlist</span>
                                             <span class="icon icon-delete"></span>
-                                        </a>
-                                        <a href="#" class="box-icon bg_white wishlist btn-icon-action d-md-none">
+                                        </button>
+                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action d-md-none" 
+                                                data-product-id="{{ producto.id }}">
                                             <span class="icon icon-heart"></span>
                                             <span class="tooltip">Add to Wishlist</span>
                                             <span class="icon icon-delete"></span>
-                                        </a>
+                                        </button>
                                         <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
                                             data-producto-id="{{ producto.id }}">
                                             <span class="icon icon-view"></span>

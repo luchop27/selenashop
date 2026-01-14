@@ -1,0 +1,183 @@
+/**
+ * Script para manejar la funcionalidad del wishlist
+ * Permite agregar/remover productos del wishlist del usuario
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📌 Script de Wishlist cargado');
+    
+    // Obtener todos los botones del wishlist
+    const wishlistButtons = document.querySelectorAll('.wishlist.btn-icon-action');
+    
+    if (wishlistButtons.length === 0) {
+        console.log('⚠️ No se encontraron botones de wishlist');
+        return;
+    }
+    
+    console.log(`✅ Se encontraron ${wishlistButtons.length} botones de wishlist`);
+    
+    wishlistButtons.forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const productId = this.getAttribute('data-product-id');
+            const wishlistId = this.getAttribute('data-wishlist-id');
+            
+            console.log('🖱️ Click en wishlist:', {productId, wishlistId});
+            
+            if (!productId) {
+                console.error('❌ No se encontró product-id');
+                return;
+            }
+            
+            if (wishlistId) {
+                // El producto está en wishlist, removerlo
+                removeFromWishlist(productId, wishlistId, this);
+            } else {
+                // El producto no está en wishlist, agregarlo
+                addToWishlist(productId, this);
+            }
+        });
+    });
+    
+    /**
+     * Agregar producto al wishlist
+     */
+    function addToWishlist(productId, button) {
+        console.log('➕ Agregando producto ' + productId + ' al wishlist');
+        
+        fetch('/api/wishlist/add/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: 'product_id=' + productId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('✅ Producto agregado al wishlist');
+                
+                // Actualizar el botón
+                button.classList.add('active');
+                button.setAttribute('data-wishlist-id', data.wishlist_id);
+                button.querySelector('.tooltip').textContent = 'Remove from Wishlist';
+                
+                showNotification('Producto agregado a favoritos', 'success');
+                
+                // Contar items en wishlist
+                updateWishlistCount();
+            } else {
+                console.error('❌ Error:', data.message);
+                showNotification(data.message || 'Error al agregar a favoritos', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error de red:', error);
+            showNotification('Error al agregar a favoritos', 'error');
+        });
+    }
+    
+    /**
+     * Remover producto del wishlist
+     */
+    function removeFromWishlist(productId, wishlistId, button) {
+        console.log('➖ Removiendo producto ' + productId + ' del wishlist');
+        
+        fetch('/api/wishlist/remove/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: 'wishlist_id=' + wishlistId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('✅ Producto removido del wishlist');
+                
+                // Actualizar el botón
+                button.classList.remove('active');
+                button.removeAttribute('data-wishlist-id');
+                button.querySelector('.tooltip').textContent = 'Add to Wishlist';
+                
+                showNotification('Producto removido de favoritos', 'success');
+                
+                // Contar items en wishlist
+                updateWishlistCount();
+            } else {
+                console.error('❌ Error:', data.message);
+                showNotification(data.message || 'Error al remover de favoritos', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error de red:', error);
+            showNotification('Error al remover de favoritos', 'error');
+        });
+    }
+    
+    /**
+     * Mostrar notificación
+     */
+    function showNotification(message, type) {
+        console.log('🔔 Notificación:', message);
+        
+        // Crear elemento de notificación
+        const notificacion = document.createElement('div');
+        notificacion.className = `alert alert-${type} alert-dismissible fade show`;
+        notificacion.style.position = 'fixed';
+        notificacion.style.top = '20px';
+        notificacion.style.right = '20px';
+        notificacion.style.zIndex = '9999';
+        notificacion.style.minWidth = '300px';
+        notificacion.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notificacion);
+        
+        // Auto remover después de 3 segundos
+        setTimeout(() => {
+            notificacion.remove();
+        }, 3000);
+    }
+    
+    /**
+     * Actualizar contador de wishlist
+     */
+    function updateWishlistCount() {
+        // Buscar el contador en la barra de navegación
+        const wishlistCounter = document.querySelector('[data-wishlist-count]');
+        if (wishlistCounter) {
+            fetch('/api/wishlist/count/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        wishlistCounter.textContent = data.count;
+                        console.log('📌 Wishlist count actualizado:', data.count);
+                    }
+                });
+        }
+    }
+    
+    /**
+     * Obtener valor de cookie CSRF
+     */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});

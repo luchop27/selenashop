@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- page-title -->
+<div class="tf-page-title">
+    <div class="container-full">
+        <div class="heading text-center" style="color: #918567;">
+            Mi Lista de Favoritos
+        </div>
+        <p class="text-center text-2 text_black-2 mt_5">
+            {% if total_items %}
+                Tienes {{ total_items }} producto{{ total_items|pluralize }} en tu lista de favoritos
+            {% else %}
+                Tu lista de favoritos está vacía
+            {% endif %}
+        </p>
+    </div>
+</div>
+<!-- /page-title -->
+
+<!-- Section Product -->
+<section class="flat-spacing-2">
+    <div class="container">
+        <div class="tf-shop-control grid-3 align-items-center">
+            <div class="tf-control-filter">
+                <a href="{% url 'core:shop-collection-sub' %}" class="tf-btn btn-fill">
+                    <span>Seguir comprando</span>
+                    <i class="icon icon-arrow-right"></i>
+                </a>
+            </div>
+            <div class="text-center">
+                <p class="text-center text_black-2">
+                    Mostrando {{ total_items }} resultado{{ total_items|pluralize }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        {% if productos %}
+        <div class="tf-list-layout wrapper-shop">
+            {% for producto in productos %}
+                <div class="card-product list-layout" data-availability="{{ producto.availability }}">
+                    <div class="card-product-wrapper">
+                        <a href="{{ producto.get_absolute_url }}" class="product-img">
+                            {% if producto.main_image_src %}
+                                <img class="lazyload img-product" data-src="{{ producto.main_image_src }}"
+                                    src="{{ producto.main_image_src }}" alt="image-product">
+                            {% else %}
+                                <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}"
+                                    src="{% static 'images/products/placeholder.jpg' %}" alt="image-product">
+                            {% endif %}
+                            {% if producto.hover_image_src %}
+                                <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}"
+                                    src="{{ producto.hover_image_src }}" alt="image-product">
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="card-product-info">
+                        <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
+                        <span class="price current-price">${{ producto.display_price }}</span>
+                        {% if producto.colors %}
+                            <ul class="list-color-product">
+                                {% for color in producto.colors %}
+                                    <li class="list-color-item {% if forloop.first %}hover-tooltip {% endif %}color-swatch{% if forloop.first %} active{% endif %}">
+                                        <span class="tooltip{% if forloop.first %} tooltip-bottom{% endif %}">{{ color.valor }}</span>
+                                        <span class="swatch-value"></span>
+                                        {% if producto.main_image_src %}
+                                            <img class="lazyload" data-src="{{ producto.main_image_src }}"
+                                                src="{{ producto.main_image_src }}" alt="image-product">
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <div class="list-product-btn">
+                            <button type="button" class="box-icon bg_white wishlist btn-icon-action" 
+                                data-product-id="{{ producto.id }}"
+                                {% if producto.in_wishlist %}data-wishlist-id="{{ producto.wishlist_item_id }}"{% endif %}>
+                                <span class="icon icon-heart"></span>
+                                <span class="tooltip">Remove from Wishlist</span>
+                                <span class="icon icon-delete"></span>
+                            </button>
+                            <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
+                                data-producto-id="{{ producto.id }}"
+                                data-product-sizes="{{ producto.sizes|join:',' }}">
+                                <span class="icon icon-view"></span>
+                                <span class="tooltip">Quick View</span>
+                            </a>
+                        </div>
+                        {% if producto.sizes %}
+                            <div class="size-list">
+                                {% for s in producto.sizes %}
+                                    <span class="size-item">{{ s }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="bi bi-heart text-secondary" viewBox="0 0 16 16">
+                    <path d="m8 2.748-.717-.737C5.956 2.017 4.834 1 3.5 1 1.833 1 0 2.75 0 4.5 0 6.5 2.625 8.937 8 13.025c5.375-4.088 8-6.525 8-8.525C16 2.75 14.167 1 12.5 1c-1.334 0-2.456 1.017-4.283 2.01l-.717.737Z"/>
+                </svg>
+            </div>
+            <h4 class="fw-5 mb-3">Tu lista de favoritos está vacía</h4>
+            <p class="text-secondary mb-4">Agrega productos a tu lista de favoritos haciendo clic en el icono del corazón</p>
+            <a href="{% url 'core:shop-collection-sub' %}" class="tf-btn btn-fill">
+                <span>Explorar productos</span>
+                <i class="icon icon-arrow-right"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+<!-- /Section Product -->
+
+<script src="{% static 'js/wishlist.js' %}"></script>
+
+{% endblock %}

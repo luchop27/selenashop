@@ -1265,3 +1265,118 @@ def reenviar_verificacion(request):
     
     return redirect('usuarios:my_account')
 
+
+# ==================== WISHLIST ====================
+@login_required(login_url='usuarios:login')
+def my_account_wishlist(request):
+    """
+    Vista para mostrar la lista de deseos del usuario
+    """
+    from .models import Wishlist
+    
+    wishlist_items = Wishlist.objects.filter(usuario=request.user).select_related('producto')
+    
+    context = {
+        'wishlist_items': wishlist_items,
+        'wishlist_count': wishlist_items.count()
+    }
+    
+    return render(request, 'wishlist.html', context)
+
+
+@login_required(login_url='usuarios:login')
+def add_to_wishlist(request, producto_id):
+    """
+    Vista AJAX para agregar producto a la lista de deseos
+    """
+    from apps.productos.models import Producto
+    from .models import Wishlist
+    
+    try:
+        producto = Producto.objects.get(id=producto_id)
+        
+        # Verificar si ya está en el wishlist
+        wishlist_item, created = Wishlist.objects.get_or_create(
+            usuario=request.user,
+            producto=producto
+        )
+        
+        if created:
+            return JsonResponse({
+                'success': True,
+                'message': f'{producto.nombre} agregado a tu lista de deseos',
+                'action': 'added'
+            })
+        else:
+            return JsonResponse({
+                'success': True,
+                'message': f'{producto.nombre} ya estaba en tu lista de deseos',
+                'action': 'already_exists'
+            })
+    
+    except Producto.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Producto no encontrado'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=500)
+
+
+@login_required(login_url='usuarios:login')
+def remove_from_wishlist(request, wishlist_id):
+    """
+    Vista AJAX para eliminar producto de la lista de deseos
+    """
+    from .models import Wishlist
+    
+    try:
+        wishlist_item = Wishlist.objects.get(id=wishlist_id, usuario=request.user)
+        producto_nombre = wishlist_item.producto.nombre
+        wishlist_item.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{producto_nombre} eliminado de tu lista de deseos'
+        })
+    
+    except Wishlist.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Producto no encontrado en tu wishlist'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=500)
+
+
+def is_in_wishlist(request, producto_id):
+    """
+    Vista AJAX para verificar si un producto está en el wishlist
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'in_wishlist': False})
+    
+    from apps.productos.models import Producto
+    from .models import Wishlist
+    
+    try:
+        in_wishlist = Wishlist.objects.filter(
+            usuario=request.user,
+            producto_id=producto_id
+        ).exists()
+        
+        return JsonResponse({
+            'success': True,
+            'in_wishlist': in_wishlist
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=500)
