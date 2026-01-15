@@ -180,3 +180,20 @@ class PasswordResetCode(models.Model):
         if self.usado:
             return False
         return timezone.now() <= self.creado + timedelta(minutes=15)
+
+
+# ==================== WISHLIST ====================
+class Wishlist(models.Model):
+    """Modelo para guardar productos favoritos del usuario"""
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='wishlist')
+    producto = models.ForeignKey('productos.Producto', on_delete=models.CASCADE, related_name='en_wishlist')
+    agregado = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('usuario', 'producto')
+        verbose_name = 'Favorito'
+        verbose_name_plural = 'Favoritos'
+        ordering = ['-agregado']
+    
+    def __str__(self):
+        return f"{self.usuario.email} - {self.producto.nombre}"

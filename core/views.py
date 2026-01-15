@@ -1737,6 +1737,10 @@ def checkout_process(request):
         # Limpiar el carrito
         cart.clear()
         
+        # Asegurar que la sesión se guarde completamente
+        request.session.modified = True
+        request.session.save()
+        
         # 📱 Enviar notificación a WhatsApp del administrador
         from .whatsapp_utils import enviar_notificacion_pedido
         resultado_whatsapp = enviar_notificacion_pedido(pedido)
@@ -2360,3 +2364,194 @@ def admin_user_delete(request, user_id):
             'success': False,
             'message': f'Error al eliminar el usuario: {str(e)}'
         }, status=500)
+
+
+# ==================== WISHLIST VIEWS ====================
+
+def wishlist(request):
+    """
+    Vista para mostrar la página del wishlist con los productos favoritos del usuario
+    """
+    from apps.usuarios.models import Wishlist
+    from django.db.models import Min
+    
+    if not request.user.is_authenticated:
+        # Si no está autenticado, redirigir a login
+        messages.warning(request, 'Inicia sesión para ver tu lista de favoritos.')
+        return redirect('apps.usuarios:login_usuario')
+    
+    # Obtener todos los items del wishlist del usuario
+    wishlist_items = Wishlist.objects.filter(usuario=request.user).select_related('producto').prefetch_related(
+        'producto__imagenes',
+        'producto__variantes',
+        'producto__categoria'
+    ).order_by('-agregado')
+    
+    # Preparar datos de productos para el template
+    productos_wishlist = []
+    for item in wishlist_items:
+        producto = item.producto
+        
+        # Precio
+        producto.display_price = producto.precio_base
+        
+        # Imágenes
+        imagenes = list(producto.imagenes.all()[:2])
+        if imagenes:
+            producto.main_image_src = imagenes[0].imagen.url if imagenes[0].imagen else None
+            producto.hover_image_src = imagenes[1].imagen.url if len(imagenes) > 1 and imagenes[1].imagen else None
+        else:
+            producto.main_image_src = None
+            producto.hover_image_src = None
+        
+        # Colores
+        colores_list = []
+        for variante in producto.variantes.all():
+            if variante.color and variante.color not in colores_list:
+                colores_list.append(variante.color)
+        producto.colors = [{'valor': c} for c in colores_list]
+        
+        # Tallas
+        tallas_list = []
+        for variante in producto.variantes.all():
+            if variante.talla and variante.talla.codigo and variante.talla.codigo not in tallas_list:
+                tallas_list.append(variante.talla.codigo)
+        producto.sizes = tallas_list
+        
+        # Disponibilidad
+        total_stock = sum(v.stock for v in producto.variantes.all())
+        producto.availability = 'En stock' if total_stock > 0 else 'Agotado'
+        
+        # Agregar el item al wishlist
+        producto.wishlist_item_id = item.id
+        producto.in_wishlist = True
+        
+        productos_wishlist.append(producto)
+    
+    context = {
+        'productos': productos_wishlist,
+        'total_items': len(productos_wishlist),
+    }
+    
+    return render(request, 'wishlist_page.html', context)
+
+
+@require_POST
+def wishlist_add(request):
+    """
+    Endpoint AJAX para agregar un producto al wishlist
+    """
+    from apps.usuarios.models import Wishlist
+    from django.http import JsonResponse
+    
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'Debes iniciar sesión para usar el wishlist'
+        }, status=401)
+    
+    product_id = request.POST.get('product_id')
+    
+    if not product_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'ID de producto no especificado'
+        }, status=400)
+    
+    try:
+        producto = Producto.objects.get(id=product_id, activo=True)
+        
+        # Crear o obtener el item del wishlist
+        wishlist_item, created = Wishlist.objects.get_or_create(
+            usuario=request.user,
+            producto=producto
+        )
+        
+        if created:
+            return JsonResponse({
+                'success': True,
+                'message': 'Producto agregado a favoritos',
+                'wishlist_id': wishlist_item.id,
+                'in_wishlist': True
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'El producto ya está en favoritos',
+                'wishlist_id': wishlist_item.id,
+                'in_wishlist': True
+            })
+            
+    except Producto.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Producto no encontrado'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=400)
+
+
+@require_POST
+def wishlist_remove(request):
+    """
+    Endpoint AJAX para remover un producto del wishlist
+    """
+    from apps.usuarios.models import Wishlist
+    from django.http import JsonResponse
+    
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'message': 'Debes iniciar sesión para usar el wishlist'
+        }, status=401)
+    
+    wishlist_id = request.POST.get('wishlist_id')
+    
+    if not wishlist_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'ID de wishlist no especificado'
+        }, status=400)
+    
+    try:
+        from apps.usuarios.models import Wishlist
+        wishlist_item = Wishlist.objects.get(id=wishlist_id, usuario=request.user)
+        wishlist_item.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Producto removido de favoritos',
+            'in_wishlist': False
+        })
+        
+    except Wishlist.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Item de wishlist no encontrado'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }, status=400)
+
+
+def wishlist_count(request):
+    """
+    Endpoint AJAX para obtener el contador de items en el wishlist
+    """
+    from apps.usuarios.models import Wishlist
+    from django.http import JsonResponse
+    
+    if request.user.is_authenticated:
+        count = Wishlist.objects.filter(usuario=request.user).count()
+    else:
+        count = 0
+    
+    return JsonResponse({
+        'success': True,
+        'count': count
+    })

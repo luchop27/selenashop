@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
-from .models import Usuario, Ciudad, Provincia
+from .models import Usuario, Ciudad, Provincia, Wishlist
 
 
 def delete_provincias(modeladmin, request, queryset):
@@ -140,3 +140,13 @@ class UsuarioAdmin(UserAdmin):
                 '<span style="background-color: #e74c3c; color: white; padding: 3px 10px; border-radius: 3px; font-weight: bold;">✗ Inactivo</span>'
             )
     estado_badge.short_description = 'Estado'
+
+
+@admin.register(Wishlist)
+class WishlistAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'producto', 'agregado')
+    list_filter = ('agregado', 'usuario')
+    search_fields = ('usuario__email', 'producto__nombre')
+    ordering = ('-agregado',)
+    date_hierarchy = 'agregado'
+    readonly_fields = ('agregado',)

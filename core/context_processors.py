@@ -69,3 +69,17 @@ def delivery_return_info(request):
         info = None
     
     return {'delivery_return_info': info}
+
+
+def wishlist_count(request):
+    """
+    Context processor para mostrar el contador de items en el wishlist
+    """
+    from apps.usuarios.models import Wishlist
+    
+    if request.user.is_authenticated:
+        wishlist_count = Wishlist.objects.filter(usuario=request.user).count()
+    else:
+        wishlist_count = 0
+    
+    return {'wishlist_count': wishlist_count}

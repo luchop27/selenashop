@@ -27,4 +27,9 @@ urlpatterns = [
     path('my-account/address/', views.my_account_address, name='my_account_address'),
     path('my-account/edit/', views.my_account_edit, name='my_account_edit'),
     path('my-account/wishlist/', views.my_account_wishlist, name='my_account_wishlist'),
+    
+    # Wishlist AJAX
+    path('wishlist/add/<int:producto_id>/', views.add_to_wishlist, name='add_to_wishlist'),
+    path('wishlist/remove/<int:wishlist_id>/', views.remove_from_wishlist, name='remove_from_wishlist'),
+    path('wishlist/check/<int:producto_id>/', views.is_in_wishlist, name='is_in_wishlist'),
 ]

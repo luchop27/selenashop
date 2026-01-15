@@ -420,8 +420,8 @@
                                     {% endif %}
                                 {% endif %}
                             </li>
-                            <li class="nav-wishlist"><a href="wishlist.html" class="nav-icon-item"><i
-                                        class="icon icon-heart"></i><span class="count-box">0</span></a></li>
+                            <li class="nav-wishlist"><a href="{% url 'usuarios:my_account_wishlist' %}" class="nav-icon-item"><i
+                                        class="icon icon-heart"></i><span class="count-box">{{ wishlist_count }}</span></a></li>
                             <li class="nav-cart"><a href="#shoppingCart" data-bs-toggle="modal" class="nav-icon-item"><i
                                         class="icon icon-bag"></i><span class="count-box tf-cart-count">{{ cart|length }}</span></a></li>
                         </ul>
@@ -503,7 +503,7 @@
                                         <a href="compare.html" class="footer-menu_item">Compare</a>
                                     </li>
                                     <li>
-                                        <a href="wishlist.html" class="footer-menu_item">My Wishlist</a>
+                                        <a href="{% url 'usuarios:my_account_wishlist' %}" class="footer-menu_item">My Wishlist</a>
                                     </li>
                                 </ul>
                             </div>
@@ -773,8 +773,8 @@
                     </ul>
                     <div class="mb-other-content">
                         <div class="d-flex group-icon">
-                            <a href="wishlist.html" class="site-nav-icon"><i class="icon icon-heart"></i>Wishlist</a>
-                            <a href="home-search.html" class="site-nav-icon"><i class="icon icon-search"></i>Search</a>
+                            <a href="{% url 'usuarios:my_account_wishlist' %}" class="site-nav-icon"><i class="icon icon-heart"></i>Wishlist</a>
+                            <a href="#canvasSearch" data-bs-toggle="offcanvas" class="site-nav-icon"><i class="icon icon-search"></i>Search</a>
                         </div>
                         <div class="mb-notice">
                             <a href="#" class="text-need">Need help ?</a>
@@ -970,19 +970,7 @@
                                 </div>
                                 <div class="tf-cart-tax">Taxes and <a href="#">shipping</a> calculated at checkout</div>
                                 <div class="tf-mini-cart-line"></div>
-                                <div class="tf-cart-checkbox">
-                                    <div class="tf-checkbox-wrapp">
-                                        <input class="" type="checkbox" id="CartDrawer-Form_agree"
-                                            name="agree_checkbox">
-                                        <div>
-                                            <i class="icon-check"></i>
-                                        </div>
-                                    </div>
-                                    <label for="CartDrawer-Form_agree">
-                                        I agree with the
-                                        <a href="#" title="Terms of Service">terms and conditions</a>
-                                    </label>
-                                </div>
+                                
                                 <div class="tf-mini-cart-view-checkout">
                                     <a href="{% url 'core:view_cart' %}"
                                         class="tf-btn btn-outline radius-3 link w-100 justify-content-center">View
@@ -1226,6 +1214,9 @@
 
     <!-- Cart functionality -->
     <script src="{% static 'js/cart.js' %}"></script>
+
+    <!-- Wishlist functionality -->
+    <script src="{% static 'js/wishlist.js' %}"></script>
 
     <!-- Script para limpiar formulario de login -->
     <script>
