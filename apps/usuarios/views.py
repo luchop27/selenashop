@@ -658,10 +658,10 @@ def password_reset_request(request):
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             
-            # Construir URL de restablecimiento
-            reset_url = request.build_absolute_uri(
-                f'/password-reset-confirm/{uid}/{token}/'
-            )
+            # Construir URL de restablecimiento usando reverse para obtener la URL correcta
+            from django.urls import reverse
+            reset_path = reverse('usuarios:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+            reset_url = request.build_absolute_uri(reset_path)
             
             # Usar CID para el logo (Content-ID)
             logo_src = "cid:logoselena"

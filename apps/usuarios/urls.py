@@ -1,5 +1,11 @@
 from django.urls import path
 from . import views
+from .views_password_reset import (
+    password_reset_request_code,
+    password_reset_verify,
+    password_reset_complete,
+    password_reset_resend
+)
 
 app_name = 'usuarios'
 
@@ -12,9 +18,11 @@ urlpatterns = [
     # API para ciudades por provincia (AJAX)
     path('api/ciudades-por-provincia/<int:provincia_id>/', views.api_ciudades_por_provincia, name='api_ciudades_por_provincia'),
     
-    # Recuperación de contraseña
-    path('password-reset/', views.password_reset_request, name='password_reset_request'),
-    path('password-reset-confirm/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
+    # Recuperación de contraseña con CÓDIGO DE 6 DÍGITOS
+    path('password-reset/', password_reset_request_code, name='password_reset_request'),
+    path('password-reset/verify/', password_reset_verify, name='password_reset_verify'),
+    path('password-reset/complete/', password_reset_complete, name='password_reset_complete'),
+    path('password-reset/resend/', password_reset_resend, name='password_reset_resend'),
     
     # Verificación de email
     path('verificar-email/<uuid:token>/', views.verificar_email, name='verificar_email'),

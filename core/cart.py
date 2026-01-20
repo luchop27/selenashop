@@ -35,8 +35,8 @@ class Cart:
         Cargar el carrito desde la BD para usuarios autenticados.
         La sesión se usa solo como caché.
         """
-        # Cargar items de la BD
-        items_db = CarritoItem.objects.filter(usuario=self.user)
+        # Cargar items de la BD con el producto relacionado
+        items_db = CarritoItem.objects.filter(usuario=self.user).select_related('producto')
         
         # Construir el carrito en formato de sesión
         self.cart = {}
@@ -51,6 +51,7 @@ class Cart:
                 'producto_id': item.producto_id,
                 'variante_id': item.variante_id,
                 'nombre': item.producto.nombre,
+                'producto_slug': item.producto.slug,  # Agregar el slug del producto
                 'precio': str(item.precio),
                 'quantity': item.cantidad,
                 'imagen': item.imagen_url,
@@ -229,7 +230,13 @@ class Cart:
             item = item_data.copy()
             
             # Encontrar el producto correspondiente
-            item['producto'] = next((p for p in productos if p.id == item['producto_id']), None)
+            producto = next((p for p in productos if p.id == item['producto_id']), None)
+            item['producto'] = producto
+            
+            # Asegurar que el slug esté disponible (por si no está en la sesión)
+            if 'producto_slug' not in item and producto:
+                item['producto_slug'] = producto.slug
+            
             item['precio_decimal'] = Decimal(item['precio'])
             item['total_precio'] = item['precio_decimal'] * item['quantity']
             yield item

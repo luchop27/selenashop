@@ -1274,6 +1274,7 @@ def view_cart(request):
             'product_id': f"{item['producto_id']}_{item['variante_id']}" if item['variante_id'] else str(item['producto_id']),
             'producto': item['producto'],
             'producto_id': item['producto_id'],
+            'producto_slug': item.get('producto_slug', ''),  # Agregar el slug del producto
             'variante_id': item['variante_id'],
             'nombre': item['nombre'],
             'precio': item['precio_decimal'],

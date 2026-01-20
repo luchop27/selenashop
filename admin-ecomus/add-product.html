@@ -147,24 +147,25 @@
                             <div class="text-tiny text-surface-2 mt-5">Máximo 100 caracteres</div>
                         </fieldset>
 
-                        <div class="cols-lg gap22">
-                            <fieldset class="name">
-                                <div class="body-title mb-10">Slug</div>
-                                {{ form.slug }}
-                                {% if form.slug.errors %}
-                                    <div class="text-danger">{{ form.slug.errors }}</div>
-                                {% endif %}
-                                <div class="text-tiny text-surface-2 mt-5">Se genera automáticamente del nombre</div>
-                            </fieldset>
-
-                            <fieldset class="name">
-                                <div class="body-title mb-10">Estado</div>
-                                <div class="flex gap10 items-center">
-                                    {{ form.activo }}
-                                    <label for="{{ form.activo.id_for_label }}">Producto activo</label>
-                                </div>
-                            </fieldset>
+                        <!-- Campo slug oculto - Se genera automáticamente -->
+                        <div style="display: none;">
+                            {{ form.slug }}
                         </div>
+
+                        <fieldset class="name">
+                            <div class="body-title mb-10">Estado</div>
+                            <div class="flex gap10 items-center mb-10">
+                                {{ form.activo }}
+                                <label for="{{ form.activo.id_for_label }}">Producto activo</label>
+                            </div>
+                            <div class="flex gap10 items-center">
+                                {{ form.bajo_pedido }}
+                                <label for="{{ form.bajo_pedido.id_for_label }}">
+                                    <span class="body-title-2">Producto bajo pedido</span>
+                                    <p class="text-tiny text-surface-2 mt-2">Si está activado, el producto seguirá visible aunque no tenga stock y permitirá pedidos. Si está desactivado, se eliminará automáticamente cuando el stock llegue a 0.</p>
+                                </label>
+                            </div>
+                        </fieldset>
                     </div>
 
                     <!-- Paso 3: Atributos y Variantes -->

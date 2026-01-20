@@ -147,25 +147,36 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Shopping Cart Configuration
 CART_SESSION_ID = 'cart'
+# ==================== EMAIL CONFIGURATION ====================
+# Configuración con Resend (moderno, sin problemas SSL, 3000 emails/mes gratis)
 
-# Email Configuration
-# Usar SMTP de Gmail para envío real de correos
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
+import os
 
-# IMPORTANTE: Configurar estas variables con tus credenciales de Gmail
-# Para EMAIL_HOST_PASSWORD, debes generar una "Contraseña de aplicación" en:
-# https://myaccount.google.com/apppasswords (requiere verificación en 2 pasos activada)
-EMAIL_HOST_USER = 'marcojaramillo0142@gmail.com'  # Cambiar por tu email de Gmail
-EMAIL_HOST_PASSWORD = 'vckwtnfrekagrhsn'  # Contraseña de aplicación SIN ESPACIOS
+# Detectar si estamos en producción
+PRODUCTION = os.environ.get('PRODUCTION', 'False') == 'True'
 
-DEFAULT_FROM_EMAIL = 'Selena Shop <marcojaramillo0142@gmail.com>'  # Cambiar por tu email
-
-# Para desarrollo (solo imprime en consola, descomentar si no quieres enviar emails reales):
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+if PRODUCTION:
+    # ===== CONFIGURACIÓN PARA PRODUCCIÓN =====
+    # Usar Resend con variables de entorno
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.resend.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    EMAIL_HOST_USER = 'resend'
+    EMAIL_HOST_PASSWORD = os.environ.get('RESEND_API_KEY', '')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Selena Shop <noreply@selenashop.com>')
+else:
+    # ===== CONFIGURACIÓN PARA DESARROLLO CON RESEND =====
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.resend.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    EMAIL_HOST_USER = 'resend'
+    EMAIL_HOST_PASSWORD = 're_5jwJYjfR_NjHxPi4WQ9GemJqbCcWKyCoz'
+    DEFAULT_FROM_EMAIL = 'Selena Shop <onboarding@resend.dev>'  # Email verificado por Resend
+    EMAIL_TIMEOUT = 10
 
 # Tiempo de expiración del token de restablecimiento (en segundos)
 PASSWORD_RESET_TIMEOUT = 86400  # 24 horas

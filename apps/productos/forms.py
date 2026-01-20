@@ -9,7 +9,7 @@ class ProductoForm(forms.ModelForm):
         fields = [
             'nombre', 'slug', 'categoria', 'coleccion', 'tipo',
             'descripcion_corta', 'descripcion_larga', 'marca',
-            'precio_base', 'tiene_tallas', 'activo'
+            'precio_base', 'tiene_tallas', 'bajo_pedido', 'activo'
         ]
         widgets = {
             # Ajustes de clases para que coincidan con el CSS del template admin-ecomus
@@ -22,8 +22,9 @@ class ProductoForm(forms.ModelForm):
             'descripcion_larga': forms.Textarea(attrs={'rows': 4, 'class': 'tf-input', 'placeholder': 'Descripción larga del producto'}),
             'marca': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Marca'}),
             'precio_base': forms.NumberInput(attrs={'class': 'tf-input', 'placeholder': 'Precio base'}),
-            'tiene_tallas': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
-            'activo': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
+            'tiene_tallas': forms.CheckboxInput(attrs={'class': 'tf-checkbox', 'style': 'width: 21px; height: 21px;'}),
+            'bajo_pedido': forms.CheckboxInput(attrs={'class': 'tf-checkbox', 'style': 'width: 21px; height: 21px;'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'tf-checkbox', 'style': 'width: 21px; height: 21px;'}),
         }
     
     def __init__(self, *args, **kwargs):

@@ -836,7 +836,12 @@ def admin_producto_edit(request, pk):
 		form = ProductoForm(request.POST, request.FILES, instance=producto)
 		
 		if form.is_valid():
-			producto = form.save()
+			producto = form.save(commit=False)
+			
+			# Procesar campo bajo_pedido desde el checkbox
+			producto.bajo_pedido = request.POST.get('bajo_pedido') == 'on'
+			
+			producto.save()
 			print(f"Producto guardado: {producto.nombre}")
 			
 			# Procesar eliminación de imágenes

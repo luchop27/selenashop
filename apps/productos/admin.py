@@ -246,11 +246,13 @@ class ProductoAdmin(admin.ModelAdmin):
 		'num_variantes',
 		'promedio_resenas',
 		'tiene_tallas',
+		'bajo_pedido',
 		'activo',
 		'created_at',
 	)
 	list_filter = (
 		'activo',
+		'bajo_pedido',
 		'tiene_tallas',
 		'categoria',
 		'coleccion',
@@ -258,7 +260,7 @@ class ProductoAdmin(admin.ModelAdmin):
 	)
 	search_fields = ('nombre', 'slug', 'descripcion_corta', 'descripcion_larga')
 	prepopulated_fields = {'slug': ('nombre',)}
-	list_editable = ('activo', 'precio_base', 'tiene_tallas')
+	list_editable = ('activo', 'precio_base', 'tiene_tallas', 'bajo_pedido')
 	inlines = [ImagenInline, VarianteInline]
 	ordering = ('-created_at',)
 	autocomplete_fields = ('categoria', 'coleccion')
@@ -287,6 +289,7 @@ class ProductoAdmin(admin.ModelAdmin):
 			'fields': (
 				'precio_base',
 				'tiene_tallas',
+				'bajo_pedido',
 				'activo',
 			)
 		}),

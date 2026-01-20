@@ -657,22 +657,22 @@
                         <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
                     </div>
                     <div class="tf-login-form">
-                        <form class="">
+                        <form method="post" action="{% url 'usuarios:password_reset_request' %}" id="modal-reset-form">
+                            {% csrf_token %}
                             <div>
-                                <p>Ingresa tu email para recibir instrucciones de cómo restablecer tu contraseña.</p>
+                                <p>Ingresa tu email para recibir un código de verificación de 6 dígitos.</p>
                             </div>
                             <div class="tf-field style-1">
-                                <input class="tf-field-input tf-input" placeholder=" " type="email" name="">
-                                <label class="tf-field-label" for="">Email *</label>
+                                <input class="tf-field-input tf-input" placeholder=" " type="email" name="email" id="modal-reset-email" required>
+                                <label class="tf-field-label" for="modal-reset-email">Email *</label>
                             </div>
                             <div>
-                                <a href="#login" data-bs-toggle="modal" class="btn-link link">Cancelar</a>
+                                <a href="#" class="btn-link link" data-bs-dismiss="modal">Cancelar</a>
                             </div>
                             <div class="bottom">
                                 <div class="w-100">
-                                    <button type="submit"
-                                        class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Restablecer
-                                            contraseña</span></button>
+                                    <button type="submit" id="modal-reset-submit"
+                                        class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Enviar código</span></button>
                                 </div>
                             </div>
                         </form>
@@ -681,6 +681,23 @@
             </div>
         </div>
         <!-- /modal forgot password -->
+        
+        <script>
+        // Manejar el envío del formulario de reset de contraseña en el modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalResetForm = document.getElementById('modal-reset-form');
+            if (modalResetForm) {
+                modalResetForm.addEventListener('submit', function(e) {
+                    const submitBtn = document.getElementById('modal-reset-submit');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span>Enviando...</span>';
+                    }
+                    // El formulario se enviará normalmente y Django manejará la redirección
+                });
+            }
+        });
+        </script>
 
         <!-- modal register -->
         <div class="modal modalCentered fade form-sign-in modal-part-content" id="register">

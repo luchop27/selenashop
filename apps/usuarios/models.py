@@ -155,31 +155,48 @@ class EmailVerificationToken(models.Model):
 
 # ==================== PASSWORD RESET CODE ====================
 class PasswordResetCode(models.Model):
-    """Código de 6 caracteres para recuperar contraseña"""
+    """Código de 6 dígitos numéricos para recuperar contraseña"""
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='reset_codes')
     codigo = models.CharField(max_length=6)
     creado = models.DateTimeField(auto_now_add=True)
     usado = models.BooleanField(default=False)
+    expira_en = models.DateTimeField(null=True, blank=True)
     
     class Meta:
-        verbose_name = 'Codigo de recuperacion'
-        verbose_name_plural = 'Codigos de recuperacion'
+        verbose_name = 'Código de recuperación'
+        verbose_name_plural = 'Códigos de recuperación'
+        ordering = ['-creado']
     
     def __str__(self):
-        return f"Codigo para {self.usuario.email}"
+        return f"Código {self.codigo} para {self.usuario.email}"
+    
+    def save(self, *args, **kwargs):
+        if not self.expira_en:
+            from datetime import timedelta
+            # El código expira en 15 minutos
+            self.expira_en = timezone.now() + timedelta(minutes=15)
+        super().save(*args, **kwargs)
     
     @staticmethod
     def generar_codigo():
+        """Genera un código numérico de 6 dígitos único"""
         import random
-        import string
-        caracteres = string.ascii_uppercase + string.digits
-        return ''.join(random.choices(caracteres, k=6))
+        return ''.join([str(random.randint(0, 9)) for _ in range(6)])
     
     def es_valido(self):
-        from datetime import timedelta
+        """Verifica si el código sigue siendo válido"""
         if self.usado:
             return False
-        return timezone.now() <= self.creado + timedelta(minutes=15)
+        if not self.expira_en:
+            return False
+        return timezone.now() <= self.expira_en
+    
+    def tiempo_restante(self):
+        """Retorna el tiempo restante en segundos"""
+        if not self.es_valido():
+            return 0
+        delta = self.expira_en - timezone.now()
+        return max(0, int(delta.total_seconds()))
 
 
 # ==================== WISHLIST ====================

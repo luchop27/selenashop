@@ -158,6 +158,13 @@ class Producto(models.Model):
     precio_base = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     tiene_tallas = models.BooleanField(default=False)
     activo = models.BooleanField(default=True)
+    
+    # Sistema de productos bajo pedido
+    bajo_pedido = models.BooleanField(
+        default=False,
+        help_text="Si está activado, el producto seguirá visible aunque no tenga stock. Si está desactivado, se eliminará automáticamente al agotarse."
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -177,6 +184,27 @@ class Producto(models.Model):
         except Exception:
             # Fallback: build a simple path if URL reversal fails
             return f"/producto/{self.slug}/"
+    
+    def stock_total(self):
+        """Calcula el stock total sumando todas las variantes"""
+        return sum(v.stock for v in self.variantes.all())
+    
+    def tiene_stock(self):
+        """Verifica si el producto tiene stock disponible"""
+        return self.stock_total() > 0
+    
+    def permite_pedido(self):
+        """Indica si el producto permite hacer pedidos (tiene stock O está bajo pedido)"""
+        return self.tiene_stock() or self.bajo_pedido
+    
+    def estado_stock(self):
+        """Retorna el estado del stock del producto para mostrar en la UI"""
+        if self.tiene_stock():
+            return "disponible"
+        elif self.bajo_pedido:
+            return "bajo_pedido"
+        else:
+            return "sin_stock"
 
 
 # ------------------------------

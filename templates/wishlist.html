@@ -2882,27 +2882,26 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="header">
-                    <div class="demo-title">Reset your password</div>
+                    <div class="demo-title">Restablecer contraseña</div>
                     <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
                 </div>
                 <div class="tf-login-form">
-                    <form class="">
+                    <form method="post" action="{% url 'usuarios:password_reset_request' %}" id="wishlist-reset-form">
+                        {% csrf_token %}
                         <div>
-                            <p>Sign up for early Sale access plus tailored new arrivals, trends and promotions. To opt
-                                out, click unsubscribe in our emails</p>
+                            <p>Ingresa tu email para recibir un código de verificación de 6 dígitos.</p>
                         </div>
                         <div class="tf-field style-1">
-                            <input class="tf-field-input tf-input" placeholder=" " type="email" name="">
-                            <label class="tf-field-label" for="">Email *</label>
+                            <input class="tf-field-input tf-input" placeholder=" " type="email" name="email" id="wishlist-reset-email" required>
+                            <label class="tf-field-label" for="wishlist-reset-email">Email *</label>
                         </div>
                         <div>
-                            <a href="#login" data-bs-toggle="modal" class="btn-link link">Cancel</a>
+                            <a href="#" class="btn-link link" data-bs-dismiss="modal">Cancelar</a>
                         </div>
                         <div class="bottom">
                             <div class="w-100">
-                                <button type="submit"
-                                    class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Reset
-                                        password</span></button>
+                                <button type="submit" id="wishlist-reset-submit"
+                                    class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Enviar código</span></button>
                             </div>
                         </div>
                     </form>
@@ -2910,6 +2909,22 @@
             </div>
         </div>
     </div>
+    
+    <script>
+    // Manejar el envío del formulario de reset en wishlist
+    document.addEventListener('DOMContentLoaded', function() {
+        const wishlistResetForm = document.getElementById('wishlist-reset-form');
+        if (wishlistResetForm) {
+            wishlistResetForm.addEventListener('submit', function(e) {
+                const submitBtn = document.getElementById('wishlist-reset-submit');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span>Enviando...</span>';
+                }
+            });
+        }
+    });
+    </script>
     <div class="modal modalCentered fade form-sign-in modal-part-content" id="register">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
