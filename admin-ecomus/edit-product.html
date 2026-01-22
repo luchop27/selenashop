@@ -638,6 +638,13 @@ function generarVariantes() {
     });
 }
 
+// ========================================
+// SISTEMA DE SELECCIÓN DE IMÁGENES
+// ========================================
+
+// Cargar imágenes existentes desde el backend
+const imagenesProducto = {{ imagenes_producto|safe }};
+
 // Auto-generar slug (solo si está vacío en edición)
 document.querySelector('[name="nombre"]').addEventListener('input', function() {
     const slugInput = document.querySelector('[name="slug"]');
@@ -682,6 +689,7 @@ function generarVariantesDesdeExistentes(variantesExistentes) {
         
         console.log(`  ✅ Variante ${index}: ${nombre}`);
         console.log(`     SKU: ${skuGenerado}, Stock: ${variante.stock}`);
+        console.log(`     Imagen index: ${variante.imagen_index}`);
         console.log(`     Atributos JSON: ${atributosJson}`);
         
         const variantDiv = document.createElement('div');
@@ -725,6 +733,14 @@ imageFilesInput.addEventListener('change', function(e) {
     handleFiles(e.target.files);
 });
 
+// Click en el área de upload para abrir selector de archivos
+uploadArea.addEventListener('click', function(e) {
+    // Evitar que el click en botones de eliminar active el input
+    if (!e.target.closest('button')) {
+        imageFilesInput.click();
+    }
+});
+
 // Drag and Drop
 uploadArea.addEventListener('dragover', function(e) {
     e.preventDefault();
@@ -757,6 +773,9 @@ function handleFiles(files) {
             displayImage(file, imageFiles.length - 1);
         }
     });
+    
+    // Regenerar selectores de imágenes en variantes
+    regenerarSelectoresImagenes();
 }
 
 function displayImage(file, index) {
@@ -796,6 +815,9 @@ function removeNewImage(index) {
         const button = item.querySelector('button');
         button.onclick = () => removeNewImage(newIndex);
     });
+    
+    // Regenerar selectores de imágenes en variantes
+    regenerarSelectoresImagenes();
 }
 
 function eliminarImagenExistente(imagenId, button) {
@@ -803,64 +825,37 @@ function eliminarImagenExistente(imagenId, button) {
         imagenesEliminar.push(imagenId);
         document.getElementById('imagenes_eliminar').value = imagenesEliminar.join(',');
         button.closest('.image-preview-item').remove();
+        
+        // Regenerar selectores de imágenes en variantes
+        regenerarSelectoresImagenes();
     }
 }
 
 // Interceptar envío del formulario
 document.querySelector('.form-add-product').addEventListener('submit', function(e) {
-    console.log('📤 Formulario enviado');
-    console.log('  Archivos nuevos:', imageFiles.length);
+    console.log('📤 Formulario enviado - modo NORMAL (no AJAX)');
     console.log('  Imágenes a eliminar:', imagenesEliminar.length);
+    console.log('  Nuevas imágenes a agregar:', imageFiles.length);
     
-    // Debug: Mostrar datos de variantes antes de enviar
-    const varianteInputs = document.querySelectorAll('input[name^="variante_"]');
-    console.log('  Total de inputs de variantes:', varianteInputs.length);
-    varianteInputs.forEach(input => {
-        if (input.name.includes('atributos')) {
-            console.log(`    ${input.name}: ${input.value.substring(0, 100)}...`);
-        }
+    // Agregar IDs de imágenes a eliminar al campo hidden
+    document.getElementById('imagenes_eliminar').value = imagenesEliminar.join(',');
+    
+    // Crear un nuevo DataTransfer para agregar las nuevas imágenes al input file
+    const dt = new DataTransfer();
+    imageFiles.forEach(file => {
+        dt.items.add(file);
+        console.log('  → Agregando nueva imagen:', file.name);
     });
     
-    if (imageFiles.length === 0 && imagenesEliminar.length === 0) {
-        console.log('⚠️ No hay cambios en imágenes, enviando formulario normalmente');
-        return true;
+    // Actualizar el input con las nuevas imágenes
+    const imageInput = document.querySelector('input[name="imagenes"]');
+    if (imageInput) {
+        imageInput.files = dt.files;
+        console.log('  Total nuevas imágenes en input:', imageInput.files.length);
     }
     
-    e.preventDefault();
-    console.log('🔄 Enviando con AJAX (hay cambios en imágenes)');
-    
-    const formData = new FormData(this);
-    
-    // Agregar nuevas imágenes
-    imageFiles.forEach((file) => {
-        formData.append('imagenes', file);
-    });
-    
-    // Agregar IDs de imágenes a eliminar
-    formData.set('imagenes_eliminar', imagenesEliminar.join(','));
-    
-    fetch(this.action || window.location.href, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (response.redirected) {
-            window.location.href = response.url;
-        } else if (response.ok) {
-            window.location.href = '/admin-panel/products/';
-        } else {
-            throw new Error('Error en la respuesta');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al actualizar el producto. Por favor, inténtalo de nuevo.');
-    });
-    
-    return false;
+    // Envío normal del formulario - Django maneja todo
+    return true;
 });
 </script>
 

@@ -9,7 +9,7 @@ class ProductoForm(forms.ModelForm):
         fields = [
             'nombre', 'slug', 'categoria', 'coleccion', 'tipo',
             'descripcion_corta', 'descripcion_larga', 'marca',
-            'precio_base', 'tiene_tallas', 'bajo_pedido', 'activo'
+            'precio_base', 'tiene_tallas', 'bajo_pedido'
         ]
         widgets = {
             # Ajustes de clases para que coincidan con el CSS del template admin-ecomus
@@ -24,7 +24,6 @@ class ProductoForm(forms.ModelForm):
             'precio_base': forms.NumberInput(attrs={'class': 'tf-input', 'placeholder': 'Precio base'}),
             'tiene_tallas': forms.CheckboxInput(attrs={'class': 'tf-checkbox', 'style': 'width: 21px; height: 21px;'}),
             'bajo_pedido': forms.CheckboxInput(attrs={'class': 'tf-checkbox', 'style': 'width: 21px; height: 21px;'}),
-            'activo': forms.CheckboxInput(attrs={'class': 'tf-checkbox', 'style': 'width: 21px; height: 21px;'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -43,8 +42,12 @@ class ProductoForm(forms.ModelForm):
         """
         Si no se selecciona una colección, asignar automáticamente a la colección 'Básica'.
         Si no existe, la crea automáticamente.
+        Los productos siempre se crean activos por defecto.
         """
         instance = super().save(commit=False)
+        
+        # Siempre establecer productos como activos
+        instance.activo = True
         
         # Si no se ha seleccionado ninguna colección
         if not instance.coleccion:

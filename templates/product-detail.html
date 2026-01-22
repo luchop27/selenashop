@@ -134,35 +134,17 @@
                                     </div>
                                     {% endif %}
                                     <div class="tf-product-info-variant-picker">
-                                        {% if colores_disponibles %}
-                                        <div class="variant-picker-item">
-                                            <div class="variant-picker-label">
-                                                Color: <span class="fw-6 variant-picker-label-value value-currentColor">{{ colores_disponibles.0.nombre }}</span>
-                                            </div>
-                                            <div class="variant-picker-values">
-                                                {% for color in colores_disponibles %}
-                                                <input id="values-color-{{ forloop.counter }}" type="radio" name="color1" {% if forloop.first %}checked{% endif %}>
-                                                <label class="hover-tooltip radius-60 color-btn" for="values-color-{{ forloop.counter }}"
-                                                    data-color="{{ color.valor }}" data-value="{{ color.nombre }}">
-                                                    <span class="btn-checkbox" style="background-color: {{ color.valor }}"></span>
-                                                    <span class="tooltip">{{ color.nombre }}</span>
-                                                </label>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        {% endif %}
-                                        
                                         {% if tallas_disponibles %}
                                         <div class="variant-picker-item">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="variant-picker-label">
-                                                    Size: <span class="fw-6 variant-picker-label-value">{{ tallas_disponibles.0.codigo }}</span>
+                                                    Talla: <span class="fw-6 variant-picker-label-value value-currentSize">{{ tallas_disponibles.0.codigo }}</span>
                                                 </div>
-                                                <a href="#find_size" data-bs-toggle="modal" class="find-size fw-6">Find your size</a>
+                                                <a href="#find_size" data-bs-toggle="modal" class="find-size fw-6">Encuentra tu talla</a>
                                             </div>
-                                            <div class="variant-picker-values">
+                                            <div class="variant-picker-values" id="size-picker-container">
                                                 {% for talla in tallas_disponibles %}
-                                                <input type="radio" name="size1" id="values-size-{{ forloop.counter }}" {% if forloop.first %}checked{% endif %}>
+                                                <input type="radio" name="size1" id="values-size-{{ forloop.counter }}" value="{{ talla.codigo }}" {% if forloop.first %}checked{% endif %} data-size="{{ talla.codigo }}">
                                                 <label class="style-text size-btn" for="values-size-{{ forloop.counter }}" data-value="{{ talla.codigo }}">
                                                     <p>{{ talla.codigo }}</p>
                                                 </label>
@@ -172,7 +154,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="tf-product-info-quantity">
-                                        <div class="quantity-title fw-6">Quantity</div>
+                                        <div class="quantity-title fw-6">Cantidad</div>
                                         <div class="wg-quantity">
                                             <span class="btn-quantity btn-decrease">-</span>
                                             <input type="text" class="quantity-product" name="number" value="1">
@@ -182,19 +164,21 @@
                                     <div class="tf-product-info-buy-button">
                                         <form class="">
                                             <a href="#"
-                                                class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Add
-                                                    to cart -&nbsp;</span><span
+                                                class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Agregar
+                                                    al carrito -&nbsp;</span><span
                                                     class="tf-qty-price total-price">${{ precio_min|default:producto.precio_base }}</span></a>
                                             <a href="#"
-                                                class="tf-product-btn-wishlist hover-tooltip box-icon bg_white wishlist btn-icon-action">
+                                                class="tf-product-btn-wishlist hover-tooltip box-icon bg_white wishlist btn-icon-action{% if in_wishlist %} active{% endif %}"
+                                                data-product-id="{{ producto.id }}"
+                                                {% if in_wishlist %}data-wishlist-id="{{ wishlist_item_id }}"{% endif %}>
                                                 <span class="icon icon-heart"></span>
-                                                <span class="tooltip">Add to Wishlist</span>
+                                                <span class="tooltip">{% if in_wishlist %}Remover de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                                 <span class="icon icon-delete"></span>
                                             </a>
                                             <div class="w-100">
-                                                <a href="#" class="btns-full">Buy with <img
+                                                <a href="#" class="btns-full">Comprar con <img
                                                         src="images/payments/paypal.png" alt=""></a>
-                                                <a href="#" class="payment-more-option">More payment options</a>
+                                                <a href="#" class="payment-more-option">Más opciones de pago</a>
                                             </div>
                                         </form>
                                     </div>
@@ -208,13 +192,13 @@
                                                     </path>
                                                 </svg>
                                             </div>
-                                            <div class="text fw-6">Delivery & Return</div>
+                                            <div class="text fw-6">Envío y Devolución</div>
                                         </a>
                                         <a href="#share_social" data-bs-toggle="modal" class="tf-product-extra-icon">
                                             <div class="icon">
                                                 <i class="icon-share"></i>
                                             </div>
-                                            <div class="text fw-6">Share</div>
+                                            <div class="text fw-6">Compartir</div>
                                         </a>
                                     </div>
                                     <div class="tf-product-info-delivery-return">
@@ -224,9 +208,9 @@
                                                     <div class="icon">
                                                         <i class="icon-delivery-time"></i>
                                                     </div>
-                                                    <p>Estimate delivery times: <span class="fw-7">12-26 days</span>
-                                                        (International), <span class="fw-7">3-6 days</span> (United
-                                                        States).</p>
+                                                    <p>Tiempos estimados de entrega: <span class="fw-7">12-26 días</span>
+                                                        (Internacional), <span class="fw-7">3-6 días</span> (Estados
+                                                        Unidos).</p>
                                                 </div>
                                             </div>
                                             <div class="col-xl-6 col-12">
@@ -234,8 +218,8 @@
                                                     <div class="icon">
                                                         <i class="icon-return-order"></i>
                                                     </div>
-                                                    <p>Return within <span class="fw-7">30 days</span> of purchase.
-                                                        Duties & taxes are non-refundable.</p>
+                                                    <p>Devolución dentro de <span class="fw-7">30 días</span> de la compra.
+                                                        Los impuestos no son reembolsables.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -243,7 +227,7 @@
                                     <div class="tf-product-info-trust-seal">
                                         <div class="tf-product-trust-mess">
                                             <i class="icon-safe"></i>
-                                            <p class="fw-6">Guarantee Safe <br> Checkout</p>
+                                            <p class="fw-6">Compra Segura <br> Garantizada</p>
                                         </div>
                                         <div class="tf-payment">
                                             <img src="images/payments/visa.png" alt="">
@@ -314,19 +298,19 @@
                         <div class="widget-tabs style-has-border">
                             <ul class="widget-menu-tab">
                                 <li class="item-title active">
-                                    <span class="inner">Description</span>
+                                    <span class="inner">Descripción</span>
                                 </li>
                                 <li class="item-title">
-                                    <span class="inner">Additional Information</span>
+                                    <span class="inner">Información Adicional</span>
                                 </li>
                                 <li class="item-title">
-                                    <span class="inner">Review</span>
+                                    <span class="inner">Reseñas</span>
                                 </li>
                                 <li class="item-title">
-                                    <span class="inner">Shipping</span>
+                                    <span class="inner">Envíos</span>
                                 </li>
                                 <li class="item-title">
-                                    <span class="inner">Return Policies</span>
+                                    <span class="inner">Políticas de Devolución</span>
                                 </li>
                             </ul>
                             <div class="widget-content-tab">
@@ -342,28 +326,28 @@
                                         </p>
                                         {% else %}
                                         <p class="mb_30">
-                                            Información del producto no disponible.
+                                            Informaci�n del producto no disponible.
                                         </p>
                                         {% endif %}
                                         {% if global_content %}
                                         <div class="tf-product-des-demo">
                                             <div class="right">
                                                 {% if global_content.features_content %}
-                                                <h3 class="fs-16 fw-5">Features</h3>
+                                                <h3 class="fs-16 fw-5">Características</h3>
                                                 <ul>
                                                     {{ global_content.features_content|safe }}
                                                 </ul>
                                                 {% endif %}
                                                 
                                                 {% if global_content.materials_content %}
-                                                <h3 class="fs-16 fw-5">Materials Care</h3>
+                                                <h3 class="fs-16 fw-5">Cuidado de Materiales</h3>
                                                 <ul class="mb-0">
                                                     {{ global_content.materials_content|safe }}
                                                 </ul>
                                                 {% endif %}
                                             </div>
                                             <div class="left">
-                                                <h3 class="fs-16 fw-5">Materials Care</h3>
+                                                <h3 class="fs-16 fw-5">Cuidado de Materiales</h3>
                                                 {% if global_content.care_text_1 %}
                                                 <div class="d-flex gap-10 mb_15 align-items-center">
                                                     <div class="icon">
@@ -488,26 +472,26 @@
                                             <div>
                                                 <div
                                                     class="tf-btn btn-outline-dark fw-6 btn-comment-review btn-cancel-review">
-                                                    Cancel Review</div>
+                                                    Cancelar Reseña</div>
                                                 <div
                                                     class="tf-btn btn-outline-dark fw-6 btn-comment-review btn-write-review">
-                                                    Write a review</div>
+                                                    Escribir reseña</div>
                                             </div>
                                         </div>
                                         <div class="reply-comment cancel-review-wrap">
                                             <div class="d-flex mb_24 gap-20 align-items-center justify-content-between flex-wrap">
-                                               <h5 class=""><span id="totalReviewsCount">0</span> Comments</h5>
+                                               <h5 class=""><span id="totalReviewsCount">0</span> Comentarios</h5>
                                                 <div class="d-flex align-items-center gap-12">
-                                                    <div class="text-caption-1">Sort by:</div>
+                                                    <div class="text-caption-1">Ordenar por:</div>
                                                     <select id="reviewSortBy" class="form-select form-select-sm" style="width: auto;">
-                                                        <option value="recent">Most Recent</option>
-                                                        <option value="rating_high">Highest Rating</option>
-                                                        <option value="rating_low">Lowest Rating</option>
+                                                        <option value="recent">Más Recientes</option>
+                                                        <option value="rating_high">Mejor Calificación</option>
+                                                        <option value="rating_low">Menor Calificación</option>
                                                     </select>
                                                 </div>
                                             </div>
                                             <div id="reviewsContainer" class="reply-comment-wrap">
-                                                <p class="text-center text_black-2 py-5">Loading reviews...</p>
+                                                <p class="text-center text_black-2 py-5">Cargando reseñas...</p>
                                             </div>
                                         </div>
                                         {% if user.is_authenticated %}
@@ -515,33 +499,33 @@
                                         <form id="reviewForm" class="form-write-review write-review-wrap mt-4">
                                             {% csrf_token %}
                                             <div class="heading">
-                                                <h5>Write a review:</h5>
+                                                <h5>Escribe una reseña:</h5>
                                                 <div class="list-rating-check">
-                                                    <span class="rating-star" data-rating="5">★</span>
-                                                    <span class="rating-star" data-rating="4">★</span>
-                                                    <span class="rating-star" data-rating="3">★</span>
-                                                    <span class="rating-star" data-rating="2">★</span>
-                                                    <span class="rating-star" data-rating="1">★</span>
+                                                    <span class="rating-star" data-rating="5">?</span>
+                                                    <span class="rating-star" data-rating="4">?</span>
+                                                    <span class="rating-star" data-rating="3">?</span>
+                                                    <span class="rating-star" data-rating="2">?</span>
+                                                    <span class="rating-star" data-rating="1">?</span>
                                                 </div>
                                                 <input type="hidden" id="reviewRating" name="rating" value="0" required>
                                             </div>
                                             <div class="form-content">
                                                 <fieldset class="box-field">
-                                                    <label class="label">Review Title (Optional)</label>
-                                                    <input type="text" id="reviewTitle" placeholder="Give your review a title" class="form-control">
+                                                    <label class="label">Título de Reseña (Opcional)</label>
+                                                    <input type="text" id="reviewTitle" placeholder="Dale un título a tu reseña" class="form-control">
                                                 </fieldset>
                                                 <fieldset class="box-field">
-                                                    <label class="label">Review *</label>
-                                                    <textarea id="reviewComment" rows="4" placeholder="Write your comment here" class="form-control" required></textarea>
+                                                    <label class="label">Reseña *</label>
+                                                    <textarea id="reviewComment" rows="4" placeholder="Escribe tu comentario aquí" class="form-control" required></textarea>
                                                 </fieldset>
                                             </div>
                                             <div class="button-submit">
-                                                <button class="tf-btn btn-fill animate-hover-btn" type="submit">Submit Review</button>
+                                                <button class="tf-btn btn-fill animate-hover-btn" type="submit">Enviar Reseña</button>
                                             </div>
                                         </form>
                                         {% else %}
                                         <div class="alert alert-info mt-4">
-                                            <p>Please <a href="{% url 'usuarios:login' %}">log in</a> to write a review.</p>
+                                            <p>Por favor <a href="{% url 'usuarios:login' %}">inicia sesión</a> para escribir una reseña.</p>
                                         </div>
                                         {% endif %}
                                     </div>
@@ -552,31 +536,31 @@
                                         <div class="title">{{ shipping_info.titulo }}</div>
                                         <p>{{ shipping_info.descripcion|linebreaks }}</p>
                                         {% if shipping_info.tiempo_nacional or shipping_info.tiempo_internacional %}
-                                        <p><strong>Delivery Times:</strong></p>
+                                        <p><strong>Tiempos de Entrega:</strong></p>
                                         <ul>
                                             {% if shipping_info.tiempo_nacional %}
-                                            <li>National: {{ shipping_info.tiempo_nacional }}</li>
+                                            <li>Nacional: {{ shipping_info.tiempo_nacional }}</li>
                                             {% endif %}
                                             {% if shipping_info.tiempo_internacional %}
-                                            <li>International: {{ shipping_info.tiempo_internacional }}</li>
+                                            <li>Internacional: {{ shipping_info.tiempo_internacional }}</li>
                                             {% endif %}
                                         </ul>
                                         {% endif %}
                                         {% if shipping_info.envio_gratis_desde %}
-                                        <p><strong>Free shipping</strong> for orders over ${{ shipping_info.envio_gratis_desde }}</p>
+                                        <p><strong>Envío gratis</strong> para pedidos mayores a ${{ shipping_info.envio_gratis_desde }}</p>
                                         {% endif %}
                                     </div>
                                     {% else %}
                                     <div class="tf-page-privacy-policy">
-                                        <div class="title">Shipping & Delivery</div>
-                                        <p>Shipping information not available.</p>
+                                        <div class="title">Envío y Entrega</div>
+                                        <p>Información de envío no disponible.</p>
                                     </div>
                                     {% endif %}
                                 </div>
                                 <div class="widget-content-inner">
                                     {% if return_policies %}
                                     <div class="tf-page-privacy-policy mb-4">
-                                        <div class="title">Return Policies</div>
+                                        <div class="title">Políticas de Devolución</div>
                                         <ul class="mb-0">
                                             {% for policy in return_policies %}
                                             <li class="mb-2"><strong>{{ policy.titulo }}:</strong> {{ policy.descripcion }}</li>
@@ -728,7 +712,7 @@
                                                     <span class="icon icon-view"></span>
                                                     <span class="tooltip">Quick View</span>
                                                 </a>
-                                        </div>                                        <!-- DEBUG: Ver qué hay en sizes -->
+                                        </div>                                        <!-- DEBUG: Ver qu� hay en sizes -->
                                         <div style="background: yellow; padding: 5px; font-size: 11px;">
                                             DEBUG sizes: {{ producto.sizes|length }} items - {{ producto.sizes }}
                                         </div>
@@ -1100,10 +1084,10 @@
     function copyShareUrl() {
         const urlInput = document.getElementById('shareUrl');
         urlInput.select();
-        urlInput.setSelectionRange(0, 99999); // Para móviles
+        urlInput.setSelectionRange(0, 99999); // Para m�viles
         
         navigator.clipboard.writeText(urlInput.value).then(function() {
-            // Cambiar el texto del botón temporalmente
+            // Cambiar el texto del bot�n temporalmente
             const btn = event.target.closest('button');
             const originalText = btn.innerHTML;
             btn.innerHTML = 'Copied!';
@@ -2035,18 +2019,18 @@
                 <div class="bottom-bar-language">
                     <div class="tf-currencies">
                         <select class="image-select center style-default type-currencies">
-                            <option data-thumbnail="{% static 'images/country/fr.svg' %}">EUR € | France</option>
-                            <option data-thumbnail="{% static 'images/country/de.svg' %}">EUR € | Germany</option>
+                            <option data-thumbnail="{% static 'images/country/fr.svg' %}">EUR � | France</option>
+                            <option data-thumbnail="{% static 'images/country/de.svg' %}">EUR � | Germany</option>
                             <option selected data-thumbnail="{% static 'images/country/us.svg' %}">USD $ | United States</option>
-                            <option data-thumbnail="{% static 'images/country/vn.svg' %}">VND ₫ | Vietnam</option>
+                            <option data-thumbnail="{% static 'images/country/vn.svg' %}">VND ? | Vietnam</option>
                         </select>
                     </div>
                     <div class="tf-languages">
                         <select class="image-select center style-default type-languages">
                             <option>English</option>
-                            <option>العربية</option>
-                            <option>简体中文</option>
-                            <option>اردو</option>
+                            <option>???????</option>
+                            <option>????</option>
+                            <option>????</option>
                         </select>
                     </div>
                 </div>
@@ -2649,309 +2633,177 @@
     </div>
     <!-- /modal quick_view -->
 
-    <!-- Script para control de cantidad según stock -->
+    <!-- Script para control de variantes y stock -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Datos de variantes con stock desde Django
-        const variantesData = {{ variantes_json|safe }};
-        console.log('Variantes disponibles:', variantesData);
+        console.log('=== SISTEMA DE VARIANTES CARGADO (SOLO TALLAS) ===');
+        
+        // Datos de variantes del backend
+        const variantesMap = {{ variantes_map_json|safe }};
+        console.log('Mapa de variantes:', variantesMap);
+        
+        // Variables globales
+        let tallaSeleccionada = null;
+        let varianteActual = null;
         
         // Elementos del DOM
+        const sizeInputs = document.querySelectorAll('input[name="size1"]');
         const quantityInput = document.querySelector('.quantity-product');
+        const totalPriceElements = document.querySelectorAll('.total-price');
         const btnIncrease = document.querySelector('.btn-increase');
         const btnDecrease = document.querySelector('.btn-decrease');
-        const sizeInputs = document.querySelectorAll('input[name="size1"]');
-        const colorInputs = document.querySelectorAll('input[name="color1"]');
-        const totalPriceElement = document.querySelector('.tf-qty-price.total-price');
+        const sizeLabel = document.querySelector('.value-currentSize');
         
-        // Variables globales para que cart.js pueda acceder
-        window.currentMaxStock = 0; // Inicialmente sin stock hasta seleccionar variante
-        window.currentVariantId = null;
-        let currentPrice = 0; // Se actualizará al seleccionar variante
-        let isProcessing = false; // Flag para prevenir clics múltiples
-        
-        // Función para obtener la variante actual según talla y color seleccionados
-        function getCurrentVariant() {
-            const selectedSize = document.querySelector('input[name="size1"]:checked');
-            const selectedColor = document.querySelector('input[name="color1"]:checked');
-            
-            if (!selectedSize) {
-                console.log('No hay talla seleccionada');
-                return null;
-            }
-            
-            // Obtener el label asociado al input
-            const sizeLabel = selectedSize.nextElementSibling;
-            const sizeValue = sizeLabel ? sizeLabel.getAttribute('data-value') : '';
-            
-            let colorValue = '';
-            if (selectedColor) {
-                const colorLabel = selectedColor.nextElementSibling;
-                colorValue = colorLabel ? colorLabel.getAttribute('data-color') : '';
-            }
-            
-            console.log('========== DEBUG ==========');
-            console.log('Input talla checked:', selectedSize);
-            console.log('Label de talla:', sizeLabel);
-            console.log('Talla seleccionada:', sizeValue);
-            console.log('Color seleccionado:', colorValue);
-            console.log('Variantes disponibles:', Object.keys(variantesData));
-            
-            // Buscar la variante en los datos
-            // IMPORTANTE: Solo agregar color si realmente existe y no es vacío
-            let key = sizeValue;
-            if (colorValue && colorValue.trim() !== '') {
-                key += '_' + colorValue;
-            }
-            
-            console.log('Buscando variante con clave: "' + key + '"');
-            const variant = variantesData[key];
-            console.log('Variante encontrada:', variant);
-            
-            if (!variant) {
-                console.error('⚠️ NO SE ENCONTRÓ LA VARIANTE');
-                console.error('Clave buscada: "' + key + '"');
-                console.error('Claves disponibles:', Object.keys(variantesData));
-                console.table(variantesData);
-            } else {
-                console.log('✅ Variante encontrada:');
-                console.log('  - ID:', variant.id);
-                console.log('  - Stock:', variant.stock);
-                console.log('  - Precio:', variant.precio);
-                console.log('  - Talla:', variant.talla);
-                console.log('  - Color:', variant.color);
-            }
-            console.log('===========================');
-            
-            return variant || null;
-        }
-        
-        // Función para actualizar el stock máximo
-        function updateMaxStock() {
-            const variant = getCurrentVariant();
-            
-            if (variant) {
-                window.currentMaxStock = variant.stock;
-                window.currentVariantId = variant.id;
-                currentPrice = parseFloat(variant.precio);
-                
-                console.log('Stock máximo actualizado:', window.currentMaxStock);
-                console.log('Precio actualizado:', currentPrice);
-                
-                // Ajustar cantidad actual si excede el nuevo stock máximo
-                const currentQty = parseInt(quantityInput.value) || 1;
-                if (currentQty > window.currentMaxStock) {
-                    quantityInput.value = window.currentMaxStock > 0 ? window.currentMaxStock : 1;
+        // Inicializar con la primera talla disponible
+        if (sizeInputs.length > 0) {
+            // Buscar la primera talla seleccionada
+            for (let i = 0; i < sizeInputs.length; i++) {
+                if (sizeInputs[i].checked) {
+                    tallaSeleccionada = sizeInputs[i].value;
+                    break;
                 }
-                
-                // Si no hay stock, poner en 1 pero deshabilitar botones
-                if (window.currentMaxStock === 0) {
-                    quantityInput.value = 1;
-                }
-                
-                // Actualizar botones según stock
-                updateButtons();
-                updateTotalPrice();
-            } else {
-                console.warn('No se encontró variante para la selección actual');
-                window.currentMaxStock = 0;
-                window.currentVariantId = null;
-                quantityInput.value = 1;
-                updateButtons();
-                updateTotalPrice();
-            }
-        }
-        
-        // Función para actualizar el estado de los botones
-        function updateButtons() {
-            const currentQty = parseInt(quantityInput.value) || 1;
-            
-            console.log('Actualizando botones - Cantidad:', currentQty, 'Stock máximo:', window.currentMaxStock);
-            
-            // Deshabilitar botón de incremento si llegamos al stock máximo o no hay stock
-            if (currentQty >= window.currentMaxStock || window.currentMaxStock === 0) {
-                btnIncrease.classList.add('disabled');
-                btnIncrease.style.opacity = '0.5';
-                btnIncrease.style.cursor = 'not-allowed';
-                btnIncrease.style.pointerEvents = 'none';
-            } else {
-                btnIncrease.classList.remove('disabled');
-                btnIncrease.style.opacity = '1';
-                btnIncrease.style.cursor = 'pointer';
-                btnIncrease.style.pointerEvents = 'auto';
-            }
-            
-            // Deshabilitar botón de decremento si estamos en 1
-            if (currentQty <= 1) {
-                btnDecrease.classList.add('disabled');
-                btnDecrease.style.opacity = '0.5';
-                btnDecrease.style.cursor = 'not-allowed';
-                btnDecrease.style.pointerEvents = 'none';
-            } else {
-                btnDecrease.classList.remove('disabled');
-                btnDecrease.style.opacity = '1';
-                btnDecrease.style.cursor = 'pointer';
-                btnDecrease.style.pointerEvents = 'auto';
-            }
-        }
-        
-        // Función para actualizar el precio total
-        function updateTotalPrice() {
-            const qty = parseInt(quantityInput.value) || 1;
-            
-            // Si no hay precio (no se ha seleccionado variante), usar precio base
-            const priceToUse = currentPrice > 0 ? currentPrice : {{ producto.precio_base|default:0 }};
-            const total = (priceToUse * qty).toFixed(2);
-            
-            console.log('Calculando precio total:');
-            console.log('  - Cantidad:', qty);
-            console.log('  - Precio unitario:', priceToUse);
-            console.log('  - Total:', total);
-            
-            if (totalPriceElement) {
-                totalPriceElement.textContent = '$' + total;
             }
         }
         
         // Event listeners para cambio de talla
         sizeInputs.forEach(input => {
             input.addEventListener('change', function() {
-                console.log('Cambio de talla detectado');
-                updateMaxStock();
-            });
-        });
-        
-        // Event listeners para cambio de color
-        colorInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                console.log('Cambio de color detectado');
-                updateMaxStock();
-            });
-        });
-        
-        // Event listener para incrementar cantidad con protección contra múltiples ejecuciones
-        btnIncrease.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            // Prevenir procesamiento múltiple
-            if (isProcessing) {
-                console.log('Ya procesando, ignorando click adicional');
-                return false;
-            }
-            
-            // Verificar si el botón está deshabilitado
-            if (btnIncrease.classList.contains('disabled') || btnIncrease.style.pointerEvents === 'none') {
-                console.log('Botón + está deshabilitado, ignorando click');
-                return false;
-            }
-            
-            isProcessing = true;
-            
-            const currentQty = parseInt(quantityInput.value) || 1;
-            console.log('=== INCREMENTO ===');
-            console.log('Cantidad actual:', currentQty);
-            console.log('Stock máximo:', window.currentMaxStock);
-            
-            // Validación estricta: solo incrementar si hay stock disponible
-            if (currentQty < window.currentMaxStock && window.currentMaxStock > 0) {
-                const newQty = currentQty + 1;
-                console.log('Intentando incrementar a:', newQty);
+                tallaSeleccionada = this.value;
+                console.log('Talla seleccionada:', tallaSeleccionada);
                 
-                // Triple verificación antes de asignar
-                if (newQty <= window.currentMaxStock) {
-                    quantityInput.value = newQty;
-                    console.log('✅ Cantidad actualizada a:', newQty);
-                    updateButtons();
-                    updateTotalPrice();
-                } else {
-                    console.log('❌ Bloqueado: excedería stock máximo');
+                // Actualizar label de talla
+                if (sizeLabel) {
+                    const label = this.nextElementSibling;
+                    if (label) {
+                        sizeLabel.textContent = label.dataset.value;
+                    }
                 }
+                
+                // Actualizar variante
+                actualizarVariante();
+            });
+        });
+        
+        // Función para actualizar variante según talla seleccionada
+        function actualizarVariante() {
+            if (!tallaSeleccionada) return;
+            
+            console.log('Buscando variante para talla:', tallaSeleccionada);
+            
+            // Buscar en variantesMap usando solo la talla
+            varianteActual = variantesMap[tallaSeleccionada];
+            
+            if (varianteActual) {
+                console.log('Variante encontrada - Stock:', varianteActual.stock);
+                window.currentVariantId = varianteActual.id;
+                actualizarStock(varianteActual.stock);
+                actualizarPrecio(varianteActual.precio);
             } else {
-                console.log('❌ Bloqueado: ya en stock máximo');
+                console.log('Variante no encontrada para talla:', tallaSeleccionada);
+                actualizarStock(0);
             }
-            
-            // Liberar el flag después de un pequeño delay
-            setTimeout(() => {
-                isProcessing = false;
-            }, 100);
-            
-            return false;
-        }, { capture: true });
+        }
         
-        // Event listener para decrementar cantidad
-        btnDecrease.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+        function actualizarStock(stock) {
+            window.currentMaxStock = stock;
+            console.log('Stock actualizado:', stock);
             
-            // Prevenir procesamiento múltiple
-            if (isProcessing) {
-                return false;
+            // Establecer el máximo del input
+            if (quantityInput) {
+                quantityInput.setAttribute('max', stock);
+                quantityInput.value = 1;
             }
-            
-            // Verificar si el botón está deshabilitado
-            if (btnDecrease.classList.contains('disabled') || btnDecrease.style.pointerEvents === 'none') {
-                console.log('Botón - está deshabilitado, ignorando click');
-                return false;
-            }
-            
-            isProcessing = true;
-            
-            const currentQty = parseInt(quantityInput.value) || 1;
-            console.log('=== DECREMENTO ===');
-            console.log('Cantidad actual:', currentQty);
-            
-            if (currentQty > 1) {
-                quantityInput.value = currentQty - 1;
-                console.log('✅ Cantidad decrementada a:', currentQty - 1);
-                updateButtons();
-                updateTotalPrice();
-            }
-            
-            setTimeout(() => {
-                isProcessing = false;
-            }, 100);
-            
-            return false;
-        }, { capture: true });
+            actualizarBotones();
+            actualizarPrecio(varianteActual?.precio || {{ producto.precio_base|default:0 }});
+        }
         
-        // Event listener para validar cuando el usuario termina de editar manualmente
-        quantityInput.addEventListener('blur', function() {
-            let value = parseInt(this.value) || 1;
-            
-            console.log('Validación manual (blur):', value, 'max:', window.currentMaxStock);
-            
-            // Limitar al stock máximo
-            if (value > window.currentMaxStock) {
-                value = window.currentMaxStock > 0 ? window.currentMaxStock : 1;
-                console.log('Ajustado a stock máximo:', value);
-            }
-            
-            // Mínimo 1
-            if (value < 1) {
-                value = 1;
-                console.log('Ajustado a mínimo 1');
-            }
-            
-            this.value = value;
-            updateButtons();
-            updateTotalPrice();
-        });
+        function actualizarPrecio(precio) {
+            const qty = parseInt(quantityInput?.value) || 1;
+            const total = (parseFloat(precio) * qty).toFixed(2);
+            totalPriceElements.forEach(el => el.textContent = '$' + total);
+        }
         
-        // Prevenir que el input acepte valores no numéricos
-        quantityInput.addEventListener('keypress', function(e) {
-            if (e.key && !/[0-9]/.test(e.key)) {
+        function actualizarBotones() {
+            const qty = parseInt(quantityInput?.value) || 1;
+            console.log('Actualizando botones - Qty:', qty, 'Max:', window.currentMaxStock);
+            
+            if (btnIncrease) {
+                if (qty >= window.currentMaxStock || window.currentMaxStock === 0) {
+                    btnIncrease.disabled = true;
+                    btnIncrease.style.opacity = '0.5';
+                    btnIncrease.style.pointerEvents = 'none';
+                } else {
+                    btnIncrease.disabled = false;
+                    btnIncrease.style.opacity = '1';
+                    btnIncrease.style.pointerEvents = 'auto';
+                }
+            }
+            
+            if (btnDecrease) {
+                btnDecrease.disabled = qty <= 1;
+                btnDecrease.style.opacity = qty <= 1 ? '0.5' : '1';
+                btnDecrease.style.pointerEvents = qty <= 1 ? 'none' : 'auto';
+            }
+        }
+        
+        if (btnIncrease) {
+            btnIncrease.addEventListener('click', function(e) {
                 e.preventDefault();
-            }
-        });
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                const qty = parseInt(quantityInput.value) || 1;
+                const maxStock = parseInt(quantityInput.getAttribute('max')) || window.currentMaxStock || 999;
+                
+                if (qty < maxStock) {
+                    quantityInput.value = qty + 1;
+                    actualizarBotones();
+                    actualizarPrecio(varianteActual?.precio || {{ producto.precio_base|default:0 }});
+                }
+                return false;
+            }, true);
+        }
         
-        // Inicializar: comenzar en 1 y obtener stock de la primera talla
-        quantityInput.value = 1;
-        updateMaxStock();
+        if (btnDecrease) {
+            btnDecrease.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                const qty = parseInt(quantityInput.value) || 1;
+                if (qty > 1) {
+                    quantityInput.value = qty - 1;
+                    actualizarBotones();
+                    actualizarPrecio(varianteActual?.precio || {{ producto.precio_base|default:0 }});
+                }
+                return false;
+            }, true);
+        }
         
-        console.log('Inicialización completa');
+        if (quantityInput) {
+            quantityInput.addEventListener('input', function() {
+                let val = parseInt(this.value) || 1;
+                const maxStock = parseInt(this.getAttribute('max')) || window.currentMaxStock || 999;
+                
+                if (val > maxStock) {
+                    val = maxStock;
+                }
+                if (val < 1) {
+                    val = 1;
+                }
+                
+                this.value = val;
+                actualizarBotones();
+                actualizarPrecio(varianteActual?.precio || {{ producto.precio_base|default:0 }});
+            });
+        }
+        
+        // Inicializar al cargar
+        if (tallaSeleccionada) {
+            actualizarVariante();
+        }
+        
+        console.log('=== INICIALIZACI�N COMPLETA ===');
     });
     </script>
     

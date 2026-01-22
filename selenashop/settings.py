@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.CartPersistenceMiddleware',  # Sincronizar carrito a BD
+    'core.admin_middleware.AdminAccessMiddleware',  # Proteger rutas de administración
 ]
 
 ROOT_URLCONF = 'selenashop.urls'

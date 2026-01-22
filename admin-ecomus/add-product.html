@@ -153,17 +153,16 @@
                         </div>
 
                         <fieldset class="name">
-                            <div class="body-title mb-10">Estado</div>
-                            <div class="flex gap10 items-center mb-10">
-                                {{ form.activo }}
-                                <label for="{{ form.activo.id_for_label }}">Producto activo</label>
-                            </div>
+                            <div class="body-title mb-10">Configuración</div>
                             <div class="flex gap10 items-center">
                                 {{ form.bajo_pedido }}
                                 <label for="{{ form.bajo_pedido.id_for_label }}">
                                     <span class="body-title-2">Producto bajo pedido</span>
                                     <p class="text-tiny text-surface-2 mt-2">Si está activado, el producto seguirá visible aunque no tenga stock y permitirá pedidos. Si está desactivado, se eliminará automáticamente cuando el stock llegue a 0.</p>
                                 </label>
+                            </div>
+                            <div class="text-tiny text-surface-2 mt-10">
+                                <i class="icon-check-circle"></i> Los productos se crean activos automáticamente
                             </div>
                         </fieldset>
                     </div>
@@ -582,10 +581,25 @@ function generarVariantes() {
     combinaciones.forEach((combo, index) => {
         const nombre = combo.map(c => c.valorNombre).join(' / ');
         
-        // Generar SKU automáticamente: slug + talla (si existe)
+        // Generar SKU automáticamente: slug + color + talla
         const tallaObj = combo.find(c => c.atributoNombre.toLowerCase() === 'talla');
+        const colorObj = combo.find(c => c.atributoNombre.toLowerCase() === 'color');
         const tallaNombre = tallaObj ? tallaObj.valorNombre.toUpperCase() : '';
-        const skuGenerado = tallaNombre ? `${productoSlug}-${tallaNombre}` : `${productoSlug}-${index + 1}`;
+        const colorNombre = colorObj ? colorObj.valorNombre.toUpperCase().substring(0, 3) : '';
+        
+        let skuGenerado = productoSlug;
+        if (tallaNombre) skuGenerado += `-${tallaNombre}`;
+        if (colorNombre) skuGenerado += `-${colorNombre}`;
+        if (!tallaNombre && !colorNombre) skuGenerado += `-${index + 1}`;
+        
+        // Crear HTML para selector de imágenes
+        let imagenesHTML = '';
+        if (imageFiles.length > 0) {
+            imagenesHTML = `
+                <fieldset>
+                </fieldset>
+            `;
+        }
         
         const variantDiv = document.createElement('div');
         variantDiv.className = 'variant-item mb-16';
@@ -598,11 +612,12 @@ function generarVariantes() {
                     SKU: ${skuGenerado}
                 </span>
             </div>
-            <div class="cols-lg gap16">
+            <div class="cols-lg gap16" style="grid-template-columns: ${imageFiles.length > 0 ? '1fr 1fr' : '1fr'};">
                 <fieldset>
                     <div class="body-text mb-4">Stock</div>
-                    <input type="number" name="variante_${index}_stock" class="tf-input" placeholder="0" value="0">
+                    <input type="number" name="variante_${index}_stock" class="tf-input" placeholder="0" value="0" min="0">
                 </fieldset>
+                ${imagenesHTML}
             </div>
             <input type="hidden" name="variante_${index}_sku" value="${skuGenerado}">
             <input type="hidden" name="variante_${index}_atributos" value='${JSON.stringify(combo)}'>
@@ -688,6 +703,9 @@ function handleFiles(files) {
             }
         }
     });
+    
+    // Regenerar variantes para mostrar selectores de imágenes
+    generarVariantes();
 }
 
 function displayImage(file, index) {
@@ -732,53 +750,31 @@ function removeImage(index) {
         const button = item.querySelector('button');
         button.onclick = () => removeImage(newIndex);
     });
+    
+    // Regenerar variantes para actualizar selectores
+    generarVariantes();
 }
 
 // Interceptar el envío del formulario para agregar las imágenes
 document.querySelector('.form-add-product').addEventListener('submit', function(e) {
-    // Si no hay imágenes, permitir el envío normal
-    if (imageFiles.length === 0) {
-        return true;
+    console.log('Formulario enviándose. Imágenes en array:', imageFiles.length);
+    
+    // Crear un nuevo DataTransfer para agregar las imágenes al input file
+    const dt = new DataTransfer();
+    imageFiles.forEach(file => {
+        dt.items.add(file);
+        console.log('Agregando imagen al input:', file.name);
+    });
+    
+    // Actualizar el input con las imágenes
+    const imageInput = document.querySelector('input[name="imagenes"]');
+    if (imageInput) {
+        imageInput.files = dt.files;
+        console.log('Total imágenes en input:', imageInput.files.length);
     }
     
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    // Agregar todas las imágenes al FormData
-    imageFiles.forEach((file, index) => {
-        formData.append('imagenes', file);
-    });
-    
-    // Enviar con fetch
-    fetch(this.action || window.location.href, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.text();
-        }
-        throw new Error('Error en la respuesta del servidor');
-    })
-    .then(html => {
-        // Si la respuesta es un redirect o success, recargar o redirigir
-        if (html.includes('exitosamente') || html.includes('success')) {
-            window.location.href = '/admin-panel/products/';
-        } else {
-            // Si hay errores, mostrar el formulario con los errores
-            document.body.innerHTML = html;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al guardar el producto. Por favor, inténtalo de nuevo.');
-    });
-    
-    return false;
+    // Envío normal del formulario
+    return true;
 });
 
 // Cargar datos al inicio

@@ -1,14 +1,19 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import ListView, DetailView
-from .models import Categoria, Estilo, Producto
+from .models import Categoria, Estilo, Producto, Atributo, ValorAtributo, Coleccion
 from django.db.models import Sum, Min, Q, Max
 from decimal import Decimal
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from .forms import ProductoForm, VarianteFormSet, ImagenFormSet
 
+# Importar decoradores de seguridad
+from core.decorators import admin_required, superuser_required
 
+
+@admin_required
 def panel_dashboard(request):
 	"""Vista principal del dashboard"""
 	total_productos = Producto.objects.count()
@@ -313,6 +318,7 @@ class EstiloProductoListView(ListView):
 # =========================
 #  VISTAS DEL PANEL (admin-ecomus)
 # =========================
+@admin_required
 def panel_productos_list(request):
 	"""
 	Renderiza tu HTML del panel: admin-ecomus/product-list.html
@@ -383,6 +389,7 @@ def panel_productos_list(request):
 		"search": search,
 	})
 
+@admin_required
 def panel_producto_crear(request):
 	"""
 	Renderiza el HTML de crear producto del panel.
@@ -549,6 +556,7 @@ def panel_categoria_edit(request, pk):
 	})
 
 
+@admin_required
 def panel_categoria_delete(request, pk):
 	"""
 	Eliminar una categoría
@@ -591,7 +599,7 @@ def panel_categoria_delete(request, pk):
 #  ADMIN PANEL ECOMUS - PRODUCTOS
 # =========================
 
-@login_required(login_url='/admin/login/')
+@admin_required
 def admin_productos_list(request):
 	"""
 	Lista de productos para el admin panel de ecomus
@@ -654,7 +662,7 @@ def admin_productos_list(request):
 	})
 
 
-@login_required(login_url='/admin/login/')
+@admin_required
 def admin_producto_add(request):
 	"""
 	Agregar nuevo producto con el diseño de ecomus
@@ -669,15 +677,14 @@ def admin_producto_add(request):
 		if form.is_valid():
 			producto = form.save()
 			
-			# Procesar imágenes múltiples
+			# Obtener imágenes cargadas (NO guardarlas aún)
 			imagenes = request.FILES.getlist('imagenes')
-			for index, imagen_file in enumerate(imagenes):
-				from .models import Imagen
-				Imagen.objects.create(
-					producto=producto,
-					imagen=imagen_file,
-					posicion=index
-				)
+			print(f"\n{'='*50}")
+			print(f"DEBUG - Total imágenes recibidas: {len(imagenes)}")
+			print(f"DEBUG - request.FILES keys: {list(request.FILES.keys())}")
+			for idx, img in enumerate(imagenes):
+				print(f"  Imagen {idx}: {img.name} ({img.size} bytes)")
+			print(f"{'='*50}\n")
 			
 			# Procesar variantes dinámicas desde el formulario
 			import json
@@ -695,12 +702,16 @@ def admin_producto_add(request):
 				stock = request.POST.get(f'variante_{variante_index}_stock', '0')
 				atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
 				
+				print(f"\n=== DEBUG VARIANTE {variante_index} ===")
+				print(f"SKU recibido: '{sku}'")
+				print(f"Stock recibido: '{stock}' (tipo: {type(stock)})")
+				print(f"Atributos JSON: {atributos_json[:100]}")
+				
 				# Crear la variante usando el precio_base del producto
 				from .models import Variante, VarianteAtributo, ValorAtributo, Talla
 				
 				# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
 				talla_obj = None
-				color_valor = None
 				
 				try:
 					atributos_data = json.loads(atributos_json)
@@ -715,32 +726,23 @@ def admin_producto_add(request):
 								defaults={'nombre': valor_nombre}
 							)
 							print(f"DEBUG - Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
-						
-						# Si es color, guardarlo
-						elif 'color' in atributo_nombre and valor_nombre:
-							color_valor = valor_nombre
 				except Exception as e:
-					print(f"Error extrayendo talla/color de atributos: {e}")
+					print(f"Error extrayendo talla de atributos: {e}")
 				
-				# Generar SKU automático: slug-TALLA (o slug-COLOR si no hay talla)
+				# Generar SKU automático: slug-TALLA
 				if not sku:
 					if talla_obj:
 						sku = f"{producto.slug}-{talla_obj.codigo}"
-					elif color_valor:
-						sku = f"{producto.slug}-{color_valor.upper()}"
-					else:
-						sku = f"{producto.slug}-{variante_index + 1}"
 				
 				# Crear la variante con la talla asignada
 				variante = Variante.objects.create(
 					producto=producto,
-					talla=talla_obj,  # Asignar la talla al campo ForeignKey
-					color=color_valor,  # Asignar el color al campo CharField
+					talla=talla_obj,
 					sku=sku,
 					precio=producto.precio_base,
 					stock=int(stock) if stock else 0
 				)
-				print(f"DEBUG - Variante creada: ID={variante.id}, SKU={variante.sku}, Talla={variante.talla}, Color={variante.color}, Stock={variante.stock}")
+				print(f"DEBUG - Variante creada: ID={variante.id}, SKU={variante.sku}, Talla={variante.talla}, Stock={variante.stock}")
 				
 				# Asociar atributos a la variante (para mantener compatibilidad con sistema de atributos)
 				try:
@@ -770,8 +772,19 @@ def admin_producto_add(request):
 				variante_index = 1
 				print(f"DEBUG - Variante por defecto creada para producto sin atributos")
 			
-			total_imagenes = len(imagenes)
-			messages.success(request, f'Producto "{producto.nombre}" creado exitosamente con {variante_index} variante(s) y {total_imagenes} imagen(es).')
+			# GUARDAR TODAS LAS IMÁGENES DEL PRODUCTO (no asociadas a variantes específicas)
+			from .models import Imagen
+			imagenes_guardadas = 0
+			for imagen_file in imagenes:
+				Imagen.objects.create(
+					producto=producto,
+					imagen=imagen_file,
+					variante=None  # Todas las imágenes son del producto, no de variantes
+				)
+				imagenes_guardadas += 1
+				print(f"DEBUG - Imagen guardada: {imagen_file.name}")
+			
+			messages.success(request, f'Producto "{producto.nombre}" creado exitosamente con {variante_index} variante(s) y {imagenes_guardadas} imagen(es).')
 			return redirect('productos:admin_productos_list')
 	else:
 		form = ProductoForm()
@@ -781,7 +794,7 @@ def admin_producto_add(request):
 	})
 
 
-@login_required
+@admin_required
 def admin_producto_view(request, pk):
 	"""
 	Ver detalles completos de un producto incluyendo imágenes y variantes
@@ -804,7 +817,7 @@ def admin_producto_view(request, pk):
 	})
 
 
-@login_required
+@admin_required
 def admin_producto_edit(request, pk):
 	"""
 	Editar producto existente con el diseño de ecomus
@@ -850,181 +863,225 @@ def admin_producto_edit(request, pk):
 				ids_eliminar = [int(id) for id in imagenes_eliminar.split(',') if id.strip()]
 				Imagen.objects.filter(id__in=ids_eliminar, producto=producto).delete()
 			
-			# Procesar nuevas imágenes
-			imagenes = request.FILES.getlist('imagenes')
-			if imagenes:
-				# Obtener la máxima posición actual
-				max_posicion = producto.imagenes.aggregate(Max('posicion'))['posicion__max'] or 0
-				for index, imagen_file in enumerate(imagenes):
-					Imagen.objects.create(
-						producto=producto,
-						imagen=imagen_file,
-						posicion=max_posicion + index + 1
-					)
+			# Procesar nuevas imágenes (guardarlas temporalmente)
+			imagenes_nuevas = request.FILES.getlist('imagenes')
+			print(f"\n{'='*50}")
+			print(f"DEBUG EDIT - Total imágenes nuevas recibidas: {len(imagenes_nuevas)}")
+			print(f"DEBUG EDIT - request.FILES keys: {list(request.FILES.keys())}")
+			for idx, img in enumerate(imagenes_nuevas):
+				print(f"  Imagen {idx}: {img.name} ({img.size} bytes)")
+			print(f"{'='*50}\n")
 			
-		# Eliminar variantes antiguas
-		producto.variantes.all().delete()
-		print("DEBUG - Variantes antiguas eliminadas")
-		
-		# Procesar nuevas variantes dinámicas desde el formulario
-		variante_index = 0
-		while True:
-			sku_key = f'variante_{variante_index}_sku'
-			if sku_key not in request.POST:
-				print(f"DEBUG - No se encontró {sku_key}, finalizando bucle")
-				break
+			# Obtener imágenes existentes del producto
+			imagenes_existentes = list(producto.imagenes.filter(variante__isnull=True))
+			print(f"DEBUG - Imágenes existentes: {len(imagenes_existentes)}")
 			
-			sku = request.POST.get(sku_key, '').strip()
-			stock = request.POST.get(f'variante_{variante_index}_stock', '0')
-			atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
+			# Combinar imágenes existentes + nuevas para el selector
+			todas_imagenes = imagenes_existentes + imagenes_nuevas
 			
-			print(f"\nDEBUG - Procesando variante {variante_index}:")
-			print(f"  SKU: {sku}")
-			print(f"  Stock: {stock}")
-			print(f"  Atributos: {atributos_json[:100]}...")
+			# Eliminar variantes antiguas
+			producto.variantes.all().delete()
+			print("DEBUG - Variantes antiguas eliminadas")
 			
-			# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
-			talla_obj = None
-			color_valor = None
+			# Eliminar imágenes asociadas a variantes (se recrearán)
+			producto.imagenes.filter(variante__isnull=False).delete()
 			
-			try:
-				atributos_data = json.loads(atributos_json)
-				for attr in atributos_data:
-					atributo_nombre = attr.get('atributoNombre', '').lower()
-					valor_nombre = attr.get('valorNombre', '')
-					
-					# Si es una talla, buscar o crear el objeto Talla
-					if 'talla' in atributo_nombre and valor_nombre:
-						talla_obj, created = Talla.objects.get_or_create(
-							codigo=valor_nombre.upper(),
-							defaults={'nombre': valor_nombre}
-						)
-						print(f"  Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
-					
-					# Si es color, guardarlo
-					elif 'color' in atributo_nombre and valor_nombre:
-						color_valor = valor_nombre
-						print(f"  Color encontrado: {color_valor}")
-			except Exception as e:
-				print(f"  ❌ Error extrayendo talla/color de atributos: {e}")
+			# Procesar nuevas variantes dinámicas desde el formulario
+			variante_index = 0
 			
-			# Generar SKU automático: slug-TALLA (o slug-COLOR si no hay talla)
-			if not sku:
-				if talla_obj:
-					sku = f"{producto.slug}-{talla_obj.codigo}"
-				elif color_valor:
-					sku = f"{producto.slug}-{color_valor.upper()}"
-				else:
-					sku = f"{producto.slug}-{variante_index + 1}"
+			while True:
+				sku_key = f'variante_{variante_index}_sku'
+				if sku_key not in request.POST:
+					print(f"DEBUG - No se encontró {sku_key}, finalizando bucle")
+					break
+				
+				sku = request.POST.get(sku_key, '').strip()
+				stock = request.POST.get(f'variante_{variante_index}_stock', '0')
+				atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
+				
+				print(f"\n=== DEBUG EDIT VARIANTE {variante_index} ===")
+				print(f"SKU recibido: '{sku}'")
+				print(f"Stock recibido: '{stock}' (tipo: {type(stock)})")
+				print(f"Atributos JSON: {atributos_json[:100]}")
+				
+				print(f"\nDEBUG - Procesando variante {variante_index}:")
+				print(f"  SKU: {sku}")
+				print(f"  Stock: {stock}")
+				print(f"  Atributos: {atributos_json[:100]}...")
+				
+				# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
+				talla_obj = None
+				
+				try:
+					atributos_data = json.loads(atributos_json)
+					for attr in atributos_data:
+						atributo_nombre = attr.get('atributoNombre', '').lower()
+						valor_nombre = attr.get('valorNombre', '')
+						
+						# Si es una talla, buscar o crear el objeto Talla
+						if 'talla' in atributo_nombre and valor_nombre:
+							talla_obj, created = Talla.objects.get_or_create(
+								codigo=valor_nombre.upper(),
+								defaults={'nombre': valor_nombre}
+							)
+							print(f"  Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
+				except Exception as e:
+					print(f"  ❌ Error extrayendo talla de atributos: {e}")
+				
+				# Generar SKU automático: slug-TALLA
+				if not sku:
+					if talla_obj:
+						sku = f"{producto.slug}-{talla_obj.codigo}"
+				
+				# Crear la variante con la talla asignada
+				variante = Variante.objects.create(
+					producto=producto,
+					talla=talla_obj,
+					sku=sku,
+					precio=producto.precio_base,
+					stock=int(stock) if stock else 0
+				)
+				print(f"  ✅ Variante creada: ID={variante.id}, SKU={variante.sku}, Talla={variante.talla}, Stock={variante.stock}")
+				
+				# Procesar atributos adicionales de la variante
+				try:
+					atributos_data = json.loads(atributos_json)
+					for attr in atributos_data:
+						valor_id = attr.get('valorId')
+						if valor_id:
+							valor_atributo = ValorAtributo.objects.get(id=valor_id)
+							VarianteAtributo.objects.create(
+								variante=variante,
+								valor_atributo=valor_atributo
+							)
+				except Exception as e:
+					print(f"  ❌ Error procesando atributos de variante: {e}")
+				
+				variante_index += 1
 			
-			# Crear la variante con la talla asignada
-			variante = Variante.objects.create(
-				producto=producto,
-				talla=talla_obj,
-				color=color_valor,
-				sku=sku,
-				precio=producto.precio_base,
-				stock=int(stock) if stock else 0
-			)
-			print(f"  ✅ Variante creada: ID={variante.id}, SKU={variante.sku}, Talla={variante.talla}, Color={variante.color}, Stock={variante.stock}")
+			print(f"\nDEBUG - Total variantes procesadas: {variante_index}")
 			
-			# Asociar atributos a la variante (para mantener compatibilidad con sistema de atributos)
-			try:
-				atributos_data = json.loads(atributos_json)
-				for attr in atributos_data:
-					valor_id = attr.get('valorId')
-					if valor_id:
-						valor_atributo = ValorAtributo.objects.get(id=valor_id)
-						VarianteAtributo.objects.create(
-							variante=variante,
-							valor_atributo=valor_atributo
-						)
-			except Exception as e:
-				print(f"  ❌ Error procesando atributos de variante: {e}")
+			# GUARDAR TODAS LAS IMÁGENES NUEVAS DEL PRODUCTO
+			imagenes_guardadas = 0
+			for imagen_file in imagenes_nuevas:
+				Imagen.objects.create(
+					producto=producto,
+					imagen=imagen_file,
+					variante=None  # Todas las imágenes son del producto
+				)
+				imagenes_guardadas += 1
+				print(f"DEBUG - Imagen guardada: {imagen_file.name}")
 			
-			variante_index += 1
-		
-		print(f"\nDEBUG - Total variantes procesadas: {variante_index}")
-		total_imagenes = len(imagenes) if imagenes else 0
-		messages.success(request, f'Producto "{producto.nombre}" actualizado exitosamente con {variante_index} variante(s) y {total_imagenes} nueva(s) imagen(es).')
-		return redirect('productos:admin_productos_list')
+			total_imagenes = len(imagenes_nuevas) if imagenes_nuevas else 0
+			messages.success(request, f'Producto "{producto.nombre}" actualizado exitosamente con {variante_index} variante(s) y {imagenes_guardadas} imagen(es) nueva(s).')
+			return redirect('productos:admin_productos_list')
 	else:
 		form = ProductoForm(instance=producto)
-	
-	# Preparar datos de variantes existentes para el JavaScript
-	variantes_data = []
-	
-	# Buscar atributos de talla y color una sola vez
-	atributo_talla = Atributo.objects.filter(nombre__icontains='talla').first()
-	atributo_color = Atributo.objects.filter(nombre__icontains='color').first()
-	
-	for variante in producto.variantes.all():
-		atributos = []
 		
-		# Primero intentar extraer desde campos directos (talla FK y color CharField)
-		if variante.talla and atributo_talla:
-			# Buscar el ValorAtributo correspondiente a la talla
-			valor_talla = ValorAtributo.objects.filter(
-				atributo=atributo_talla,
-				valor=variante.talla.codigo
-			).first()
-			if valor_talla:
-				atributos.append({
-					'atributoId': atributo_talla.id,
-					'atributoNombre': atributo_talla.nombre,
-					'valorId': valor_talla.id,
-					'valorNombre': valor_talla.valor,
-				})
-				print(f"DEBUG GET - Variante {variante.sku}: Talla {variante.talla.codigo} convertida a atributo")
+		# Preparar datos de variantes existentes para el JavaScript
+		variantes_data = []
+		atributo_talla = Atributo.objects.filter(nombre__iexact='talla').first()
+		atributo_color = Atributo.objects.filter(nombre__iexact='color').first()
 		
-		if variante.color and atributo_color:
-			# Buscar el ValorAtributo correspondiente al color
-			valor_color = ValorAtributo.objects.filter(
-				atributo=atributo_color,
-				valor=variante.color
-			).first()
-			if valor_color:
-				atributos.append({
-					'atributoId': atributo_color.id,
-					'atributoNombre': atributo_color.nombre,
-					'valorId': valor_color.id,
-					'valorNombre': valor_color.valor,
-				})
-				print(f"DEBUG GET - Variante {variante.sku}: Color {variante.color} convertido a atributo")
+		for variante in producto.variantes.all():
+			print(f"\nDEBUG GET - Procesando variante: {variante.sku}")
+			atributos = []
+			
+			# Verificar si tiene talla como campo directo
+			if variante.talla and atributo_talla:
+				# Buscar el ValorAtributo correspondiente a esta talla
+				valor_talla = ValorAtributo.objects.filter(
+					atributo=atributo_talla,
+					valor=variante.talla.codigo
+				).first()
+				if valor_talla:
+					atributos.append({
+						'atributoId': atributo_talla.id,
+						'atributoNombre': atributo_talla.nombre,
+						'valorId': valor_talla.id,
+						'valorNombre': valor_talla.valor,
+					})
+					print(f"DEBUG GET - Variante {variante.sku}: Talla {variante.talla.codigo} convertida a atributo")
+			
+			if variante.color and atributo_color:
+				# Buscar el ValorAtributo correspondiente al color
+				valor_color = ValorAtributo.objects.filter(
+					atributo=atributo_color,
+					valor=variante.color
+				).first()
+				if valor_color:
+					atributos.append({
+						'atributoId': atributo_color.id,
+						'atributoNombre': atributo_color.nombre,
+						'valorId': valor_color.id,
+						'valorNombre': valor_color.valor,
+					})
+					print(f"DEBUG GET - Variante {variante.sku}: Color {variante.color} convertido a atributo")
+			
+			# Si no se encontraron atributos desde campos directos, buscar en sistema de atributos
+			if not atributos:
+				for va in variante.atributos.all():
+					atributos.append({
+						'atributoId': va.valor_atributo.atributo.id,
+						'atributoNombre': va.valor_atributo.atributo.nombre,
+						'valorId': va.valor_atributo.id,
+						'valorNombre': va.valor_atributo.valor,
+					})
+				print(f"DEBUG GET - Variante {variante.sku}: Usando atributos del sistema")
+			
+			variantes_data.append({
+				'sku': variante.sku,
+				'precio': str(variante.precio),
+				'stock': variante.stock,
+				'atributos': atributos,
+				'imagen_index': None  # Se llenará abajo
+			})
 		
-		# Si no se encontraron atributos desde campos directos, buscar en sistema de atributos
-		if not atributos:
-			for va in variante.atributos.all():
-				atributos.append({
-					'atributoId': va.valor_atributo.atributo.id,
-					'atributoNombre': va.valor_atributo.atributo.nombre,
-					'valorId': va.valor_atributo.id,
-					'valorNombre': va.valor_atributo.valor,
-				})
-			print(f"DEBUG GET - Variante {variante.sku}: Usando atributos del sistema")
+		# Obtener imágenes del producto y mapear cuál está usando cada variante
+		imagenes_producto = list(producto.imagenes.all().order_by('posicion'))
+		imagenes_data = []
 		
-		variantes_data.append({
-			'sku': variante.sku,
-			'precio': str(variante.precio),
-			'stock': variante.stock,
-			'atributos': atributos
-		})
+		for idx, img in enumerate(imagenes_producto):
+			imagen_info = {
+				'id': img.id,
+				'url': img.imagen.url,
+				'posicion': idx,
+				'variante_sku': img.variante.sku if img.variante else None
+			}
+			
+			# Si esta imagen está asociada a una variante, actualizar variantes_data
+			if img.variante:
+				# Actualizar variantes_data para indicar qué imagen usa
+				for vdata in variantes_data:
+					if vdata['sku'] == img.variante.sku:
+						vdata['imagen_index'] = idx
+						break
+			
+			imagenes_data.append(imagen_info)
 	
 	print(f"\nDEBUG GET - Total variantes preparadas: {len(variantes_data)}")
-	print(f"JSON enviado al template: {json.dumps(variantes_data, indent=2)}\n")
+	print(f"DEBUG GET - Total imágenes: {len(imagenes_data)}")
+	print(f"DEBUG GET - Imágenes: {imagenes_data}")
+	
+	# Convertir datos a JSON para el template
+	import json
+	variantes_json = json.dumps(variantes_data)
+	imagenes_json = json.dumps(imagenes_data)
 	
 	return render(request, 'edit-product.html', {
 		'form': form,
 		'producto': producto,
-		'variantes_json': json.dumps(variantes_data),
+		'categorias': Categoria.objects.filter(estado=True),
+		'colecciones': Coleccion.objects.filter(activo=True),
+		'atributos': Atributo.objects.filter(activo=True).exclude(nombre__iexact='color'),
+		'variantes_json': variantes_json,
+		'imagenes_producto': imagenes_json,
 	})
 
 
-@login_required
+@admin_required
 def admin_producto_delete(request, pk):
-	"""
-	Eliminar un producto existente
-	"""
+	"""Elimina un producto (vista de confirmación o procesamiento directo)"""
 	if request.user.rol != 'admin_tienda' and not request.user.is_staff:
 		messages.error(request, 'No tienes permiso para acceder.')
 		return redirect('core:inicio')
@@ -1048,20 +1105,16 @@ def admin_producto_delete(request, pk):
 	return redirect('productos:admin_productos_list')
 
 
-# =========================
-#  VISTAS ATRIBUTOS
-# =========================
-from django.core.paginator import Paginator
-from .models import Atributo, ValorAtributo
-
-
-@login_required
+@admin_required
 def admin_atributos_list(request):
-	"""Lista todos los atributos con paginación y búsqueda"""
-	atributos_list = Atributo.objects.all().order_by('posicion', 'nombre')
+	"""Lista todos los atributos con búsqueda y paginación"""
+	if request.user.rol != 'admin_tienda' and not request.user.is_staff:
+		messages.error(request, 'No tienes permiso para acceder.')
+		return redirect('core:inicio')
 	
-	# Búsqueda
-	search = request.GET.get('search', '')
+	search = request.GET.get('search', '').strip()
+	atributos_list = Atributo.objects.prefetch_related('valores').order_by('posicion', 'nombre')
+	
 	if search:
 		atributos_list = atributos_list.filter(nombre__icontains=search)
 	
@@ -1082,7 +1135,7 @@ def admin_atributos_list(request):
 	})
 
 
-@login_required
+@admin_required
 def admin_atributo_add(request):
 	"""Agregar nuevo atributo"""
 	if request.method == 'POST':
@@ -1121,7 +1174,7 @@ def admin_atributo_add(request):
 	return render(request, 'add-attributes.html', {})
 
 
-@login_required  
+@admin_required  
 def admin_atributo_edit(request, pk):
 	"""Editar atributo existente"""
 	atributo = get_object_or_404(Atributo, pk=pk)
@@ -1160,7 +1213,7 @@ def admin_atributo_edit(request, pk):
 	})
 
 
-@login_required
+@admin_required
 def admin_atributo_delete(request, pk):
 	"""Eliminar atributo"""
 	atributo = get_object_or_404(Atributo, pk=pk)
@@ -1240,7 +1293,7 @@ def api_colecciones_list(request):
 # =========================
 from .models import Coleccion
 
-@login_required
+@admin_required
 def admin_colecciones_list(request):
 	"""Lista de colecciones con paginación y búsqueda"""
 	search = request.GET.get('search', '')
@@ -1265,7 +1318,7 @@ def admin_colecciones_list(request):
 	})
 
 
-@login_required
+@admin_required
 def admin_coleccion_add(request):
 	"""Agregar nueva colección"""
 	if request.method == 'POST':
@@ -1287,7 +1340,7 @@ def admin_coleccion_add(request):
 	})
 
 
-@login_required
+@admin_required
 def admin_coleccion_edit(request, pk):
 	"""Editar colección existente"""
 	coleccion = get_object_or_404(Coleccion, pk=pk)
@@ -1317,7 +1370,7 @@ def admin_coleccion_edit(request, pk):
 	})
 
 
-@login_required
+@admin_required
 def admin_coleccion_delete(request, pk):
 	"""Eliminar colección"""
 	coleccion = get_object_or_404(Coleccion, pk=pk)

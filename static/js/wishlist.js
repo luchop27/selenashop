@@ -103,6 +103,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.removeAttribute('data-wishlist-id');
                 button.querySelector('.tooltip').textContent = 'Add to Wishlist';
                 
+                // Si estamos en la página de wishlist, remover el producto de la lista
+                const isWishlistPage = window.location.pathname.includes('/wishlist');
+                if (isWishlistPage) {
+                    const productCard = button.closest('.card-product');
+                    if (productCard) {
+                        productCard.style.transition = 'opacity 0.3s ease';
+                        productCard.style.opacity = '0';
+                        setTimeout(() => {
+                            productCard.remove();
+                            
+                            // Verificar si quedan productos
+                            const remainingProducts = document.querySelectorAll('.card-product').length;
+                            if (remainingProducts === 0) {
+                                // Recargar la página para mostrar el mensaje de "lista vacía"
+                                window.location.reload();
+                            }
+                        }, 300);
+                    }
+                }
+                
                 showNotification('Producto removido de favoritos', 'success');
                 
                 // Contar items en wishlist
@@ -150,17 +170,21 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function updateWishlistCount() {
         // Buscar el contador en la barra de navegación
-        const wishlistCounter = document.querySelector('[data-wishlist-count]');
-        if (wishlistCounter) {
-            fetch('/api/wishlist/count/')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        wishlistCounter.textContent = data.count;
-                        console.log('📌 Wishlist count actualizado:', data.count);
-                    }
-                });
-        }
+        const wishlistCounters = document.querySelectorAll('.nav-wishlist .count-box');
+        
+        fetch('/api/wishlist/count/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    wishlistCounters.forEach(counter => {
+                        counter.textContent = data.count;
+                    });
+                    console.log('📌 Wishlist count actualizado:', data.count);
+                }
+            })
+            .catch(error => {
+                console.error('Error al actualizar contador:', error);
+            });
     }
     
     /**

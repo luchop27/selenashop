@@ -1,4 +1,6 @@
 """
+
+
 Backend de email personalizado con manejo robusto de errores SSL
 """
 from django.core.mail.backends.smtp import EmailBackend as SMTPBackend

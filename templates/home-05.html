@@ -97,9 +97,8 @@
                             src="{% static 'images/slider/fashion-slideshow-10.jpg' %}" alt="fashion-slideshow-01">
                         <div class="box-content text-center">
                             <div class="container">
-                                <h1 class="fade-item fade-item-1 text-white heading">Effortless Elegance</h1>
-                                <p class="fade-item fade-item-2 text-white">From casual to formal, we've got you
-                                    covered</p>
+                                <h1 class="fade-item fade-item-1 text-white heading">Elegancia Sin Esfuerzo</h1>
+                                <p class="fade-item fade-item-2 text-white">De casual a formal, te tenemos cubierto</p>
                                 <a href="{% url 'productos:producto_list' %}"
                                     class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Shop
                                         collection</span><i class="icon icon-arrow-right"></i></a>
@@ -114,9 +113,9 @@
                             src="{% static 'images/slider/fashion-slideshow-11.jpg' %}" alt="fashion-slideshow-01">
                         <div class="box-content text-center">
                             <div class="container">
-                                <h1 class="fade-item fade-item-1 text-white heading">The mystery behind</h1>
-                                <p class="fade-item fade-item-2 text-white">From casual to formal, we've got you
-                                    covered</p>
+                                <h1 class="fade-item fade-item-1 text-white heading">El Misterio Detrás</h1>
+                                <p class="fade-item fade-item-2 text-white">De casual a formal, te tenemos
+                                    cubierto</p>
                                 <a href="{% url 'productos:producto_list' %}"
                                     class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Shop
                                         collection</span><i class="icon icon-arrow-right"></i></a>
@@ -131,12 +130,12 @@
                             src="{% static 'images/slider/fashion-slideshow-12.jpg' %}" alt="fashion-slideshow-01">
                         <div class="box-content text-center">
                             <div class="container">
-                                <h1 class="fade-item fade-item-1 text-white">Multi-faceted Beauty</h1>
-                                <p class="fade-item fade-item-2 text-white">From casual to formal, we've got you
-                                    covered</p>
+                                <h1 class="fade-item fade-item-1 text-white">Belleza Multifacética</h1>
+                                <p class="fade-item fade-item-2 text-white">De casual a formal, te tenemos
+                                    cubierto</p>
                                 <a href="{% url 'productos:producto_list' %}"
-                                    class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Shop
-                                        collection</span><i class="icon icon-arrow-right"></i></a>
+                                    class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Ver
+                                        colección</span><i class="icon icon-arrow-right"></i></a>
                             </div>
 
                         </div>
@@ -214,9 +213,8 @@
 <section class="flat-spacing-6">
     <div class="container">
         <div class="flat-title mb_1 gap-14">
-            <span class="title wow fadeInUp" data-wow-delay="0s">New Arrivals</span>
-            <p class="sub-title wow fadeInUp" data-wow-delay="0s">Shop the Latest Styles: Stay ahead of the
-                curve with our newest arrivals</p>
+            <span class="title wow fadeInUp" data-wow-delay="0s">Nuevos Productos</span>
+            <p class="sub-title wow fadeInUp" data-wow-delay="0s">Compra los Últimos Estilos: Mantente a la vanguardia con nuestros productos más recientes</p>
         </div>
         <div class="grid-layout loadmore-item" data-grid="grid-4">
             {% if productos_nuevos %}
@@ -231,7 +229,7 @@
             <button id="btn-loadmore" class="tf-btn-loading tf-loading-default style-2 btn-loadmore"
                     data-offset="{{ productos_nuevos|length }}" data-limit="4"
                     data-url="{% url 'core:api_productos_nuevos' %}">
-                <span class="text">Load more</span>
+                <span class="text">Cargar más</span>
             </button>
              
         </div>
@@ -244,8 +242,8 @@
         <section class="flat-spacing-5 pt_0 flat-testimonial">
             <div class="container">
                 <div class="flat-title wow fadeInUp" data-wow-delay="0s">
-                    <span class="title">Happy Clients</span>
-                    <p class="sub-title">Hear what they say about us</p>
+                    <span class="title">Clientes Felices</span>
+                    <p class="sub-title">Escucha lo que dicen sobre nosotros</p>
                 </div>
                 <div class="wrap-carousel">
                     <div dir="ltr" class="swiper tf-sw-testimonial" data-preview="3" data-tablet="2" data-mobile="1"
@@ -300,10 +298,10 @@
                                             <i class="icon-star"></i>
                                             <i class="icon-star"></i>
                                         </div>
-                                        <div class="heading">No reviews yet</div>
-                                        <div class="text">Be the first to leave a review for our products.</div>
+                                        <div class="heading">Aún no hay reseñas</div>
+                                        <div class="text">Sé el primero en dejar una reseña para nuestros productos.</div>
                                         <div class="author">
-                                            <div class="name">Customer</div>
+                                            <div class="name">Cliente</div>
                                             <div class="metas">-</div>
                                         </div>
                                     </div>
@@ -324,7 +322,7 @@
         <section class="flat-spacing-6  ">
             <div class="container">
                 <div class="flat-title wow fadeInUp" data-wow-delay="0s">
-                    <span class="title">Visit our store</span>
+                    <span class="title">Visita nuestra tienda</span>
                 </div>
                 <div class="flat-tab-store flat-animate-tab">
                     <ul class="widget-tab-2" role="tablist">
@@ -343,7 +341,7 @@
                                     <h5 class="store-heading">Tienda Machala</h5>
                                     <div class="description">
                                         <p>301 Front St WToronto,<br>Ecomus@support.com <br>(08) 8942 1299</p>
-                                        <p>Mon - Fri, 8:30am - 10:30pm<br>Saturday, 8:30am - 10:30pm <br>Sunday Closed
+                                        <p>Lunes - Viernes, 8:30am - 10:30pm<br>Sábado, 8:30am - 10:30pm <br>Domingo Cerrado
                                         </p>
                                     </div>
                                 </div>
@@ -358,7 +356,7 @@
                                     <h5 class="store-heading">Bodega Machala</h5>
                                     <div class="description">
                                         <p>301 Front St WToronto,<br>Ecomus@support.com <br>(08) 8942 1299</p>
-                                        <p>Mon - Fri, 8:30am - 10:30pm<br>Saturday, 8:30am - 10:30pm <br>Sunday Closed
+                                        <p>Lunes - Viernes, 8:30am - 10:30pm<br>Sábado, 8:30am - 10:30pm <br>Domingo Cerrado
                                         </p>
                                     </div>
                                 </div>
@@ -400,7 +398,7 @@
                     <div class="tf-product-info-variant-picker mb_15">
                         <div class="variant-picker-item">
                             <div class="variant-picker-label">
-                                Color: <span class="fw-6 variant-picker-label-value">Orange</span>
+                                Color: <span class="fw-6 variant-picker-label-value">Naranja</span>
                             </div>
                             <div class="variant-picker-values">
                                 <input id="values-orange" type="radio" name="color" checked>
@@ -422,7 +420,7 @@
                         </div>
                         <div class="variant-picker-item">
                             <div class="variant-picker-label">
-                                Size: <span class="fw-6 variant-picker-label-value">S</span>
+                                Talla: <span class="fw-6 variant-picker-label-value">S</span>
                             </div>
                             <div class="variant-picker-values">
                                 <input type="radio" name="size" id="values-s" checked>
@@ -445,7 +443,7 @@
                         </div>
                     </div>
                     <div class="tf-product-info-quantity mb_15">
-                        <div class="quantity-title fw-6">Quantity</div>
+                        <div class="quantity-title fw-6">Cantidad</div>
                         <div class="wg-quantity">
                             <span class="btn-quantity minus-btn">-</span>
                             <input type="text" name="number" value="1">
@@ -455,8 +453,8 @@
                     <div class="tf-product-info-buy-button">
                         <form class="">
                             <a href="#"
-                                class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Add
-                                    to cart -&nbsp;</span><span class="tf-qty-price">$18.00</span></a>
+                                class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Agregar
+                                    al carrito -&nbsp;</span><span class="tf-qty-price">$18.00</span></a>
                             <div class="tf-product-btn-wishlist btn-icon-action">
                                 <i class="icon-heart"></i>
                                 <i class="icon-delete"></i>
@@ -467,8 +465,8 @@
                                 <span class="icon icon-check"></span>
                             </a>
                             <div class="w-100">
-                                        <a href="#" class="btns-full">Buy with <img src="{% static 'images/payments/paypal.png' %}" alt=""></a>
-                                <a href="#" class="payment-more-option">More payment options</a>
+                                        <a href="#" class="btns-full">Comprar con <img src="{% static 'images/payments/paypal.png' %}" alt=""></a>
+                                <a href="#" class="payment-more-option">Más opciones de pago</a>
                             </div>
                         </form>
                     </div>

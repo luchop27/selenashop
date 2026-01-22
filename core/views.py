@@ -10,6 +10,9 @@ from django.views.decorators.csrf import csrf_protect
 # Import Producto model to build the shop listing
 from apps.productos.models import Producto
 
+# Importar decoradores de seguridad
+from .decorators import admin_required, superuser_required
+
 
 def inicio(request):
     """Renderiza la plantilla home-05.html (nuevo index)"""
@@ -622,20 +625,15 @@ def logout_usuario(request):
     return logout_view(request)
 
 
-@login_required(login_url='/login/')
+@admin_required
 def dashboard_redirect(request):
     """Redirección al dashboard si el usuario es admin"""
-    if request.user.rol == 'admin_tienda' or request.user.is_staff:
-        return redirect('core:admin_index')
-    else:
-        messages.error(request, 'No tienes permiso para acceder al panel de administración.')
-        return redirect('core:inicio')
+    return redirect('core:admin_index')
 
 
+@admin_required
 def admin_index(request):
     """Renderiza el índice del panel administrativo con estadísticas reales"""
-    if not request.user.is_authenticated or (request.user.rol != 'admin_tienda' and not request.user.is_staff):
-        return redirect('core:inicio')
     
     from django.db.models import Sum, Count, F
     from django.db.models.functions import TruncWeek
@@ -802,6 +800,8 @@ def product_detail(request, slug=None):
         # Obtener todas las imágenes del producto
         imagenes = list(producto.imagenes.all())
         
+        print(f"DEBUG - Total imágenes del producto: {len(imagenes)}")
+        
         # Obtener todas las variantes
         variantes = list(producto.variantes.all())
         print(f"DEBUG - Producto ID: {producto.id}, Nombre: {producto.nombre}")
@@ -809,18 +809,7 @@ def product_detail(request, slug=None):
         for v in variantes:
             print(f"DEBUG - Variante ID: {v.id}, Talla: {v.talla}, Color: {v.color}, Stock: {v.stock}")
         
-        # Extraer colores únicos
-        colores_disponibles = []
-        colores_vistos = set()
-        for variante in variantes:
-            if variante.color and variante.color not in colores_vistos:
-                colores_disponibles.append({
-                    'nombre': variante.color,
-                    'valor': variante.color
-                })
-                colores_vistos.add(variante.color)
-        
-        # Extraer tallas únicas
+        # Extraer tallas únicas (solo variantes con stock > 0)
         tallas_disponibles = []
         tallas_vistas = set()
         for variante in variantes:
@@ -882,17 +871,8 @@ def product_detail(request, slug=None):
             
             prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
             
-            # Obtener colores y tallas del producto relacionado
+            # Obtener tallas del producto relacionado
             prod_variantes = list(prod.variantes.all())
-            
-            # Colores
-            colores_prod = []
-            colores_vistos_prod = set()
-            for var in prod_variantes:
-                if var.color and var.color not in colores_vistos_prod:
-                    colores_prod.append({'valor': var.color, 'nombre': var.color})
-                    colores_vistos_prod.add(var.color)
-            prod.colors = colores_prod
             
             # Tallas
             tallas_prod = []
@@ -958,19 +938,8 @@ def product_detail(request, slug=None):
             
             prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
             
-            # Colores
-            prod_variantes_rec = list(prod.variantes.all())
-            colores_rec = []
-            colores_vistos_rec = set()
-            for var in prod_variantes_rec:
-                if hasattr(var, 'color') and var.color:
-                    color = var.color
-                    if color not in colores_vistos_rec:
-                        colores_rec.append({'valor': color, 'nombre': color})
-                        colores_vistos_rec.add(color)
-            prod.colors = colores_rec
-            
             # Tallas
+            prod_variantes_rec = list(prod.variantes.all())
             tallas_rec = []
             tallas_vistas_rec = set()
             for var in prod_variantes_rec:
@@ -996,23 +965,38 @@ def product_detail(request, slug=None):
         # Preparar datos de variantes con stock para JavaScript
         import json
         variantes_stock = {}
+        variantes_map = {}  # Mapa COLOR-TALLA -> datos variante
         variante_default_id = None  # Para productos sin atributos
         
         for variante in variantes:
             if variante.talla:
                 key = f"{variante.talla.codigo}"
-                # Solo agregar color a la clave si realmente existe y no está vacío
-                if variante.color and variante.color.strip():
-                    key += f"_{variante.color}"
+                
                 variantes_stock[key] = {
                     'id': variante.id,
                     'stock': variante.stock,
                     'talla': variante.talla.codigo if variante.talla else None,
-                    'color': variante.color if variante.color else '',
                     'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
                 }
+                
+                # Obtener imagen asociada a esta variante
+                imagen_url = None
+                imagenes_variante = producto.imagenes.filter(variante=variante)
+                if imagenes_variante.exists():
+                    imagen_url = imagenes_variante.first().imagen.url
+                elif imagenes:  # Fallback a primera imagen
+                    imagen_url = imagenes[0].imagen.url
+                
+                variantes_map[key] = {
+                    'stock': variante.stock,
+                    'precio': str(variante.precio) if variante.precio else str(producto.precio_base),
+                    'imagen': imagen_url,
+                    'id': variante.id,
+                    'talla': variante.talla.codigo if variante.talla else None
+                }
+                
                 # Debug: imprimir información de la variante
-                print(f"DEBUG Backend - Clave: '{key}' - Stock: {variante.stock} - Precio: {variante.precio} - Color: '{variante.color}'")
+                print(f"DEBUG Backend - Talla '{key}' - Stock: {variante.stock} - Precio: {variante.precio} - Imagen: {imagen_url}")
             else:
                 # Variante default (sin talla) para productos sin atributos
                 variante_default_id = variante.id
@@ -1026,15 +1010,28 @@ def product_detail(request, slug=None):
                 print(f"DEBUG Backend - Variante DEFAULT: ID={variante.id} - Stock: {variante.stock} - Precio: {variante.precio}")
         
         variantes_json = json.dumps(variantes_stock)
+        variantes_map_json = json.dumps(variantes_map)
         print(f"DEBUG Backend - Variantes JSON completo: {variantes_json}")
+        print(f"DEBUG Backend - Variantes MAP JSON: {variantes_map_json}")
+        
+        # Verificar si el producto está en el wishlist del usuario
+        in_wishlist = False
+        wishlist_item_id = None
+        if request.user.is_authenticated:
+            from apps.usuarios.models import Wishlist
+            wishlist_item = Wishlist.objects.filter(
+                usuario=request.user,
+                producto=producto
+            ).first()
+            if wishlist_item:
+                in_wishlist = True
+                wishlist_item_id = wishlist_item.id
         
         context = {
             'producto': producto,
             'imagenes': imagenes,
             'variantes': variantes,
-            'variantes_json': variantes_json,
-            'variante_default_id': variante_default_id,  # Para productos sin atributos
-            'colores_disponibles': colores_disponibles,
+            'variantes_map_json': variantes_map_json,  # Mapa completo de variantes para JS
             'tallas_disponibles': tallas_disponibles,
             'precio_min': precio_min,
             'precio_max': precio_max,
@@ -1044,6 +1041,8 @@ def product_detail(request, slug=None):
             'global_content': global_content,
             'shipping_info': shipping_info,
             'return_policies': return_policies,
+            'in_wishlist': in_wishlist,
+            'wishlist_item_id': wishlist_item_id,
         }
     else:
         # Sin ID, mostrar template demo
@@ -1883,7 +1882,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from .models import Pedido
 
-@login_required
+@admin_required
 def admin_order_list(request):
     """
     Vista para listar todos los pedidos en el panel de administración con filtros.
@@ -1922,7 +1921,7 @@ def admin_order_list(request):
         'pago_filter': pago_filter,
     })
 
-@login_required
+@admin_required
 def admin_order_detail_select(request):
     """
     Vista para seleccionar un pedido y ver su detalle.
@@ -1953,7 +1952,7 @@ def admin_order_detail_select(request):
         'search_query': search_query
     })
 
-@login_required
+@admin_required
 def admin_order_detail(request, pedido_id):
     """
     Vista para ver los detalles de un pedido específico en el panel de administración.
@@ -1964,7 +1963,7 @@ def admin_order_detail(request, pedido_id):
     pedido = get_object_or_404(Pedido.objects.select_related('usuario').prefetch_related('items'), id=pedido_id)
     return render(request, 'oder-detail.html', {'pedido': pedido})
 
-@login_required
+@admin_required
 def admin_order_tracking_select(request):
     """
     Vista para seleccionar un pedido y ver su seguimiento.
@@ -1995,19 +1994,15 @@ def admin_order_tracking_select(request):
         'search_query': search_query
     })
 
-@login_required
-@login_required
+@admin_required
 def admin_order_tracking(request, pedido_id):
     """
     Vista para el seguimiento de un pedido específico.
     """
-    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
-        return redirect('core:inicio')
-    
     pedido = get_object_or_404(Pedido.objects.select_related('usuario').prefetch_related('items'), id=pedido_id)
     return render(request, 'oder-tracking.html', {'pedido': pedido})
 
-@login_required
+@admin_required
 @require_POST
 def admin_order_mark_paid(request, pedido_id):
     """
@@ -2040,6 +2035,7 @@ def admin_order_mark_paid(request, pedido_id):
         'message': 'Pedido marcado como pagado exitosamente'
     })
 
+@admin_required
 @csrf_protect
 @require_POST
 def admin_order_update_status(request, pedido_id):
@@ -2047,9 +2043,6 @@ def admin_order_update_status(request, pedido_id):
     Vista para actualizar el estado del pedido (procesando, enviado, entregado).
     Solo accessible para staff/admin.
     """
-    # Verificar que el usuario sea staff o admin
-    if not (request.user.is_authenticated and (request.user.is_staff or (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'))):
-        return JsonResponse({'success': False, 'message': 'No tienes permiso'}, status=403)
     
     import json
     from django.utils import timezone
@@ -2099,14 +2092,12 @@ def admin_order_update_status(request, pedido_id):
             'message': f'Error: {str(e)}'
         }, status=500)
 
-@login_required
+@admin_required
 @require_POST
 def admin_order_cancel(request, pedido_id):
     """
     Vista para cancelar un pedido y devolver el stock.
     """
-    if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
-        return JsonResponse({'success': False, 'message': 'No tienes permiso'}, status=403)
     
     from apps.productos.models import Variante
     
@@ -2176,7 +2167,7 @@ def admin_order_cancel(request, pedido_id):
 
 # ==================== GESTIÓN DE USUARIOS ====================
 
-@login_required
+@admin_required
 def admin_user_list(request):
     """Lista todos los usuarios del sistema"""
     from apps.usuarios.models import Usuario
@@ -2234,16 +2225,11 @@ def admin_user_list(request):
     return render(request, 'all-user.html', context)
 
 
-@login_required
+@admin_required
 def admin_user_detail(request, user_id):
     """Vista detallada de un usuario específico"""
     from apps.usuarios.models import Usuario
     from django.shortcuts import get_object_or_404
-    
-    # Verificar permisos de administrador
-    if not request.user.is_staff:
-        messages.error(request, 'No tienes permisos para acceder a esta sección.')
-        return redirect('core:inicio')
     
     usuario = get_object_or_404(Usuario, id=user_id)
     
@@ -2262,16 +2248,11 @@ def admin_user_detail(request, user_id):
     return render(request, 'user-detail.html', context)
 
 
-@login_required
+@admin_required
 def admin_user_edit(request, user_id):
     """Vista para editar un usuario del sistema"""
     from apps.usuarios.models import Usuario, Ciudad, Provincia
     from django.shortcuts import get_object_or_404
-    
-    # Verificar permisos de administrador
-    if not request.user.is_staff:
-        messages.error(request, 'No tienes permisos para acceder a esta sección.')
-        return redirect('core:inicio')
     
     usuario = get_object_or_404(Usuario, id=user_id)
     
@@ -2326,7 +2307,7 @@ def admin_user_edit(request, user_id):
     return render(request, 'edit-user.html', context)
 
 
-@login_required
+@admin_required
 @require_POST
 def admin_user_delete(request, user_id):
     """Elimina un usuario del sistema"""
@@ -2334,10 +2315,6 @@ def admin_user_delete(request, user_id):
     from django.shortcuts import get_object_or_404
     from django.contrib.auth import authenticate, login, logout
     from django.http import JsonResponse
-    
-    # Verificar permisos de administrador
-    if not request.user.is_staff:
-        return JsonResponse({'success': False, 'message': 'No tienes permisos para realizar esta acción.'}, status=403)
     
     try:
         usuario = get_object_or_404(Usuario, id=user_id)

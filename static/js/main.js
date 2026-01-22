@@ -566,19 +566,21 @@
       $(".total-price").text("$" + totalPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","));
     });
 
-    $(".btn-increase").on("click", function () {
-      var currentQuantity = parseInt(quantityInput.val());
-      quantityInput.val(currentQuantity + 1);
-      updateTotalPrice();
-    });
+    // Comentado para evitar conflicto con botones personalizados en product-detail
+    // Los botones de cantidad ahora se manejan en cada página con lógica específica
+    // $(".btn-increase").on("click", function () {
+    //   var currentQuantity = parseInt(quantityInput.val());
+    //   quantityInput.val(currentQuantity + 1);
+    //   updateTotalPrice();
+    // });
 
-    $(".btn-decrease").on("click", function () {
-      var currentQuantity = parseInt(quantityInput.val());
-      if (currentQuantity > 1) {
-        quantityInput.val(currentQuantity - 1);
-        updateTotalPrice();
-      }
-    });
+    // $(".btn-decrease").on("click", function () {
+    //   var currentQuantity = parseInt(quantityInput.val());
+    //   if (currentQuantity > 1) {
+    //     quantityInput.val(currentQuantity - 1);
+    //     updateTotalPrice();
+    //   }
+    // });
 
     function updateTotalPrice() {
       var currentPrice = parseFloat($(".price-on-sale").text().replace("$", ""));
