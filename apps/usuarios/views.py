@@ -392,11 +392,11 @@ def login_usuario(request):
             
             # Si es admin_tienda o staff -> ir al panel admin
             if user.rol == 'admin_tienda' or user.is_staff:
-                messages.success(request, f'Bienvenido al panel de administración, {user.email}')
+                # Mensaje eliminado para mejor UX
                 return redirect('core:admin_index')
             
             # Si es cliente -> ir a my account o a la página solicitada
-            messages.success(request, f'¡Bienvenido de vuelta, {user.nombre or user.email}!')
+            # Mensaje eliminado para mejor UX
             
             if next_url and url_has_allowed_host_and_scheme(next_url, {request.get_host()}):
                 return redirect(next_url)
@@ -507,18 +507,9 @@ def registrar_usuario(request):
                 rol='cliente',  # Por defecto todos los registros desde la web son clientes
             )
             
-            # Enviar email de verificación
-            if enviar_email_verificacion(request, user):
-                messages.success(
-                    request, 
-                    f'🎉 ¡Registro exitoso! Te hemos enviado un correo de bienvenida a {email}. '
-                    'Revisa tu bandeja de entrada para verificar tu cuenta.'
-                )
-            else:
-                messages.success(
-                    request,
-                    f'🎉 ¡Registro exitoso! Tu cuenta ha sido creada correctamente.'
-                )
+            # Enviar email de verificación silenciosamente
+            enviar_email_verificacion(request, user)
+            # Mensaje de registro eliminado - mejor UX con modal de bienvenida
             
             # Autenticar y hacer login automáticamente (aunque el email no esté verificado)
             user = authenticate(request, username=email, password=password)
@@ -566,7 +557,7 @@ def obtener_ciudades_por_provincia(provincia_id):
 def logout_usuario(request):
     """Vista de logout para usuarios"""
     logout(request)
-    messages.success(request, 'Has cerrado sesión correctamente.')
+    # Mensaje de logout eliminado para mejor UX
     return redirect('usuarios:login')
 
 

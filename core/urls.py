@@ -1,6 +1,4 @@
 from django.urls import path
-from django.views.generic import TemplateView
-from django.views.generic.base import RedirectView
 from . import views
 
 app_name = 'core'
@@ -60,4 +58,10 @@ urlpatterns = [
     path('about-us/', views.about_us, name='about_us'),
     path('nosotros/', views.about_us, name='nosotros'),
     path('contacto/', views.contacto, name='contacto'),
+    path('terms-conditions/', views.terms_conditions, name='terms-conditions'),
+    path('privacy-policy/', views.privacy_policy, name='privacy-policy'),
+    path('delivery-return/', views.delivery_return, name='delivery-return'),
+    path('shipping/', views.shipping_delivery, name='shipping'),
+    path('faq/', views.faq, name='faq'),
+    path('compare/', views.compare, name='compare'),
 ]

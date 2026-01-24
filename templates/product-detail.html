@@ -781,7 +781,7 @@
                             {% if productos_recientes %}
                                 {% for producto in productos_recientes %}
                                 <div class="swiper-slide" lazy="true">
-                                    <div class="card-product">
+                                    <div class="card-product" data-product-id="{{ producto.id }}">
                                         <div class="card-product-wrapper">
                                             <a href="{% url 'core:product_detail' producto.slug %}" class="product-img">
                                                 {% if producto.main_image_src %}

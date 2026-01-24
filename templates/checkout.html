@@ -195,6 +195,18 @@
                                     <h6 class="fw-5">Subtotal</h6>
                                     <h6 class="subtotal fw-5" id="checkout-subtotal">${{ cart.get_total_price }}</h6>
                                 </div>
+                                
+                                <!-- 🎭 Cupón de Carnaval Automático -->
+                                {% if carnival_coupon_available %}
+                                <div class="d-flex justify-content-between align-items-center pb_20" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                                    <div>
+                                        <h6 class="fw-bold mb-1 text-white">🎭 ESPECIAL CARNAVAL</h6>
+                                        <p class="mb-0 text-white small" style="opacity: 0.95;">10% de descuento aplicado</p>
+                                    </div>
+                                    <h6 class="fw-bold text-white mb-0" id="carnival-discount">-${{ carnival_discount|floatformat:2 }}</h6>
+                                </div>
+                                {% endif %}
+                                
                                 {% if has_gift_wrap %}
                                 <div class="d-flex justify-content-between line pb_20">
                                     <h6 class="fw-5">Envoltura de regalo</h6>
@@ -554,9 +566,11 @@
             // Actualizar el display del envío
             document.getElementById('shipping-cost').textContent = '$' + shippingCost.toFixed(2);
             
-            // Calcular total: subtotal + envío - descuento
+            // Calcular total: subtotal + envío - descuento - carnaval
             const discountAmount = parseFloat(document.getElementById('discount-amount-input').value) || 0;
-            const finalTotal = subtotalAmount + shippingCost - discountAmount;
+            const carnivalDiscount = {{ carnival_discount|default:0 }};
+            const giftWrapCost = {{ has_gift_wrap|yesno:"5.00,0.00" }};
+            const finalTotal = subtotalAmount + shippingCost + giftWrapCost - discountAmount - carnivalDiscount;
             
             document.getElementById('checkout-total').textContent = '$' + finalTotal.toFixed(2);
             
