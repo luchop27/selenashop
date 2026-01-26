@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AboutUs, AboutUsImage, DeliveryReturnInfo, Pedido, DetallePedido, CodigoDescuento
+from .models import AboutUs, AboutUsImage, DeliveryReturnInfo, Pedido, DetallePedido, CodigoDescuento, InfoPage
 
 
 # ==================== ABOUT US ADMIN ====================
@@ -192,3 +192,36 @@ class DeliveryReturnInfoAdmin(admin.ModelAdmin):
         if DeliveryReturnInfo.objects.count() <= 1:
             return False
         return super().has_delete_permission(request, obj)
+
+
+# ==================== INFO PAGES ADMIN ====================
+
+@admin.register(InfoPage)
+class InfoPageAdmin(admin.ModelAdmin):
+    """Administración de páginas de información estática"""
+    list_display = ('get_titulo', 'slug', 'activo', 'fecha_modificacion')
+    list_filter = ('slug', 'activo', 'fecha_modificacion')
+    search_fields = ('titulo', 'contenido')
+    readonly_fields = ('fecha_creacion', 'fecha_modificacion')
+    
+    fieldsets = (
+        ('Información Básica', {
+            'fields': ('slug', 'titulo', 'activo')
+        }),
+        ('Contenido', {
+            'fields': ('contenido',),
+            'description': 'Puedes usar etiquetas HTML para formatear el contenido'
+        }),
+        ('SEO', {
+            'fields': ('seo_meta_description',),
+            'classes': ('collapse',)
+        }),
+        ('Fechas', {
+            'fields': ('fecha_creacion', 'fecha_modificacion'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_titulo(self, obj):
+        return obj.get_slug_display()
+    get_titulo.short_description = 'Página'

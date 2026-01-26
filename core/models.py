@@ -396,3 +396,53 @@ class CodigoDescuento(models.Model):
         
         # No permitir descuentos mayores al monto del carrito
         return min(descuento, monto_carrito)
+
+
+# ==================== PÁGINAS DE INFORMACIÓN ESTÁTICA ====================
+
+class InfoPage(models.Model):
+    """Modelo para almacenar páginas de información estática (Términos, Privacidad, Envíos, etc)"""
+    
+    TIPO_CHOICES = [
+        ('terms-conditions', 'Términos y Condiciones'),
+        ('privacy-policy', 'Política de Privacidad'),
+        ('delivery-return', 'Devoluciones y Cambios'),
+        ('shipping', 'Envíos'),
+    ]
+    
+    slug = models.CharField(
+        max_length=50,
+        unique=True,
+        choices=TIPO_CHOICES,
+        verbose_name='Tipo de página'
+    )
+    titulo = models.CharField(
+        max_length=200,
+        help_text='Título de la página'
+    )
+    contenido = models.TextField(
+        help_text='Contenido HTML de la página (puedes usar etiquetas HTML)'
+    )
+    seo_meta_description = models.CharField(
+        max_length=160,
+        blank=True,
+        null=True,
+        help_text='Descripción para SEO (máx 160 caracteres)'
+    )
+    activo = models.BooleanField(
+        default=True,
+        help_text='Mostrar esta página'
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Página de Información'
+        verbose_name_plural = 'Páginas de Información'
+        ordering = ['slug']
+    
+    def __str__(self):
+        return f"{self.get_slug_display()} - {'Activo' if self.activo else 'Inactivo'}"
+    
+    def get_absolute_url(self):
+        return f"/{self.slug}/"

@@ -2581,24 +2581,45 @@ def wishlist_count(request):
 
 
 # Vistas para páginas estáticas
+def info_page(request, slug):
+    """
+    Vista única para mostrar páginas de información estática desde la base de datos.
+    Soporta: terms-conditions, privacy-policy, delivery-return, shipping
+    """
+    from .models import InfoPage
+    from django.http import Http404
+    
+    try:
+        page = InfoPage.objects.get(slug=slug, activo=True)
+    except InfoPage.DoesNotExist:
+        raise Http404(f"La página '{slug}' no encontrada")
+    
+    context = {
+        'page': page,
+        'title': page.titulo,
+    }
+    
+    return render(request, 'info_page.html', context)
+
+
 def terms_conditions(request):
     """Renderiza la página de términos y condiciones"""
-    return render(request, 'terms-conditions.html')
+    return info_page(request, 'terms-conditions')
 
 
 def privacy_policy(request):
     """Renderiza la página de política de privacidad"""
-    return render(request, 'privacy-policy.html')
+    return info_page(request, 'privacy-policy')
 
 
 def delivery_return(request):
     """Renderiza la página de devoluciones y cambios"""
-    return render(request, 'delivery-return.html')
+    return info_page(request, 'delivery-return')
 
 
 def shipping_delivery(request):
     """Renderiza la página de envíos"""
-    return render(request, 'shipping-delivery.html')
+    return info_page(request, 'shipping')
 
 
 def faq(request):
