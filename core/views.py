@@ -2582,28 +2582,71 @@ def wishlist_count(request):
 
 # Vistas para páginas estáticas
 def terms_conditions(request):
-    """Renderiza la página de términos y condiciones"""
-    return render(request, 'terms-conditions.html')
+    """Renderiza la página de términos y condiciones desde el admin Django"""
+    from apps.ayudas.models import PaginaAyuda
+    pagina = None
+    try:
+        pagina = PaginaAyuda.objects.get(tipo='terminos', activo=True)
+    except PaginaAyuda.DoesNotExist:
+        # Si no existe, mostrar una página por defecto
+        pass
+    
+    if pagina:
+        return render(request, 'terms-conditions.html', {'pagina': pagina})
+    else:
+        # Renderizar template vacío si no hay contenido
+        return render(request, 'terms-conditions.html', {'pagina': None})
 
 
 def privacy_policy(request):
-    """Renderiza la página de política de privacidad"""
-    return render(request, 'privacy-policy.html')
+    """Renderiza la página de política de privacidad desde el admin Django"""
+    from apps.ayudas.models import PaginaAyuda
+    pagina = None
+    try:
+        pagina = PaginaAyuda.objects.get(tipo='privacidad', activo=True)
+    except PaginaAyuda.DoesNotExist:
+        pass
+    
+    if pagina:
+        return render(request, 'terms-conditions.html', {'pagina': pagina})
+    else:
+        return render(request, 'terms-conditions.html', {'pagina': None})
 
 
 def delivery_return(request):
-    """Renderiza la página de devoluciones y cambios"""
-    return render(request, 'delivery-return.html')
+    """Renderiza la página de devoluciones y cambios desde el admin Django"""
+    from apps.ayudas.models import PaginaAyuda
+    pagina = None
+    try:
+        pagina = PaginaAyuda.objects.get(tipo='devoluciones', activo=True)
+    except PaginaAyuda.DoesNotExist:
+        pass
+    
+    if pagina:
+        return render(request, 'terms-conditions.html', {'pagina': pagina})
+    else:
+        return render(request, 'terms-conditions.html', {'pagina': None})
 
 
 def shipping_delivery(request):
-    """Renderiza la página de envíos"""
-    return render(request, 'shipping-delivery.html')
+    """Renderiza la página de envíos desde el admin Django"""
+    from apps.ayudas.models import PaginaAyuda
+    pagina = None
+    try:
+        pagina = PaginaAyuda.objects.get(tipo='envios', activo=True)
+    except PaginaAyuda.DoesNotExist:
+        pass
+    
+    if pagina:
+        return render(request, 'terms-conditions.html', {'pagina': pagina})
+    else:
+        return render(request, 'terms-conditions.html', {'pagina': None})
 
 
 def faq(request):
-    """Renderiza la página de FAQ"""
-    return render(request, 'faq-1.html')
+    """Renderiza la página de FAQ (redirige a la vista dinámicamente cargada desde ayudas)"""
+    from apps.ayudas.views import faq_list
+    return faq_list(request)
 
 
 def compare(request):

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.usuarios',
     'apps.productos',
     'apps.resenas',
+    'apps.ayudas',
     'core',
 ]
 AUTH_USER_MODEL = 'usuarios.Usuario'
@@ -76,6 +77,7 @@ TEMPLATES = [
                 'core.context_processors.cart',
                 'core.context_processors.delivery_return_info',
                 'core.context_processors.wishlist_count',
+                'apps.ayudas.context_processors.datos_contacto',
             ],
         },
     },
