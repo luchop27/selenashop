@@ -53,6 +53,47 @@
             height: 140px; /* menos alto en móviles */
         }
     }
+    
+    /* ===== Fix testimonial cards to have equal height ===== */
+    .testimonial-item.style-column {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 450px; /* altura mínima consistente */
+    }
+    
+    .testimonial-item.style-column .rating {
+        flex-shrink: 0;
+    }
+    
+    .testimonial-item.style-column .heading {
+        flex-shrink: 0;
+        min-height: 50px; /* altura mínima para el título */
+    }
+    
+    .testimonial-item.style-column .text {
+        flex-grow: 1; /* el texto se expande para llenar el espacio */
+        min-height: 80px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 4; /* limitar a 4 líneas */
+        -webkit-box-orient: vertical;
+    }
+    
+    .testimonial-item.style-column .author {
+        flex-shrink: 0;
+        margin-top: auto; /* empujar hacia abajo */
+    }
+    
+    .testimonial-item.style-column .product {
+        flex-shrink: 0;
+        margin-top: 15px;
+    }
+    
+    /* Asegurar que el swiper-slide también tenga altura consistente */
+    .tf-sw-testimonial .swiper-slide {
+        height: auto;
+    }
 </style>
 
 

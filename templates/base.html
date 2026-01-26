@@ -223,7 +223,7 @@
                                                     <div class="row g-2 productos-nuevos">
                                                         {% for producto in productos_mejor_puntuados %}
                                                         <div class="col-4">
-                                                            <div class="card-product">
+                                                            <div class="card-product" data-product-id="{{ producto.id }}">
                                                                 <div class="card-product-wrapper">
                                                                     <a href="{{ producto.get_absolute_url }}" class="product-img">
                                                                         {% if producto.imagenes.all %}
@@ -481,17 +481,17 @@
                                 </div>
                                 <ul class="footer-menu-list tf-collapse-content">
                                     <li>
-                                        <a href="privacy-policy.html" class="footer-menu_item">Política de Privacidad</a>
+                                        <a href="{% url 'core:privacy-policy' %}" class="footer-menu_item">Política de Privacidad</a>
                                     </li>
                                     <li>
-                                        <a href="delivery-return.html" class="footer-menu_item">Devoluciones y Cambios
+                                        <a href="{% url 'core:delivery-return' %}" class="footer-menu_item">Devoluciones y Cambios
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="shipping-delivery.html" class="footer-menu_item">Envíos</a>
+                                        <a href="{% url 'core:shipping' %}" class="footer-menu_item">Envíos</a>
                                     </li>
                                     <li>
-                                        <a href="terms-conditions.html" class="footer-menu_item">Términos y
+                                        <a href="{% url 'core:terms-conditions' %}" class="footer-menu_item">Términos y
                                             Condiciones</a>
                                     </li>
                                     <li>
@@ -1342,6 +1342,243 @@
             padding-right: 12px;
         }
     </style>
+    
+    <!-- Modal Login Required -->
+    <div class="modal fade" id="modalLoginRequired" tabindex="-1" aria-labelledby="modalLoginRequiredLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 0; border: none;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-6" id="modalLoginRequiredLabel">Iniciar Sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <p class="text_black-2">Inicia sesión para guardar tus productos preferidos y tenerlos disponibles en cualquier momento.</p>
+                    </div>
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'usuarios:login' %}" class="tf-btn btn-fill w-100 radius-3 justify-content-center" style="padding: 12px;">
+                            Iniciar Sesión
+                        </a>
+                        <p class="text-center mb-0">
+                            <span class="text_black-2">¿Nuevo cliente? </span>
+                            <a href="{% url 'usuarios:register' %}" class="text-decoration-underline">Crea tu cuenta</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Cupón Carnaval 10% -->
+    <div class="modal fade" id="modalCuponCarnaval" tabindex="-1" aria-labelledby="modalCuponCarnavalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 15px; z-index: 10; background: white; border-radius: 50%; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);"></button>
+                <div class="modal-body text-center p-0" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);">
+                    <div class="p-5">
+                        <div class="mb-4">
+                            <h2 class="text-white fw-bold mb-2" style="font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🎭 ¡Hola nena! 🏖️</h2>
+                            <h3 class="text-white fw-bold" style="font-size: 3rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Obtén un 10% de descuento</h3>
+                        </div>
+                        <p class="text-white mb-4" style="font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                            <strong>¡ESPECIAL CARNAVAL!</strong><br>
+                            Tu nuevo bikini favorito está a solo un clic de distancia.<br>
+                            <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; display: inline-block; margin-top: 10px;">
+                                🎉 Válido todo FEBRERO 🎉
+                            </span>
+                        </p>
+                        {% if user.is_authenticated %}
+                            <div class="alert alert-light mb-3" style="border-radius: 15px;">
+                                <p class="mb-0"><strong>¡Ya estás registrada!</strong><br>Tu cupón del 10% se aplicará automáticamente en tu <strong>primera compra</strong> de febrero.</p>
+                            </div>
+                            <button type="button" class="btn btn-light btn-lg" data-bs-dismiss="modal" style="border-radius: 30px; padding: 12px 40px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                                ¡Entendido!
+                            </button>
+                        {% else %}
+                            <form id="formCuponEmail" class="mb-3">
+                                <div class="input-group" style="max-width: 400px; margin: 0 auto;">
+                                    <input type="email" id="emailCupon" class="form-control form-control-lg" placeholder="Correo electrónico" required style="border-radius: 30px 0 0 30px; border: 2px solid white; padding: 12px 20px;">
+                                    <button type="submit" class="btn btn-dark btn-lg" style="border-radius: 0 30px 30px 0; padding: 12px 30px; font-weight: 600;">
+                                        Desbloquea mi descuento
+                                    </button>
+                                </div>
+                            </form>
+                            <p class="text-white small mb-0" style="opacity: 0.9;">
+                                <a href="{% url 'usuarios:register' %}" class="text-white text-decoration-underline fw-bold">¿No tienes cuenta? ¡Regístrate aquí!</a>
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script para mostrar modal después de 2 segundos -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si es febrero (mes 1 = febrero en JavaScript, 0-indexed)
+            // TEMPORAL: También funciona en enero (mes 0) para pruebas
+            const now = new Date();
+            const isFebrero = now.getMonth() === 1 || now.getMonth() === 0;  // 0=enero, 1=febrero
+            
+            // Solo mostrar en febrero (o enero para pruebas) y si no se ha mostrado en esta sesión
+            if (isFebrero && !sessionStorage.getItem('cuponCarnavalMostrado')) {
+                setTimeout(function() {
+                    const modal = new bootstrap.Modal(document.getElementById('modalCuponCarnaval'));
+                    modal.show();
+                    sessionStorage.setItem('cuponCarnavalMostrado', 'true');
+                }, 2000); // 2 segundos
+            }
+            
+            // Manejar envío de formulario de email
+            const formCupon = document.getElementById('formCuponEmail');
+            if (formCupon) {
+                formCupon.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('emailCupon').value;
+                    // Redirigir a registro con email pre-llenado
+                    window.location.href = '{% url "usuarios:register" %}?email=' + encodeURIComponent(email);
+                });
+            }
+        });
+    </script>
+
+    <!-- Wishlist functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const isAuthenticated = {{ user.is_authenticated|lower }};
+            
+            // Manejar clicks en botones de wishlist
+            document.addEventListener('click', function(e) {
+                const wishlistBtn = e.target.closest('.btn-icon-action.wishlist');
+                if (wishlistBtn) {
+                    e.preventDefault();
+                    
+                    // Si no está autenticado, mostrar modal
+                    if (!isAuthenticated) {
+                        const modalLoginRequired = new bootstrap.Modal(document.getElementById('modalLoginRequired'));
+                        modalLoginRequired.show();
+                        return;
+                    }
+                    
+                    // Si está autenticado, agregar a wishlist
+                    const productCard = wishlistBtn.closest('.card-product');
+                    const productId = productCard ? productCard.dataset.productId : null;
+                    
+                    if (productId) {
+                        // Toggle wishlist via AJAX
+                        const isActive = wishlistBtn.classList.contains('active');
+                        
+                        if (isActive) {
+                            // Remover de wishlist
+                            removeFromWishlist(productId, wishlistBtn);
+                        } else {
+                            // Agregar a wishlist
+                            addToWishlist(productId, wishlistBtn);
+                        }
+                    }
+                }
+            });
+            
+            function addToWishlist(productId, button) {
+                fetch('{% url "core:wishlist_add" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: 'product_id=' + productId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.classList.add('active');
+                        showToast('Producto agregado a favoritos ❤️');
+                        updateWishlistCount();
+                    } else if (data.require_login) {
+                        const modalLoginRequired = new bootstrap.Modal(document.getElementById('modalLoginRequired'));
+                        modalLoginRequired.show();
+                    } else {
+                        showToast(data.message || 'Error al agregar a favoritos');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al agregar a favoritos');
+                });
+            }
+            
+            function removeFromWishlist(productId, button) {
+                fetch('{% url "core:wishlist_remove" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: 'product_id=' + productId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        button.classList.remove('active');
+                        showToast('Producto eliminado de favoritos');
+                        updateWishlistCount();
+                    } else {
+                        showToast(data.message || 'Error al eliminar de favoritos');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Error al eliminar de favoritos');
+                });
+            }
+            
+            function updateWishlistCount() {
+                fetch('{% url "core:wishlist_count" %}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const countElements = document.querySelectorAll('.count-wishlist');
+                        countElements.forEach(el => {
+                            el.textContent = data.count;
+                        });
+                    })
+                    .catch(error => console.error('Error updating wishlist count:', error));
+            }
+            
+            function showToast(message) {
+                // Crear toast simple
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed bottom-0 end-0 p-3';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `
+                    <div class="toast show" role="alert">
+                        <div class="toast-body bg-dark text-white rounded">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+            
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 

@@ -169,16 +169,35 @@ document.addEventListener('DOMContentLoaded', function() {
      * Actualizar contador de wishlist
      */
     function updateWishlistCount() {
-        // Buscar el contador en la barra de navegación
-        const wishlistCounters = document.querySelectorAll('.nav-wishlist .count-box');
-        
         fetch('/api/wishlist/count/')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    wishlistCounters.forEach(counter => {
-                        counter.textContent = data.count;
+                    // Buscar todos los enlaces de wishlist en el navbar
+                    const wishlistLinks = document.querySelectorAll('.nav-wishlist a');
+                    
+                    wishlistLinks.forEach(link => {
+                        // Buscar o crear el contador
+                        let counter = link.querySelector('.count-box');
+                        
+                        if (data.count > 0) {
+                            // Si hay items, mostrar/actualizar contador
+                            if (!counter) {
+                                // Crear el contador si no existe
+                                counter = document.createElement('span');
+                                counter.className = 'count-box';
+                                link.appendChild(counter);
+                            }
+                            counter.textContent = data.count;
+                            counter.style.display = 'flex'; // Asegurar que sea visible
+                        } else {
+                            // Si no hay items, ocultar contador
+                            if (counter) {
+                                counter.style.display = 'none';
+                            }
+                        }
                     });
+                    
                     console.log('📌 Wishlist count actualizado:', data.count);
                 }
             })

@@ -89,8 +89,12 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     fecha_edicion = models.DateTimeField(auto_now=True)
 
     # Campos de control de Django
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
+    
+    # Campo para trackear cupón de carnaval
+    carnival_coupon_used_2026 = models.BooleanField(default=False, help_text="Si el usuario ya usó el cupón del 10% de carnaval febrero 2026")
+    carnival_coupon_used_date = models.DateTimeField(null=True, blank=True, help_text="Fecha en que usó el cupón de carnaval")
 
     objects = UsuarioManager()
 
@@ -108,6 +112,20 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         """Retorna el nombre corto del usuario"""
         return self.nombre if self.nombre else self.email
+    
+    def has_carnival_coupon_available(self):
+        """Verifica si el usuario tiene el cupón de carnaval disponible (solo febrero 2026)"""
+        from datetime import datetime
+        now = datetime.now()
+        # TEMPORAL: válido en enero y febrero 2026 para pruebas
+        if now.year == 2026 and now.month in [1, 2]:
+            return not self.carnival_coupon_used_2026
+        return False
+    
+    @property
+    def has_used_carnival_coupon(self):
+        """Propiedad para templates: verifica si ya usó el cupón"""
+        return self.carnival_coupon_used_2026
 
     def __str__(self):
         return f"{self.email} ({self.rol})"

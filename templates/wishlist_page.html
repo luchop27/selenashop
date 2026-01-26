@@ -120,4 +120,13 @@
 
 <script src="{% static 'js/wishlist.js' %}"></script>
 
+{% if show_login_modal %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalLoginRequired = new bootstrap.Modal(document.getElementById('modalLoginRequired'));
+        modalLoginRequired.show();
+    });
+</script>
+{% endif %}
+
 {% endblock %}

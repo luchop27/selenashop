@@ -1519,6 +1519,22 @@ def checkout(request):
         if hasattr(request.user, 'telefono') and request.user.telefono:
             user_telefono = request.user.telefono
     
+    # Verificar si el usuario tiene cupón de carnaval disponible
+    carnival_discount = 0
+    carnival_coupon_available = False
+    from datetime import datetime
+    now = datetime.now()
+    
+    # TEMPORAL: Permitir en enero (mes 1) y febrero (mes 2) para pruebas
+    if request.user.is_authenticated and now.year == 2026 and now.month in [1, 2]:
+        if hasattr(request.user, 'has_carnival_coupon_available'):
+            carnival_coupon_available = request.user.has_carnival_coupon_available()
+            if carnival_coupon_available:
+                # Calcular 10% de descuento sobre el subtotal
+                from decimal import Decimal
+                subtotal = cart.get_total_price()
+                carnival_discount = subtotal * Decimal('0.10')
+    
     context = {
         'cart_items': cart_items,
         'cart': cart,
@@ -1532,6 +1548,8 @@ def checkout(request):
         'user_telefono': user_telefono,
         'note': cart.get_note(),
         'has_gift_wrap': cart.has_gift_wrap(),
+        'carnival_coupon_available': carnival_coupon_available,
+        'carnival_discount': carnival_discount,
     }
     
     return render(request, 'checkout.html', context)
@@ -1657,8 +1675,23 @@ def checkout_process(request):
         discount_code = request.POST.get('discount_code_applied', '').strip()
         discount_amount = Decimal(request.POST.get('discount_amount', '0'))
         
-        # Validar código de descuento si se proporcionó
-        if discount_code:
+        # 🎭 CUPÓN DE CARNAVAL AUTOMÁTICO - FEBRERO 2026
+        carnival_discount_applied = False
+        from datetime import datetime
+        now = datetime.now()
+        
+        # TEMPORAL: Permitir en enero (mes 1) y febrero (mes 2) para pruebas
+        if request.user.is_authenticated and now.year == 2026 and now.month in [1, 2]:
+            if hasattr(request.user, 'has_carnival_coupon_available') and request.user.has_carnival_coupon_available():
+                # Aplicar 10% de descuento automáticamente
+                carnival_discount = subtotal * Decimal('0.10')
+                discount_amount += carnival_discount
+                discount_code = 'CARNAVAL2026' if not discount_code else f'{discount_code}+CARNAVAL2026'
+                carnival_discount_applied = True
+                print(f'🎭 Cupón de carnaval aplicado: ${carnival_discount}')
+        
+        # Validar código de descuento manual si se proporcionó (además del carnival)
+        if discount_code and 'CARNAVAL2026' not in discount_code:
             from .models import CodigoDescuento
             try:
                 codigo = CodigoDescuento.objects.get(codigo=discount_code)
@@ -1736,6 +1769,13 @@ def checkout_process(request):
         
         # Limpiar el carrito
         cart.clear()
+        
+        # 🎭 Marcar cupón de carnaval como usado
+        if carnival_discount_applied and request.user.is_authenticated:
+            request.user.carnival_coupon_used_2026 = True
+            request.user.carnival_coupon_used_date = now
+            request.user.save()
+            print(f'✅ Cupón de carnaval marcado como usado para {request.user.email}')
         
         # Asegurar que la sesión se guarde completamente
         request.session.modified = True
@@ -2354,9 +2394,13 @@ def wishlist(request):
     from django.db.models import Min
     
     if not request.user.is_authenticated:
-        # Si no está autenticado, redirigir a login
-        messages.warning(request, 'Inicia sesión para ver tu lista de favoritos.')
-        return redirect('apps.usuarios:login_usuario')
+        # Si no está autenticado, mostrar template con modal
+        context = {
+            'productos': [],
+            'total_items': 0,
+            'show_login_modal': True,
+        }
+        return render(request, 'wishlist_page.html', context)
     
     # Obtener todos los items del wishlist del usuario
     wishlist_items = Wishlist.objects.filter(usuario=request.user).select_related('producto').prefetch_related(
@@ -2425,7 +2469,8 @@ def wishlist_add(request):
     if not request.user.is_authenticated:
         return JsonResponse({
             'success': False,
-            'message': 'Debes iniciar sesión para usar el wishlist'
+            'require_login': True,
+            'message': 'Debes iniciar sesión para usar la lista de deseos'
         }, status=401)
     
     product_id = request.POST.get('product_id')
@@ -2533,3 +2578,34 @@ def wishlist_count(request):
         'success': True,
         'count': count
     })
+
+
+# Vistas para páginas estáticas
+def terms_conditions(request):
+    """Renderiza la página de términos y condiciones"""
+    return render(request, 'terms-conditions.html')
+
+
+def privacy_policy(request):
+    """Renderiza la página de política de privacidad"""
+    return render(request, 'privacy-policy.html')
+
+
+def delivery_return(request):
+    """Renderiza la página de devoluciones y cambios"""
+    return render(request, 'delivery-return.html')
+
+
+def shipping_delivery(request):
+    """Renderiza la página de envíos"""
+    return render(request, 'shipping-delivery.html')
+
+
+def faq(request):
+    """Renderiza la página de FAQ"""
+    return render(request, 'faq-1.html')
+
+
+def compare(request):
+    """Renderiza la página de comparación"""
+    return render(request, 'compare.html')
