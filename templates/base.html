@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
@@ -449,26 +449,38 @@
                                     </div>
                                     <ul>
                                         <li>
-                                            <p>Dirección: Av. Principal 123, <br> Quito, Ecuador</p>
+                                            {% if datos_contacto.google_maps_url %}
+                                            <p>Dirección: <a href="{{ datos_contacto.google_maps_url }}" target="_blank" rel="noopener noreferrer" class="link" style="color: inherit; text-decoration: none; cursor: pointer;">{{ datos_contacto.direccion }}</a></p>
+                                            {% else %}
+                                            <p>Dirección: {{ datos_contacto.direccion }}</p>
+                                            {% endif %}
                                         </li>
                                         <li>
-                                            <p>Email: <a href="mailto:info@selenashop.com">info@selenashop.com</a></p>
+                                            <p>Email: <a href="mailto:{{ datos_contacto.email }}">{{ datos_contacto.email }}</a></p>
                                         </li>
                                         <li>
-                                            <p>Teléfono: <a href="tel:+593999999999">+593 99 999 9999</a></p>
+                                            <p>Teléfono: <a href="tel:{{ datos_contacto.telefono|slugify }}">{{ datos_contacto.telefono }}</a></p>
                                         </li>
                                     </ul>
-                                    <a href="#" class="tf-btn btn-line">Cómo llegar<i
+                                    <a href="{% url 'core:contacto' %}" class="tf-btn btn-line">Cómo llegar<i
                                             class="icon icon-arrow1-top-left"></i></a>
                                     <ul class="tf-social-icon d-flex gap-10">
-                                        <li><a href="https://www.facebook.com/selenamaite.ec/?ref=pl_edit_xav_ig_profile_page_web#" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-facebook social-line"><i
+                                        {% if datos_contacto.facebook %}
+                                        <li><a href="{{ datos_contacto.facebook }}" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-facebook social-line"><i
                                                     class="icon fs-14 icon-fb"></i></a></li>
-                                        <li><a href="#" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-twiter social-line"><i
+                                        {% endif %}
+                                        {% if datos_contacto.twitter %}
+                                        <li><a href="{{ datos_contacto.twitter }}" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-twiter social-line"><i
                                                     class="icon fs-12 icon-Icon-x"></i></a></li>
-                                        <li><a href="https://www.instagram.com/selenaonlineshop_ec?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-instagram social-line"><i
+                                        {% endif %}
+                                        {% if datos_contacto.instagram %}
+                                        <li><a href="{{ datos_contacto.instagram }}" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-instagram social-line"><i
                                                     class="icon fs-14 icon-instagram"></i></a></li>
-                                        <li><a href="#" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-tiktok social-line"><i
+                                        {% endif %}
+                                        {% if datos_contacto.tiktok %}
+                                        <li><a href="{{ datos_contacto.tiktok }}" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-tiktok social-line"><i
                                                     class="icon fs-14 icon-tiktok"></i></a></li>
+                                        {% endif %}
                                     </ul>
                                 </div>
                             </div>
@@ -488,14 +500,10 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'core:shipping' %}" class="footer-menu_item">Envíos</a>
+                                        <a href="{% url 'core:shipping' %}" class="footer-menu_item">Enví­os</a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'core:terms-conditions' %}" class="footer-menu_item">Términos y
-                                            Condiciones</a>
-                                    </li>
-                                    <li>
-                                        <a href="faq-1.html" class="footer-menu_item">FAQ’s</a>
+                                        <a href="{% url 'core:faq' %}" class="footer-menu_item">FAQs</a>
                                     </li>
                                     
                                 </ul>
@@ -512,10 +520,10 @@
                                         <a href="{% url 'core:about_us' %}" class="footer-menu_item">Nuestra Historia</a>
                                     </li>
                                     <li>
-                                        <a href="{% url 'core:about_us' %}" class="footer-menu_item">Visita Nuestra Tienda</a>
+                                        <a href="{% url 'core:contacto' %}" class="footer-menu_item">Visita Nuestra Tienda</a>
                                     </li>
                                     <li>
-                                        <a href="#" class="footer-menu_item">Contáctanos</a>
+                                        <a href="{% url 'core:contacto' %}" class="footer-menu_item">Contáctanos</a>
                                     </li>
                                     {% if user.is_authenticated %}
                                         <li>
@@ -534,7 +542,7 @@
                             <div class="col-xl-3 col-md-6 col-12">
                                 <div class="footer-newsletter footer-col-block">
                                     <div class="footer-heading footer-heading-desktop">
-                                        <h6>Suscríbete al Newsletter</h6>
+                                        <h6>Suscrí­bete al Newsletter</h6>
                                     </div>
                                     <div class="footer-heading footer-heading-moblie">
                                         <h6>Suscríbete al Newsletter</h6>
@@ -559,11 +567,7 @@
                                             <div id="subscribe-msg"></div>
                                         </form>
                                         <div class="tf-cur">
-                                            <div class="tf-currencies">
-                                                <select class="image-select center style-default type-currencies">
-                                                    <option selected data-thumbnail="{% static 'images/country/us.svg' %}">USD $ | Ecuador</option>
-                                                </select>
-                                            </div>
+                                            
                                             <div class="tf-languages">
                                                 <select class="image-select center style-default type-languages">
                                                     <option selected>Español</option>
@@ -583,13 +587,7 @@
                                 <div
                                     class="footer-bottom-wrap d-flex gap-20 flex-wrap justify-content-between align-items-center">
                                     <div class="footer-menu_item">© 2025 SelenaShop. Todos los derechos reservados</div>
-                                    <div class="tf-payment">
-                                        <img src="{% static 'images/payments/visa.png' %}" alt="">
-                                        <img src="{% static 'images/payments/img-1.png' %}" alt="">
-                                        <img src="{% static 'images/payments/img-2.png' %}" alt="">
-                                        <img src="{% static 'images/payments/img-3.png' %}" alt="">
-                                        <img src="{% static 'images/payments/img-4.png' %}" alt="">
-                                    </div>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -787,7 +785,7 @@
                             <a href="#canvasSearch" data-bs-toggle="offcanvas" class="site-nav-icon"><i class="icon icon-search"></i>Buscar</a>
                         </div>
                         <div class="mb-notice">
-                            <a href="#" class="text-need">¿Necesitas ayuda?</a>
+                            <a href="#" class="text-need">Â¿Necesitas ayuda?</a>
                         </div>
                         <ul class="mb-info">
                             <li>Address: 1234 Fashion Street, Suite 567, <br> New York, NY 10001</li>
@@ -801,18 +799,18 @@
                     <div class="bottom-bar-language">
                         <div class="tf-currencies">
                             <select class="image-select center style-default type-currencies">
-                                <option data-thumbnail="{% static 'images/country/fr.svg' %}">EUR € | France</option>
-                                <option data-thumbnail="{% static 'images/country/de.svg' %}">EUR € | Germany</option>
+                                <option data-thumbnail="{% static 'images/country/fr.svg' %}">EUR â‚¬ | France</option>
+                                <option data-thumbnail="{% static 'images/country/de.svg' %}">EUR â‚¬ | Germany</option>
                                 <option selected data-thumbnail="{% static 'images/country/us.svg' %}">USD $ | United States</option>
-                                <option data-thumbnail="{% static 'images/country/vn.svg' %}">VND ₫ | Vietnam</option>
+                                <option data-thumbnail="{% static 'images/country/vn.svg' %}">VND â‚« | Vietnam</option>
                             </select>
                         </div>
                         <div class="tf-languages">
                             <select class="image-select center style-default type-languages">
                                 <option>English</option>
-                                <option>العربية</option>
-                                <option>简体中文</option>
-                                <option>اردو</option>
+                                <option>Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©</option>
+                                <option>ç®€ä½“ä¸­æ–‡</option>
+                                <option>Ø§Ø±Ø¯Ùˆ</option>
                             </select>
                         </div>
                     </div>
@@ -1029,7 +1027,7 @@
                                             </svg>
                                         </div>
                                         <div class="tf-gift-wrap-infos">
-                                            <p>¿Quieres un envoltorio de regalo?</p>
+                                            <p>Â¿Quieres un envoltorio de regalo?</p>
                                             Solo
                                             <span class="price fw-6">$5.00</span>
                                         </div>
@@ -1242,7 +1240,7 @@
         }
     </script>
     <script>
-        // 👇 Mes actual (0 = enero, 11 = diciembre)
+        // ðŸ‘‡ Mes actual (0 = enero, 11 = diciembre)
         const mesActual = new Date().getMonth();
 
         if (mesActual === 11) { // diciembre
@@ -1253,7 +1251,7 @@
             for (let i = 0; i < totalCopos; i++) {
             const copo = document.createElement("div");
             copo.className = "copos";
-            copo.innerHTML = Math.random() > 0.5 ? "❄" : "✻";
+            copo.innerHTML = Math.random() > 0.5 ? "â„" : "âœ»";
 
             copo.style.left = Math.random() * 100 + "vw";
             copo.style.fontSize = (Math.random() * 1.5 + 0.5) + "em";
@@ -1318,7 +1316,7 @@
         .mega-menu .card-product .ratings .list-rating .icon-star.empty {
             color: #e0e0e0;
         }
-        
+
         /* Ajuste de hover para categorías */
         .mega-menu .menu-heading:hover { color: #8a7a5a; }
         .mega-menu .ropa-title { color: #8a7a5a; }
@@ -1363,7 +1361,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Modal Cupón Carnaval 10% -->
     <div class="modal fade" id="modalCuponCarnaval" tabindex="-1" aria-labelledby="modalCuponCarnavalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
@@ -1372,7 +1370,7 @@
                 <div class="modal-body text-center p-0" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);">
                     <div class="p-5">
                         <div class="mb-4">
-                            <h2 class="text-white fw-bold mb-2" style="font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">🎭 ¡Hola nena! 🏖️</h2>
+                            <h2 class="text-white fw-bold mb-2" style="font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">¡Hola nena!</h2>
                             <h3 class="text-white fw-bold" style="font-size: 3rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Obtén un 10% de descuento</h3>
                         </div>
                         <p class="text-white mb-4" style="font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
@@ -1407,7 +1405,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Script para mostrar modal después de 2 segundos -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1415,7 +1413,7 @@
             // TEMPORAL: También funciona en enero (mes 0) para pruebas
             const now = new Date();
             const isFebrero = now.getMonth() === 1 || now.getMonth() === 0;  // 0=enero, 1=febrero
-            
+
             // Solo mostrar en febrero (o enero para pruebas) y si no se ha mostrado en esta sesión
             if (isFebrero && !sessionStorage.getItem('cuponCarnavalMostrado')) {
                 setTimeout(function() {
@@ -1424,7 +1422,7 @@
                     sessionStorage.setItem('cuponCarnavalMostrado', 'true');
                 }, 2000); // 2 segundos
             }
-            
+
             // Manejar envío de formulario de email
             const formCupon = document.getElementById('formCuponEmail');
             if (formCupon) {
@@ -1488,7 +1486,7 @@
                 .then(data => {
                     if (data.success) {
                         button.classList.add('active');
-                        showToast('Producto agregado a favoritos ❤️');
+                        showToast('Producto agregado a favoritos â¤ï¸');
                         updateWishlistCount();
                     } else if (data.require_login) {
                         const modalLoginRequired = new bootstrap.Modal(document.getElementById('modalLoginRequired'));
@@ -1580,3 +1578,4 @@
 </body>
 
 </html>
+

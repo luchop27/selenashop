@@ -1,0 +1,53 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- page-title -->
+<div class="tf-page-title style-2">
+    <div class="container-full">
+        <div class="heading text-center">Preguntas Frecuentes</div>
+    </div>
+</div>
+<!-- /page-title -->
+
+<!-- FAQ -->
+<section class="flat-spacing-11">
+    <div class="container">
+        <div class="tf-accordion-wrap d-flex justify-content-between">
+            <div class="content">
+                {% if categorias %}
+                    {% for categoria in categorias %}
+                        {% if categoria.preguntas_activas %}
+                            <h5 class="mb_24">{{ categoria.nombre }}</h5>
+                            <div class="flat-accordion style-default has-btns-arrow mb_60">
+                                {% for pregunta in categoria.preguntas_activas %}
+                                    <div class="flat-toggle {% if forloop.first %}active{% endif %}">
+                                        <div class="toggle-title {% if forloop.first %}active{% endif %}">
+                                            {{ pregunta.pregunta }}
+                                        </div>
+                                        <div class="toggle-content">
+                                            {{ pregunta.respuesta|safe }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="box">
+                        <p class="text-center text-muted">No hay preguntas frecuentes disponibles</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="box tf-other-content radius-10 bg_grey-8">
+                <h5 class="mb_20">Tienes una pregunta?</h5>
+                <p class="text_black-2 mb_40">Si tienes alguna pregunta que requiere asistencia inmediata, puedes hacer clic en los botones de abajo para ponerte en contacto con nuestro equipo de servicio al cliente.</p>
+                <div class="d-flex gap-20 align-items-center">
+                    <a href="{% url 'core:contacto' %}" class="tf-btn radius-3 btn-fill animate-hover-btn justify-content-center">Contáctanos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /FAQ -->
+{% endblock %}

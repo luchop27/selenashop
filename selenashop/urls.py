@@ -29,6 +29,9 @@ urlpatterns = [
     # URLs de usuarios (my-account, etc)
     path('usuarios/', include('apps.usuarios.urls')),
     
+    # URLs de ayuda (términos, devoluciones, envíos, privacidad)
+    path('ayuda/', include('apps.ayudas.urls')),
+    
     # URLs del catálogo de productos
     path('', include('apps.productos.urls')),
     
