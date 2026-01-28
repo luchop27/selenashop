@@ -1,6 +1,24 @@
 # apps/productos/models.py
 from django.db import models
 from django.urls import reverse
+from django.core.exceptions import ValidationError
+import os
+
+
+def validate_video_extension(value):
+    """Validar que el archivo sea un video válido"""
+    ext = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv']
+    if ext not in valid_extensions:
+        raise ValidationError(f'Archivo no permitido. Solo se aceptan: {", ".join(valid_extensions)}')
+
+
+def validate_image_extension(value):
+    """Validar que el archivo sea una imagen válida"""
+    ext = os.path.splitext(value.name)[1].lower()
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.heic', '.heif']
+    if ext not in valid_extensions:
+        raise ValidationError(f'Archivo no permitido. Solo se aceptan: {", ".join(valid_extensions)}')
 
 
 # -----------------------------
@@ -283,8 +301,13 @@ class Variante(models.Model):
 # ------------------------------
 class Imagen(models.Model):
     """
-    Imagen asociada a un producto o a una variante específica.
+    Imagen o video asociado a un producto o a una variante específica.
     """
+    TIPO_CHOICES = [
+        ('imagen', 'Imagen'),
+        ('video', 'Video'),
+    ]
+    
     producto = models.ForeignKey(
         Producto,
         on_delete=models.CASCADE,
@@ -299,15 +322,29 @@ class Imagen(models.Model):
         blank=True,
         related_name='imagenes'
     )
-    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
+    tipo_medio = models.CharField(max_length=10, choices=TIPO_CHOICES, default='imagen', help_text="Tipo de medio")
+    imagen = models.ImageField(
+        upload_to='productos/imagenes/', 
+        blank=True, 
+        null=True,
+        validators=[validate_image_extension],
+        help_text="Archivo de imagen (JPG, PNG, GIF, WebP, HEIC/iPhone) - Resolución original mantenida"
+    )
+    video = models.FileField(
+        upload_to='productos/videos/', 
+        blank=True, 
+        null=True,
+        validators=[validate_video_extension],
+        help_text="Archivo de video (MP4, WebM, MOV) - Resolución original mantenida"
+    )
     url = models.TextField(default='', blank=True, help_text="URL alternativa si no se usa archivo")
     posicion = models.PositiveIntegerField(default=0, help_text="Orden de visualización")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         ordering = ['posicion', 'created_at']
-        verbose_name = "Imagen"
-        verbose_name_plural = "Imágenes"
+        verbose_name = "Imagen/Video"
+        verbose_name_plural = "Imágenes/Videos"
         constraints = [
             models.CheckConstraint(
                 check=(models.Q(producto__isnull=False) | models.Q(variante__isnull=False)),
@@ -316,17 +353,84 @@ class Imagen(models.Model):
         ]
 
     def __str__(self):
+        tipo = "Video" if self.tipo_medio == 'video' else "Imagen"
         if self.producto:
-            return f"Imagen de {self.producto.nombre}"
+            return f"{tipo} de {self.producto.nombre}"
         if self.variante:
-            return f"Imagen de variante {self.variante}"
+            return f"{tipo} de variante {self.variante}"
         return self.url or ""
+    
+    def clean(self):
+        """Validar que el tipo de medio coincida con el archivo subido"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"=== CLEAN IMAGEN ===")
+        logger.info(f"Tipo medio: {self.tipo_medio}")
+        logger.info(f"Tiene imagen: {bool(self.imagen)}")
+        logger.info(f"Tiene video: {bool(self.video)}")
+        logger.info(f"Tiene URL: {bool(self.url)}")
+        
+        super().clean()
+        
+        if self.tipo_medio == 'video':
+            if self.imagen and not self.video:
+                logger.error("ERROR: Tipo video pero solo hay imagen")
+                raise ValidationError({
+                    'tipo_medio': 'Has seleccionado "Video" pero subiste una imagen. Cambia el tipo a "Imagen" o sube un video.'
+                })
+            if not self.video and not self.url:
+                logger.error("ERROR: Tipo video pero no hay video ni URL")
+                raise ValidationError({
+                    'video': 'Debes subir un archivo de video o proporcionar una URL.'
+                })
+            logger.info("✓ Validación video OK")
+        elif self.tipo_medio == 'imagen':
+            if self.video and not self.imagen:
+                logger.error("ERROR: Tipo imagen pero solo hay video")
+                raise ValidationError({
+                    'tipo_medio': 'Has seleccionado "Imagen" pero subiste un video. Cambia el tipo a "Video" o sube una imagen.'
+                })
+            if not self.imagen and not self.url:
+                logger.error("ERROR: Tipo imagen pero no hay imagen ni URL")
+                raise ValidationError({
+                    'imagen': 'Debes subir una imagen o proporcionar una URL.'
+                })
+            logger.info("✓ Validación imagen OK")
+    
+    def save(self, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"=== SAVE IMAGEN ===")
+        logger.info(f"Tipo medio: {self.tipo_medio}")
+        logger.info(f"Tiene imagen: {bool(self.imagen)}")
+        logger.info(f"Tiene video: {bool(self.video)}")
+        
+        try:
+            super().save(*args, **kwargs)
+            logger.info("✓ Guardado exitoso")
+        except Exception as e:
+            logger.error(f"ERROR al guardar: {e}")
+            raise
+    
+
 
     @property
     def src(self):
+        if self.tipo_medio == 'video' and self.video:
+            return self.video.url
         if self.imagen:
             return self.imagen.url
         return self.url or ""
+    
+    @property
+    def es_video(self):
+        return self.tipo_medio == 'video'
+    
+    @property
+    def es_imagen(self):
+        return self.tipo_medio == 'imagen'
 
 
 # ------------------------------

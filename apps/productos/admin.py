@@ -220,8 +220,19 @@ class EstiloAdmin(admin.ModelAdmin):
 class ImagenInline(admin.TabularInline):
 	model = Imagen
 	extra = 1
-	fields = ('url', 'variante')
+	fields = ('tipo_medio', 'imagen', 'video', 'url', 'variante', 'posicion')
 	autocomplete_fields = ('variante',)
+	
+	def get_readonly_fields(self, request, obj=None):
+		"""No hacer ningún campo readonly para permitir subir archivos"""
+		return []
+	
+	# COMENTADO TEMPORALMENTE PARA PROBAR SIN INTERFERENCIAS DE JS
+	# class Media:
+	# 	css = {
+	# 		'all': ('admin/css/imagen_inline.css',)
+	# 	}
+	# 	js = ('admin/js/imagen_inline.js',)
 
 
 class VarianteInline(admin.TabularInline):
@@ -267,6 +278,36 @@ class ProductoAdmin(admin.ModelAdmin):
 	actions = ['activar_productos', 'desactivar_productos', 'duplicar_producto']
 	list_per_page = 20
 	date_hierarchy = 'created_at'
+	
+	def save_model(self, request, obj, form, change):
+		"""Asegurar que el modelo se guarde correctamente"""
+		import logging
+		logger = logging.getLogger(__name__)
+		logger.info(f"=== GUARDANDO PRODUCTO: {obj.nombre} ===")
+		super().save_model(request, obj, form, change)
+	
+	def save_formset(self, request, form, formset, change):
+		"""Procesar y guardar los formsets de imágenes/videos y variantes"""
+		import logging
+		logger = logging.getLogger(__name__)
+		
+		if formset.model == Imagen:
+			logger.info(f"=== GUARDANDO FORMSET DE IMAGENES ===")
+			instances = formset.save(commit=False)
+			
+			for instance in instances:
+				logger.info(f"Imagen/Video a guardar:")
+				logger.info(f"  - Tipo: {instance.tipo_medio}")
+				logger.info(f"  - Tiene imagen: {bool(instance.imagen)}")
+				logger.info(f"  - Tiene video: {bool(instance.video)}")
+				instance.save()
+				logger.info(f"  ✓ Guardado exitoso")
+			
+			for obj in formset.deleted_objects:
+				obj.delete()
+			formset.save_m2m()
+		else:
+			formset.save()
 
 	fieldsets = (
 		('Datos básicos', {

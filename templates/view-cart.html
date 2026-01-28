@@ -454,11 +454,11 @@
                                     <div class="card-product-wrapper">
                                         <a href="{% url 'core:product_detail' producto.slug %}" class="product-img">
                                             {% if producto.imagenes.all %}
-                                                <img class="lazyload img-product" data-src="{{ producto.imagenes.first.imagen.url }}"
-                                                    src="{{ producto.imagenes.first.imagen.url }}" alt="{{ producto.nombre }}">
+                                                <img class="lazyload img-product" data-src="{{ producto.imagenes.first.src }}"
+                                                    src="{{ producto.imagenes.first.src }}" alt="{{ producto.nombre }}">
                                                 {% if producto.imagenes.all|length > 1 %}
-                                                    <img class="lazyload img-hover" data-src="{{ producto.imagenes.all.1.imagen.url }}"
-                                                        src="{{ producto.imagenes.all.1.imagen.url }}" alt="{{ producto.nombre }}">
+                                                    <img class="lazyload img-hover" data-src="{{ producto.imagenes.all.1.src }}"
+                                                        src="{{ producto.imagenes.all.1.src }}" alt="{{ producto.nombre }}">
                                                 {% endif %}
                                             {% else %}
                                                 <img class="lazyload img-product" data-src="{% static 'images/products/default.jpg' %}"

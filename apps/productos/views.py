@@ -680,10 +680,18 @@ def admin_producto_add(request):
 			# Obtener imágenes cargadas (NO guardarlas aún)
 			imagenes = request.FILES.getlist('imagenes')
 			print(f"\n{'='*50}")
-			print(f"DEBUG - Total imágenes recibidas: {len(imagenes)}")
+			print(f"DEBUG - Total archivos recibidos: {len(imagenes)}")
 			print(f"DEBUG - request.FILES keys: {list(request.FILES.keys())}")
-			for idx, img in enumerate(imagenes):
-				print(f"  Imagen {idx}: {img.name} ({img.size} bytes)")
+			print(f"DEBUG - request.POST keys: {list(request.POST.keys())}")
+			for idx, archivo in enumerate(imagenes):
+				print(f"  Archivo {idx}:")
+				print(f"    Nombre: {archivo.name}")
+				print(f"    Tamaño: {archivo.size} bytes")
+				print(f"    Tipo: {archivo.content_type}")
+				extension = archivo.name.lower().split('.')[-1]
+				print(f"    Extensión: .{extension}")
+				es_video = extension in ['mp4', 'webm', 'mov', 'avi', 'mkv']
+				print(f"    Es video: {es_video}")
 			print(f"{'='*50}\n")
 			
 			# Procesar variantes dinámicas desde el formulario
@@ -772,19 +780,46 @@ def admin_producto_add(request):
 				variante_index = 1
 				print(f"DEBUG - Variante por defecto creada para producto sin atributos")
 			
-			# GUARDAR TODAS LAS IMÁGENES DEL PRODUCTO (no asociadas a variantes específicas)
+			# GUARDAR TODAS LAS IMÁGENES Y VIDEOS DEL PRODUCTO
 			from .models import Imagen
 			imagenes_guardadas = 0
-			for imagen_file in imagenes:
-				Imagen.objects.create(
-					producto=producto,
-					imagen=imagen_file,
-					variante=None  # Todas las imágenes son del producto, no de variantes
-				)
-				imagenes_guardadas += 1
-				print(f"DEBUG - Imagen guardada: {imagen_file.name}")
+			videos_guardados = 0
 			
-			messages.success(request, f'Producto "{producto.nombre}" creado exitosamente con {variante_index} variante(s) y {imagenes_guardadas} imagen(es).')
+			for archivo in imagenes:
+				# Determinar si es imagen o video por extensión
+				extension = archivo.name.lower().split('.')[-1]
+				es_video = extension in ['mp4', 'webm', 'mov', 'avi', 'mkv']
+				
+				print(f"\nProcesando archivo: {archivo.name}")
+				print(f"  Extensión: .{extension}")
+				print(f"  Es video: {es_video}")
+				
+				try:
+					if es_video:
+						imagen_obj = Imagen.objects.create(
+							producto=producto,
+							tipo_medio='video',
+							video=archivo,
+							variante=None
+						)
+						videos_guardados += 1
+						print(f"  ✓ Video guardado con ID: {imagen_obj.id}")
+					else:
+						imagen_obj = Imagen.objects.create(
+							producto=producto,
+							tipo_medio='imagen',
+							imagen=archivo,
+							variante=None
+						)
+						imagenes_guardadas += 1
+						print(f"  ✓ Imagen guardada con ID: {imagen_obj.id}")
+				except Exception as e:
+					print(f"  ✗ ERROR al guardar: {e}")
+					import traceback
+					traceback.print_exc()
+			
+			total_archivos = imagenes_guardadas + videos_guardados
+			messages.success(request, f'Producto "{producto.nombre}" creado exitosamente con {variante_index} variante(s), {imagenes_guardadas} imagen(es) y {videos_guardados} video(s).')
 			return redirect('productos:admin_productos_list')
 	else:
 		form = ProductoForm()

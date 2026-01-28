@@ -1,6 +1,56 @@
 ﻿{% extends "base.html" %}
 {% load static %}
 {% block content %}
+
+        <!-- Modal para expandir imagen/video con fondo negro -->
+        <div id="mediaExpandModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center;">
+            <div style="position: relative; width: 95%; height: 95%; display: flex; align-items: center; justify-content: center;">
+                <img id="modalImage" src="" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: none;">
+                <video id="modalVideo" controls style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: none;"></video>
+                <button onclick="closeMediaModal()" style="position: absolute; top: 20px; right: 0; background: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">&times;</button>
+            </div>
+        </div>
+
+        <script>
+        function openMediaModal(src, isVideo) {
+            const modal = document.getElementById('mediaExpandModal');
+            const img = document.getElementById('modalImage');
+            const video = document.getElementById('modalVideo');
+            
+            if (isVideo) {
+                video.src = src;
+                video.style.display = 'block';
+                img.style.display = 'none';
+            } else {
+                img.src = src;
+                img.style.display = 'block';
+                video.style.display = 'none';
+                video.pause();
+            }
+            
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMediaModal() {
+            const modal = document.getElementById('mediaExpandModal');
+            const video = document.getElementById('modalVideo');
+            modal.style.display = 'none';
+            video.pause();
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Cerrar con ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeMediaModal();
+        });
+        
+        // Cerrar al hacer clic en el fondo negro
+        document.getElementById('mediaExpandModal').addEventListener('click', function(e) {
+            if (e.target === this) closeMediaModal();
+        });
+        </script>
+
         <!-- breadcrumb -->
         <div class="tf-breadcrumb">
             <div class="container">
@@ -38,12 +88,28 @@
                                             {% if imagenes %}
                                                 {% for imagen in imagenes %}
                                                 <div class="swiper-slide stagger-item">
+                                                    {% if imagen.es_video %}
+                                                    <div class="item position-relative">
+                                                        <div class="wrap-btn-viewer style-video">
+                                                            <div class="icon">
+                                                                <i class="icon-play"></i>
+                                                            </div>
+                                                        </div>
+                                                        <video class="lazyload" 
+                                                               data-src="{{ imagen.src }}" 
+                                                               src="{{ imagen.src }}" 
+                                                               alt="video-product"
+                                                               muted>
+                                                        </video>
+                                                    </div>
+                                                    {% else %}
                                                     <div class="item">
                                                         <img class="lazyload"
-                                                            data-src="{{ imagen.imagen.url }}"
-                                                            src="{{ imagen.imagen.url }}" 
+                                                            data-src="{{ imagen.src }}"
+                                                            src="{{ imagen.src }}" 
                                                             alt="{{ producto.nombre }}">
                                                     </div>
+                                                    {% endif %}
                                                 </div>
                                                 {% endfor %}
                                             {% else %}
@@ -63,14 +129,32 @@
                                             {% if imagenes %}
                                                 {% for imagen in imagenes %}
                                                 <div class="swiper-slide">
-                                                    <a href="{{ imagen.imagen.url }}" target="_blank" class="item"
-                                                        data-pswp-width="770px" data-pswp-height="1075px">
-                                                        <img class="tf-image-zoom lazyload"
-                                                            data-zoom="{{ imagen.imagen.url }}"
-                                                            data-src="{{ imagen.imagen.url }}"
-                                                            src="{{ imagen.imagen.url }}" 
-                                                            alt="{{ producto.nombre }}">
-                                                    </a>
+                                                    {% if imagen.es_video %}
+                                                    <div class="item position-relative" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 600px; background: #f5f5f5;">
+                                                        <video playsinline="true" preload="metadata" muted controls loop
+                                                               src="{{ imagen.src }}"
+                                                               style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">
+                                                        </video>
+                                                        <button onclick="openMediaModal('{{ imagen.src }}', true)" 
+                                                           class="box-icon bg_white position-absolute" 
+                                                           style="top: 10px; right: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; cursor: pointer; padding: 8px; border: none;">
+                                                            <img src="{% static 'images/icons/expand-icon.jpg' %}" alt="Expandir" style="width: 100%; height: 100%; object-fit: contain;">
+                                                        </button>
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="item position-relative" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 600px; background: #f5f5f5;">
+                                                        <img class="lazyload"
+                                                            data-src="{{ imagen.src }}"
+                                                            src="{{ imagen.src }}" 
+                                                            alt="{{ producto.nombre }}"
+                                                            style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">
+                                                        <button onclick="openMediaModal('{{ imagen.src }}', false)" 
+                                                           class="box-icon bg_white position-absolute" 
+                                                           style="top: 10px; right: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; cursor: pointer; padding: 8px; border: none;">
+                                                            <img src="{% static 'images/icons/expand-icon.jpg' %}" alt="Expandir" style="width: 100%; height: 100%; object-fit: contain;">
+                                                        </button>
+                                                    </div>
+                                                    {% endif %}
                                                 </div>
                                                 {% endfor %}
                                             {% else %}
@@ -176,9 +260,7 @@
                                                 <span class="icon icon-delete"></span>
                                             </a>
                                             <div class="w-100">
-                                                <a href="#" class="btns-full">Comprar con <img
-                                                        src="images/payments/paypal.png" alt=""></a>
-                                                <a href="#" class="payment-more-option">Más opciones de pago</a>
+                                                <a href="{% url 'core:view_cart' %}" class="btns-full">Comprar</a>
                                             </div>
                                         </form>
                                     </div>
@@ -249,8 +331,8 @@
                         <div class="tf-sticky-atc-product d-flex align-items-center">
                             <div class="tf-sticky-atc-img">
                                 {% if imagenes %}
-                                    <img class="lazyloaded" data-src="{{ imagenes.0.imagen.url }}" alt="{{ producto.nombre }}"
-                                        src="{{ imagenes.0.imagen.url }}">
+                                    <img class="lazyloaded" data-src="{{ imagenes.0.src }}" alt="{{ producto.nombre }}"
+                                        src="{{ imagenes.0.src }}">
                                 {% else %}
                                     <img class="lazyloaded" data-src="{% static 'images/products/placeholder.jpg' %}" alt="No image"
                                         src="{% static 'images/products/placeholder.jpg' %}">
@@ -261,10 +343,12 @@
                         <div class="tf-sticky-atc-infos">
                             <form class="">
                                 <div class="tf-sticky-atc-variant-price text-center">
-                                    <select class="tf-select">
+                                    <select class="tf-select sticky-variant-select" id="stickyVariantSelect">
                                         {% for variante in variantes %}
-                                            <option {% if forloop.first %}selected="selected"{% endif %}>
-                                                
+                                            <option value="{{ variante.id }}" 
+                                                    data-precio="{{ variante.precio|default:producto.precio_base }}"
+                                                    data-stock="{{ variante.stock }}"
+                                                    {% if forloop.first %}selected="selected"{% endif %}>
                                                 {% if variante.talla %}{{ variante.talla.codigo }}{% else %}Size{% endif %} - 
                                                 ${{ variante.precio|default:producto.precio_base }}
                                             </option>
@@ -273,15 +357,14 @@
                                 </div>
                                 <div class="tf-sticky-atc-btns">
                                     <div class="tf-product-info-quantity">
-                                        <div class="wg-quantity">
+                                        <div class="wg-quantity sticky-quantity">
                                             <span class="btn-quantity minus-btn">-</span>
-                                            <input type="text" name="number" value="1">
+                                            <input type="text" name="number" value="1" class="sticky-qty-input">
                                             <span class="btn-quantity plus-btn">+</span>
                                         </div>
                                     </div>
                                     <a href="#"
-                                        class="tf-btn btn-fill radius-3 justify-content-center fw-6 fs-14 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Add
-                                            to cart</a>
+                                        class="tf-btn btn-fill radius-3 justify-content-center fw-6 fs-14 flex-grow-1 animate-hover-btn btn-add-to-cart sticky-add-cart"><span>Agregar al carrito</span></a>
                                 </div>
                             </form>
                         </div>
@@ -2806,11 +2889,168 @@
         console.log('=== INICIALIZACI�N COMPLETA ===');
     });
     </script>
+
+    <!-- JavaScript para Modal Sticky -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stickySelect = document.getElementById('stickyVariantSelect');
+        const stickyQtyInput = document.querySelector('.sticky-qty-input');
+        const stickyMinusBtn = document.querySelector('.sticky-quantity .minus-btn');
+        const stickyPlusBtn = document.querySelector('.sticky-quantity .plus-btn');
+        const stickyAddCartBtn = document.querySelector('.sticky-add-cart');
+        
+        let currentStickyStock = 0;
+        
+        if (stickySelect) {
+            stickySelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                currentStickyStock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
+                if (stickyQtyInput) stickyQtyInput.value = 1;
+                updateStickyButtons();
+            });
+            
+            const firstOption = stickySelect.options[stickySelect.selectedIndex];
+            if (firstOption) currentStickyStock = parseInt(firstOption.getAttribute('data-stock')) || 0;
+        }
+        
+        if (stickyMinusBtn && stickyQtyInput) {
+            stickyMinusBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                let qty = parseInt(stickyQtyInput.value) || 1;
+                if (qty > 1) {
+                    stickyQtyInput.value = qty - 1;
+                    updateStickyButtons();
+                }
+            });
+        }
+        
+        if (stickyPlusBtn && stickyQtyInput) {
+            stickyPlusBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                let qty = parseInt(stickyQtyInput.value) || 1;
+                if (qty < currentStickyStock) {
+                    stickyQtyInput.value = qty + 1;
+                    updateStickyButtons();
+                }
+            });
+        }
+        
+        if (stickyQtyInput) {
+            stickyQtyInput.addEventListener('input', function() {
+                let val = parseInt(this.value) || 1;
+                if (val > currentStickyStock) val = currentStickyStock;
+                if (val < 1) val = 1;
+                this.value = val;
+                updateStickyButtons();
+            });
+        }
+        
+        function updateStickyButtons() {
+            const qty = parseInt(stickyQtyInput?.value) || 1;
+            if (stickyPlusBtn) {
+                if (qty >= currentStickyStock || currentStickyStock === 0) {
+                    stickyPlusBtn.style.opacity = '0.5';
+                    stickyPlusBtn.style.pointerEvents = 'none';
+                } else {
+                    stickyPlusBtn.style.opacity = '1';
+                    stickyPlusBtn.style.pointerEvents = 'auto';
+                }
+            }
+            if (stickyMinusBtn) {
+                if (qty <= 1) {
+                    stickyMinusBtn.style.opacity = '0.5';
+                    stickyMinusBtn.style.pointerEvents = 'none';
+                } else {
+                    stickyMinusBtn.style.opacity = '1';
+                    stickyMinusBtn.style.pointerEvents = 'auto';
+                }
+            }
+        }
+        
+        if (stickyAddCartBtn) {
+            stickyAddCartBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!stickySelect || !stickyQtyInput) return;
+                
+                const selectedOption = stickySelect.options[stickySelect.selectedIndex];
+                const varianteId = selectedOption.value;
+                const cantidad = parseInt(stickyQtyInput.value) || 1;
+                
+                fetch('/api/cart/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: `variante_id=${varianteId}&cantidad=${cantidad}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) window.location.href = '/cart/';
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        updateStickyButtons();
+    });
+    </script>
     
     <!-- Reviews JavaScript -->
     <script src="{% static 'js/reviews.js' %}"></script>
     
     <!-- Wishlist JavaScript -->
     <script src="{% static 'js/wishlist.js' %}"></script>
+
+    <style>
+        /* Estilos para videos en el detalle del producto */
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            background: #000;
+            border-radius: 4px;
+        }
+
+        /* Asegurar que los videos en thumbs tengan el mismo tamaño que las imágenes */
+        .tf-product-media-thumbs .item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Controles de video personalizados */
+        .video-container video::-webkit-media-controls-panel {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Responsive para videos */
+        @media (max-width: 768px) {
+            .video-container video {
+                max-height: 400px;
+            }
+        }
+    </style>
 
 {% endblock %}
