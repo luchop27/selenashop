@@ -2,6 +2,70 @@
 {% load static %}
 {% block content %}
 
+<style>
+/* Fix overflow horizontal - product-detail specific */
+.d-flex > *, .row > *, .container > *, .tf-product-info-list > * {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+img, .img-product, .img-hover, .lazyload {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+#gallery-started {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.swiper, .tf-sw-recent, .tf-sw-product-sell, .swiper-wrapper {
+    overflow: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-width: 0 !important;
+}
+
+.widget-menu-tab {
+    flex-wrap: wrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tf-product-info-buy-button .tf-btn, .tf-sticky-atc-btns .tf-btn, .tf-btn, .btn {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+}
+
+.offcanvas, .canvas-wrapper, .canvas-body, .canvas-header {
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.d-flex, .row, .container, .tf-sw-recent, .tf-sw-product-sell {
+    min-width: 0 !important;
+}
+
+.tf-sticky-btn-atc, .offcanvas {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+</style>
+
         <!-- Modal para expandir imagen/video con fondo negro -->
         <div id="mediaExpandModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center;">
             <div style="position: relative; width: 95%; height: 95%; display: flex; align-items: center; justify-content: center;">
@@ -80,102 +144,43 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="tf-product-media-wrap sticky-top">
-                                <div class="thumbs-slider">
-                                    <div dir="ltr" class="swiper tf-product-media-thumbs other-image-zoom"
-                                        data-direction="vertical">
-                                        <div class="swiper-wrapper stagger-wrap">
-                                            {% if imagenes %}
-                                                {% for imagen in imagenes %}
-                                                <div class="swiper-slide stagger-item">
-                                                    {% if imagen.es_video %}
-                                                    <div class="item position-relative">
-                                                        <div class="wrap-btn-viewer style-video">
-                                                            <div class="icon">
-                                                                <i class="icon-play"></i>
-                                                            </div>
-                                                        </div>
-                                                        <video class="lazyload" 
-                                                               data-src="{{ imagen.src }}" 
-                                                               src="{{ imagen.src }}" 
-                                                               alt="video-product"
-                                                               muted>
-                                                        </video>
-                                                    </div>
-                                                    {% else %}
-                                                    <div class="item">
-                                                        <img class="lazyload"
-                                                            data-src="{{ imagen.src }}"
-                                                            src="{{ imagen.src }}" 
-                                                            alt="{{ producto.nombre }}">
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                                {% endfor %}
-                                            {% else %}
-                                                <div class="swiper-slide stagger-item">
-                                                    <div class="item">
-                                                        <img class="lazyload"
-                                                            data-src="{% static 'images/products/placeholder.jpg' %}"
-                                                            src="{% static 'images/products/placeholder.jpg' %}" 
-                                                            alt="No image">
-                                                    </div>
-                                                </div>
-                                            {% endif %}
-                                        </div>
+                            <div class="tf-product-media-wrap">
+                                <div>
+                                    <div class="d-grid grid-template-columns-2 gap-10" id="gallery-started">
+
+                                        {% if imagenes %}
+                                            {% for imagen in imagenes %}
+                                                {% if not imagen.es_video %}
+                                                <a href="{{ imagen.src }}" target="_blank" class="item"
+                                                data-pswp-width="770" data-pswp-height="1075">
+                                                    <img class="tf-image-zoom lazyload"
+                                                        data-zoom="{{ imagen.src }}"
+                                                        data-src="{{ imagen.src }}"
+                                                        src="{{ imagen.src }}"
+                                                        alt="{{ producto.nombre }}">
+                                                </a>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <a href="{% static 'images/products/placeholder.jpg' %}" target="_blank" class="item"
+                                            data-pswp-width="770" data-pswp-height="1075">
+                                                <img class="tf-image-zoom lazyload"
+                                                    data-zoom="{% static 'images/products/placeholder.jpg' %}"
+                                                    data-src="{% static 'images/products/placeholder.jpg' %}"
+                                                    src="{% static 'images/products/placeholder.jpg' %}"
+                                                    alt="No image">
+                                            </a>
+                                        {% endif %}
+
                                     </div>
-                                    <div dir="ltr" class="swiper tf-product-media-main" id="gallery-swiper-started">
-                                        <div class="swiper-wrapper">
-                                            {% if imagenes %}
-                                                {% for imagen in imagenes %}
-                                                <div class="swiper-slide">
-                                                    {% if imagen.es_video %}
-                                                    <div class="item position-relative" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 600px; background: #f5f5f5;">
-                                                        <video playsinline="true" preload="metadata" muted controls loop
-                                                               src="{{ imagen.src }}"
-                                                               style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">
-                                                        </video>
-                                                        <button onclick="openMediaModal('{{ imagen.src }}', true)" 
-                                                           class="box-icon bg_white position-absolute" 
-                                                           style="top: 10px; right: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; cursor: pointer; padding: 8px; border: none;">
-                                                            <img src="{% static 'images/icons/expand-icon.jpg' %}" alt="Expandir" style="width: 100%; height: 100%; object-fit: contain;">
-                                                        </button>
-                                                    </div>
-                                                    {% else %}
-                                                    <div class="item position-relative" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 600px; background: #f5f5f5;">
-                                                        <img class="lazyload"
-                                                            data-src="{{ imagen.src }}"
-                                                            src="{{ imagen.src }}" 
-                                                            alt="{{ producto.nombre }}"
-                                                            style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">
-                                                        <button onclick="openMediaModal('{{ imagen.src }}', false)" 
-                                                           class="box-icon bg_white position-absolute" 
-                                                           style="top: 10px; right: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; cursor: pointer; padding: 8px; border: none;">
-                                                            <img src="{% static 'images/icons/expand-icon.jpg' %}" alt="Expandir" style="width: 100%; height: 100%; object-fit: contain;">
-                                                        </button>
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                                {% endfor %}
-                                            {% else %}
-                                                <div class="swiper-slide">
-                                                    <a href="{% static 'images/products/placeholder.jpg' %}" target="_blank" class="item"
-                                                        data-pswp-width="770px" data-pswp-height="1075px">
-                                                        <img class="tf-image-zoom lazyload"
-                                                            data-zoom="{% static 'images/products/placeholder.jpg' %}"
-                                                            data-src="{% static 'images/products/placeholder.jpg' %}"
-                                                            src="{% static 'images/products/placeholder.jpg' %}" 
-                                                            alt="No image">
-                                                    </a>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="swiper-button-next button-style-arrow thumbs-next"></div>
-                                        <div class="swiper-button-prev button-style-arrow thumbs-prev"></div>
-                                    </div>
+
+                                    <!-- CONTADOR SOLO MÓVIL -->
+                                    <div id="mobile-image-counter">1/1</div>
+
                                 </div>
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="tf-product-info-wrap position-relative" data-producto-id="{{ producto.id }}">
                                 <div class="tf-zoom-main"></div>
@@ -721,135 +726,138 @@
         </section>
         <!-- /tabs -->
         <!-- Product -->
-        <section class="flat-spacing-6 pt_0">
-            <div class="container">
-                <div class="flat-title wow fadeInUp" data-wow-delay="0s">
-                    <span class="title">People Also Bought</span>
-                    <div class="d-flex gap-16 align-items-center box-pagi-arr">
-                        <div class="nav-sw-arrow nav-next-slider nav-next-product"><span
-                                class="icon icon-arrow1-left"></span></div>
-                        <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-line fs-12 fw-6">VIEW ALL</a>
-                        <div class="nav-sw-arrow nav-prev-slider nav-prev-product"><span
-                                class="icon icon-arrow1-right"></span></div>
-                    </div>
-                </div>
-                <div class="hover-sw-nav hover-sw-2">
-                    <div dir="ltr" class="swiper tf-sw-product-sell wrap-sw-over" data-preview="4" data-tablet="3"
-                        data-mobile="2" data-space-lg="30" data-space-md="15" data-pagination="2" data-pagination-md="3"
-                        data-pagination-lg="3">
-                        <div class="swiper-wrapper">
-                            {% if productos_relacionados %}
-                                {% for producto in productos_relacionados %}
-                                    <div class="swiper-slide" lazy="true">
-                                        <div class="card-product style-5">
-                                            <div class="card-product-wrapper">
-                                                <a href="{{ producto.get_absolute_url }}" class="product-img">
-                                                    {% if producto.main_image_src %}
-                                                        <img class="lazyload img-product" 
-                                                             data-src="{{ producto.main_image_src }}"
-                                                             src="{{ producto.main_image_src }}" 
-                                                             alt="{{ producto.nombre }}">
-                                                    {% else %}
-                                                        <img class="lazyload img-product" 
-                                                             data-src="{% static 'images/products/placeholder.jpg' %}"
-                                                             src="{% static 'images/products/placeholder.jpg' %}" 
-                                                             alt="{{ producto.nombre }}">
-                                                    {% endif %}
-                                                    
-                                                    {% if producto.hover_image_src %}
-                                                        <img class="lazyload img-hover" 
-                                                             data-src="{{ producto.hover_image_src }}"
-                                                             src="{{ producto.hover_image_src }}" 
-                                                             alt="{{ producto.nombre }}">
-                                                    {% endif %}
-                                                </a>
-                                                <div class="list-product-btn gap-0">
-                                                    <a href="#quick_add" data-bs-toggle="modal"
-                                                        class="box-icon bg_white quick-add tf-btn-loading shadow-none">
-                                                        <span class="icon icon-bag"></span>
-                                                        <span class="tooltip">Quick Add</span>
-                                                    </a>
-                                                    <a href="#"
-                                                        class="box-icon bg_white wishlist btn-icon-action shadow-none">
-                                                        <span class="icon icon-heart"></span>
-                                                        <span class="tooltip">Add to Wishlist</span>
-                                                        <span class="icon icon-delete"></span>
-                                                    </a>
-                                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                                        class="box-icon bg_white compare btn-icon-action shadow-none">
-                                                        <span class="icon icon-compare"></span>
-                                                        <span class="tooltip">Add to Compare</span>
-                                                        <span class="icon icon-check"></span>
-                                                    </a>
-                                                <a href="#quick_view" data-bs-toggle="modal"
-                                                    class="box-icon bg_white quickview btn-open-quickview tf-btn-loading shadow-none"
-                                                    data-product-id="{{ producto.id }}"
-                                                    data-product-name="{{ producto.nombre|escapejs }}"
-                                                    data-product-price="{{ producto.display_price }}"
-                                                    data-product-desc="{{ producto.descripcion_corta|default:'Producto de alta calidad'|escapejs }}"
-                                                    data-product-main-image="{{ producto.main_image_src }}"
-                                                    data-product-hover-image="{{ producto.hover_image_src }}"
-                                                    data-product-url="{{ producto.get_absolute_url }}"
-                                                    data-product-colors="{% for c in producto.colors %}{{ c.valor }}{% if not forloop.last %},{% endif %}{% endfor %}"
-                                                    data-product-sizes="{{ producto.sizes|join:',' }}">
-                                                    <span class="icon icon-view"></span>
-                                                    <span class="tooltip">Quick View</span>
-                                                </a>
-                                        </div>                                        <!-- DEBUG: Ver qu� hay en sizes -->
-                                        <div style="background: yellow; padding: 5px; font-size: 11px;">
-                                            DEBUG sizes: {{ producto.sizes|length }} items - {{ producto.sizes }}
+<section class="flat-spacing-6 pt_0">
+    <div class="container">
+        <div class="flat-title wow fadeInUp" data-wow-delay="0s">
+            <span class="title">People Also Bought</span>
+            <div class="d-flex gap-16 align-items-center box-pagi-arr">
+                <div class="nav-sw-arrow nav-next-slider nav-next-product"><span
+                        class="icon icon-arrow1-left"></span></div>
+                <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-line fs-12 fw-6">VIEW ALL</a>
+                <div class="nav-sw-arrow nav-prev-slider nav-prev-product"><span
+                        class="icon icon-arrow1-right"></span></div>
+            </div>
+        </div>
+        <div class="hover-sw-nav hover-sw-2">
+            <div dir="ltr" class="swiper tf-sw-product-sell wrap-sw-over" data-preview="4" data-tablet="3"
+                data-mobile="2" data-space-lg="30" data-space-md="15" data-pagination="2" data-pagination-md="3"
+                data-pagination-lg="3">
+                <div class="swiper-wrapper">
+                    {% if productos_relacionados %}
+                        {% for producto in productos_relacionados %}
+                            <div class="swiper-slide" lazy="true">
+                                <div class="card-product style-5" data-product-id="{{ producto.id }}" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'Ecomus' }}">
+                                    <div class="card-product-wrapper">
+                                        <a href="{{ producto.get_absolute_url }}" class="product-img">
+                                            {% if producto.main_image_src %}
+                                                <img class="lazyload img-product" 
+                                                     data-src="{{ producto.main_image_src }}"
+                                                     src="{{ producto.main_image_src }}" 
+                                                     alt="{{ producto.nombre }}">
+                                            {% else %}
+                                                <img class="lazyload img-product" 
+                                                     data-src="{% static 'images/products/placeholder.jpg' %}"
+                                                     src="{% static 'images/products/placeholder.jpg' %}" 
+                                                     alt="{{ producto.nombre }}">
+                                            {% endif %}
+                                            
+                                            {% if producto.hover_image_src %}
+                                                <img class="lazyload img-hover" 
+                                                     data-src="{{ producto.hover_image_src }}"
+                                                     src="{{ producto.hover_image_src }}" 
+                                                     alt="{{ producto.nombre }}">
+                                            {% endif %}
+                                        </a>
+                                        
+                                        <div class="list-product-btn gap-0">
+                                            <!-- Quick Add -->
+                                            <a href="#quick_add" data-bs-toggle="modal"
+                                                class="box-icon bg_white quick-add tf-btn-loading shadow-none">
+                                                <span class="icon icon-bag"></span>
+                                                <span class="tooltip">Quick Add</span>
+                                            </a>
+                                            
+                                            <!-- Wishlist -->
+                                            <button type="button" 
+                                                class="box-icon bg_white wishlist btn-icon-action shadow-none" 
+                                                data-product-id="{{ producto.id }}"
+                                                {% if producto.in_wishlist %}data-wishlist-id="{{ producto.wishlist_item_id }}"{% endif %}>
+                                                <span class="icon icon-heart"></span>
+                                                <span class="tooltip">{% if producto.in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}</span>
+                                                <span class="icon icon-delete"></span>
+                                            </button>
+                                            
+                                            <!-- Compare -->
+                                            <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
+                                                class="box-icon bg_white compare btn-icon-action shadow-none">
+                                                <span class="icon icon-compare"></span>
+                                                <span class="tooltip">Add to Compare</span>
+                                                <span class="icon icon-check"></span>
+                                            </a>
+                                            
+                                            <!-- Quick View -->
+                                            <a href="#quick_view" data-bs-toggle="modal"
+                                                class="box-icon bg_white quickview btn-open-quickview tf-btn-loading shadow-none"
+                                                data-producto-id="{{ producto.id }}">
+                                                <span class="icon icon-view"></span>
+                                                <span class="tooltip">Quick View</span>
+                                            </a>
                                         </div>
                                         
+                                        <!-- Size List -->
                                         {% if producto.sizes %}
-                                            <div class="size-list style-3">
+                                            <div class="size-list">
                                                 {% for s in producto.sizes %}
                                                     <span class="size-item">{{ s }}</span>
                                                 {% endfor %}
                                             </div>
-                                        {% else %}
-                                            <div style="background: red; color: white; padding: 5px;">
-                                                NO HAY TALLAS
-                                            </div>
                                         {% endif %}
                                     </div>
+                                    
                                     <div class="card-product-info">
                                         <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
-                                        <span class="price">${{ producto.display_price }}</span>
+                                        <span class="price current-price">${{ producto.display_price }}</span>
 
                                         {% if producto.colors %}
-                                                    <ul class="list-color-product">
-                                                        {% for color in producto.colors %}
-                                                            <li class="list-color-item color-swatch {% if forloop.first %}active{% endif %}">
-                                                                <span class="tooltip">{{ color.valor }}</span>
-                                                                <span class="swatch-value"></span>
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <!-- Fallback si no hay productos -->
-                                <div class="swiper-slide">
-                                    <div class="card-product style-5">
-                                        <div class="card-product-info text-center p-5">
-                                            <p>No hay productos disponibles en este momento.</p>
-                                        </div>
+                                            <ul class="list-color-product">
+                                                {% for color in producto.colors %}
+                                                    <li class="list-color-item color-swatch {% if forloop.first %}active{% endif %}">
+                                                        <span class="tooltip">{{ color.valor }}</span>
+                                                        <span class="swatch-value" {% if color.codigo_color %}style="background-color: {{ color.codigo_color }};"{% endif %}></span>
+                                                        {% if producto.main_image_src %}
+                                                            <img class="lazyload" 
+                                                                 data-src="{{ producto.main_image_src }}"
+                                                                 src="{{ producto.main_image_src }}" 
+                                                                 alt="{{ color.valor }}">
+                                                        {% endif %}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
                                     </div>
                                 </div>
-                            {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Fallback si no hay productos -->
+                        <div class="swiper-slide">
+                            <div class="card-product style-5">
+                                <div class="card-product-info text-center p-5">
+                                    <p>No hay productos disponibles en este momento.</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="nav-sw nav-next-slider nav-next-product box-icon w_46 round"><span
-                            class="icon icon-arrow-left"></span></div>
-                    <div class="nav-sw nav-prev-slider nav-prev-product box-icon w_46 round"><span
-                            class="icon icon-arrow-right"></span></div>
+                    {% endif %}
                 </div>
             </div>
-        </section>
-        <!-- /Product -->
+            <div class="nav-sw nav-next-slider nav-next-product box-icon w_46 round"><span
+                    class="icon icon-arrow-left"></span></div>
+            <div class="nav-sw nav-prev-slider nav-prev-product box-icon w_46 round"><span
+                    class="icon icon-arrow-right"></span></div>
+        </div>
+    </div>
+</section>
+<!-- /Product -->
         <!-- recent -->
         <section class="flat-spacing-4 pt_0">
             <div class="container">
@@ -901,7 +909,16 @@
                                                     <span class="icon icon-check"></span>
                                                 </a>
                                                 <a href="#quick_view" data-bs-toggle="modal"
-                                                    class="box-icon bg_white quickview tf-btn-loading">
+                                                    class="box-icon bg_white quickview tf-btn-loading"
+                                                    data-product-id="{{ producto.id }}"
+                                                    data-product-name="{{ producto.nombre|escapejs }}"
+                                                    data-product-price="{{ producto.display_price }}"
+                                                    data-product-desc="{{ producto.descripcion_corta|default:'Producto de alta calidad'|escapejs }}"
+                                                    data-product-main-image="{{ producto.main_image_src }}"
+                                                    data-product-hover-image="{{ producto.hover_image_src }}"
+                                                    data-product-url="{{ producto.get_absolute_url }}"
+                                                    data-product-colors="{% for c in producto.colors %}{{ c.valor }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                                    data-product-sizes="{{ producto.sizes|join:',' }}">
                                                     <span class="icon icon-view"></span>
                                                     <span class="tooltip">Quick View</span>
                                                 </a>
@@ -922,7 +939,11 @@
                                                     {% for color in producto.colors %}
                                                         <li class="list-color-item color-swatch {% if forloop.first %}active{% endif %}">
                                                             <span class="tooltip">{{ color.nombre }}</span>
-                                                            <span class="swatch-value" style="background-color: {{ color.valor }};"></span>
+                                                            {% if color.valor %}
+                                                                <span class="swatch-value" data-color="{{ color.valor|escape }}"></span>
+                                                            {% else %}
+                                                                <span class="swatch-value"></span>
+                                                            {% endif %}
                                                             {% if producto.main_image_src %}
                                                                 <img class="lazyload" data-src="{{ producto.main_image_src }}"
                                                                     src="{{ producto.main_image_src }}" alt="{{ color.nombre|escapejs }}">
@@ -954,131 +975,7 @@
             </div>
         </section>
         <!-- /recent -->
-        
 
-    </div>
-
-    <!-- modal compare_color -->
-    <div class="modal fade modalDemo tf-product-modal modal-part-content canvas-compare_color" id="compare_color">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="header">
-                    <div class="demo-title">Compare color</div>
-                    <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
-                </div>
-                <div class="tf-compare-color-wrapp">
-                    <div class="tf-compare-color-grid">
-
-                        <input type="checkbox" class="sr-only" id="remove-compare-color-beige-1">
-                        <div class="tf-compare-color-item">
-                            <div class="tf-compare-color-top">
-                                <label for="remove-compare-color-beige-1" class="tf-compare-color-remove">Remove</label>
-                                <img class="lazyload" data-src="images/shop/products/hmgoepprod2.jpg"
-                                    src="images/shop/products/hmgoepprod2.jpg" alt="img-compare">
-                            </div>
-                            <div class="tf-compare-color-bottom">
-                                <div class="tf-compare-color-color">
-                                    <span class="tf-color-list-color bg-color-beige"></span>
-                                    <span>Beige</span>
-                                </div>
-                                <form class="">
-                                    <select class="tf-select" name="id">
-                                        <option value="46633906045232" selected="">S - $8.00</option>
-                                        <option value="47256262738224">M - $8.00</option>
-                                        <option value="47256262770992">L - $8.00</option>
-                                        <option value="47256262803760">XL - $8.00</option>
-                                    </select>
-                                    <a href="#"
-                                        class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn btn-add-to-cart"><span>Add
-                                            to cart</span></a>
-                                </form>
-                            </div>
-                        </div>
-
-                        <input type="checkbox" class="sr-only" id="remove-compare-color-beige-2">
-                        <div class="tf-compare-color-item">
-                            <div class="tf-compare-color-top">
-                                <label for="remove-compare-color-beige-2" class="tf-compare-color-remove">Remove</label>
-                                <img class="lazyload" data-src="images/shop/products/hmgoepprod12.jpg"
-                                    src="images/shop/products/hmgoepprod12.jpg" alt="">
-                            </div>
-                            <div class="tf-compare-color-bottom">
-                                <div class="tf-compare-color-color">
-                                    <span class="tf-color-list-color bg-color-blue"></span>
-                                    <span>Blue</span>
-                                </div>
-                                <form class="">
-                                    <select class="tf-select" name="id">
-                                        <option value="46633906045232" selected="">S - $8.00</option>
-                                        <option value="47256262738224">M - $8.00</option>
-                                        <option value="47256262770992">L - $8.00</option>
-                                        <option value="47256262803760">XL - $8.00</option>
-                                    </select>
-                                    <a href="#"
-                                        class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn btn-add-to-cart"><span>Add
-                                            to cart</span></a>
-                                </form>
-                            </div>
-                        </div>
-
-                        <input type="checkbox" class="sr-only" id="remove-compare-color-beige-3">
-                        <div class="tf-compare-color-item">
-                            <div class="tf-compare-color-top">
-                                <label for="remove-compare-color-beige-3" class="tf-compare-color-remove">Remove</label>
-                                <img class="lazyload" data-src="images/shop/products/hmgoepprod7.jpg"
-                                    src="images/shop/products/hmgoepprod7.jpg" alt="">
-                            </div>
-                            <div class="tf-compare-color-bottom">
-                                <div class="tf-compare-color-color">
-                                    <span class="tf-color-list-color bg-color-black"></span>
-                                    <span>Black</span>
-                                </div>
-                                <form class="">
-                                    <select class="tf-select" name="id">
-                                        <option value="46633906045232" selected="">S - $8.00</option>
-                                        <option value="47256262738224">M - $8.00</option>
-                                        <option value="47256262770992">L - $8.00</option>
-                                        <option value="47256262803760">XL - $8.00</option>
-                                    </select>
-                                    <a href="#"
-                                        class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn btn-add-to-cart"><span>Add
-                                            to cart</span></a>
-                                </form>
-                            </div>
-                        </div>
-
-                        <input type="checkbox" class="sr-only" id="remove-compare-color-beige-4">
-                        <div class="tf-compare-color-item">
-                            <div class="tf-compare-color-top">
-                                <label for="remove-compare-color-beige-4" class="tf-compare-color-remove">Remove</label>
-                                <img class="lazyload" data-src="images/shop/products/hmgoepprod14.jpg"
-                                    src="images/shop/products/hmgoepprod14.jpg" alt="">
-                            </div>
-                            <div class="tf-compare-color-bottom">
-                                <div class="tf-compare-color-color">
-                                    <span class="tf-color-list-color bg-color-white"></span>
-                                    <span>White</span>
-                                </div>
-                                <form class="">
-                                    <select class="tf-select" name="id">
-                                        <option value="46633906045232" selected="">S - $8.00</option>
-                                        <option value="47256262738224">M - $8.00</option>
-                                        <option value="47256262770992">L - $8.00</option>
-                                        <option value="47256262803760">XL - $8.00</option>
-                                    </select>
-                                    <a href="#"
-                                        class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn btn-add-to-cart"><span>Add
-                                            to cart</span></a>
-                                </form>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- /modal compare_color -->
 
     <!-- modal delivery_return -->
     <div class="modal modalCentered fade modalDemo tf-product-modal modal-part-content" id="delivery_return">
@@ -1134,7 +1031,7 @@
             </div>
         </div>
     </div>
-    <!-- /modal delivery_return -->
+    <!-- /modal delivery_return -->     
     <!-- modal share social -->
     <div class="modal modalCentered fade modalDemo tf-product-modal modal-part-content" id="share_social">
         <div class="modal-dialog modal-dialog-centered">
@@ -1187,12 +1084,7 @@
     }
     </script>
     <!-- /modal share social -->
-    <!-- gotop -->
-    <button id="goTop">
-        <span class="border-progress"></span>
-        <span class="icon icon-arrow-up"></span>
-    </button>
-    <!-- /gotop -->
+
 
     <!-- toolbar-bottom -->
     <div class="tf-toolbar-bottom type-1150">
@@ -1241,886 +1133,8 @@
         </div>
     </div>
     <!-- /toolbar-bottom -->
-    <!-- modalDemo -->
-    <div class="modal fade modalDemo" id="modalDemo">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="header">
-                    <h5 class="demo-title">Ultimate HTML Theme</h5>
-                    <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
-                </div>
-                <div class="mega-menu">
-                    <div class="row-demo">
-                        <div class="demo-item">
-                            <a href="index.html">
-                                <div class="demo-image position-relative">
-                                    <img class="lazyload" data-src="images/demo/home-01.jpg"
-                                        src="images/demo/home-01.jpg" alt="home-01">
-                                    <div class="demo-label">
-                                        <span class="demo-new">New</span>
-                                        <span>Trend</span>
-                                    </div>
-                                </div>
-                                <span class="demo-name">Home Fashion 01</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-multi-brand.html">
-                                <div class="demo-image position-relative">
-                                    <img class="lazyload" data-src="images/demo/home-multi-brand.jpg"
-                                        src="images/demo/home-multi-brand.jpg" alt="home-multi-brand">
-                                    <div class="demo-label">
-                                        <span class="demo-new">New</span>
-                                        <span class="demo-hot">Hot</span>
-                                    </div>
-                                </div>
-                                <span class="demo-name">Home Multi Brand</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-02.html">
-                                <div class="demo-image position-relative">
-                                    <img class="lazyload" data-src="images/demo/home-02.jpg"
-                                        src="images/demo/home-02.jpg" alt="home-02">
-                                    <div class="demo-label">
-                                        <span class="demo-hot">Hot</span>
-                                    </div>
-                                </div>
-                                <span class="demo-name">Home Fashion 02</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-03.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-03.jpg"
-                                        src="images/demo/home-03.jpg" alt="home-03">
-                                </div>
-                                <span class="demo-name">Home Fashion 03</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-04.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-04.jpg"
-                                        src="images/demo/home-04.jpg" alt="home-04">
-                                </div>
-                                <span class="demo-name">Home Fashion 04</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-05.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-05.jpg"
-                                        src="images/demo/home-05.jpg" alt="home-05">
-                                </div>
-                                <span class="demo-name">Home Fashion 05</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-06.html">
-                                <div class="demo-image position-relative">
-                                    <img class="lazyload" data-src="images/demo/home-06.jpg"
-                                        src="images/demo/home-06.jpg" alt="home-06">
-                                </div>
-                                <span class="demo-name">Home Fashion 06</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-drinkwear.html">
-                                <div class="demo-image position-relative">
-                                    <img class="lazyload" data-src="images/demo/home-drinkwear.png"
-                                        src="images/demo/home-drinkwear.png" alt="home-drinkwear">
-                                    <div class="demo-label">
-                                        <span class="demo-new">New</span>
-                                    </div>
-                                </div>
-                                <span class="demo-name">Home Drinkwear</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-supplement.html">
-                                <div class="demo-image position-relative">
-                                    <img class="lazyload" data-src="images/demo/home-supplement.png"
-                                        src="images/demo/home-supplement.png" alt="home-supplement">
-                                    <div class="demo-label">
-                                        <span class="demo-new">New</span>
-                                    </div>
-                                </div>
-                                <span class="demo-name">Home Supplement</span>
-                            </a>
-                        </div>
-
-                        <div class="demo-item">
-                            <a href="home-personalized-pod.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-personalized-pod.jpg"
-                                        src="images/demo/home-personalized-pod.jpg" alt="home-personalized-pod">
-                                </div>
-                                <span class="demo-name">Home Personalized Pod</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-pickleball.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-pickleball.png"
-                                        src="images/demo/home-pickleball.png" alt="home-pickleball">
-                                </div>
-                                <span class="demo-name">Home Pickleball</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-ceramic.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-ceramic.png"
-                                        src="images/demo/home-ceramic.png" alt="home-ceramic">
-                                </div>
-                                <span class="demo-name">Home Ceramic</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-food.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-food.png"
-                                        src="images/demo/home-food.png" alt="home-food">
-                                </div>
-                                <span class="demo-name">Home Food</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-camp-and-hike.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-camp-and-hike.png"
-                                        src="images/demo/home-camp-and-hike.png" alt="home-camp-and-hike">
-                                </div>
-                                <span class="demo-name">Home Camp And Hike</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-07.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-07.jpg"
-                                        src="images/demo/home-07.jpg" alt="home-07">
-                                </div>
-                                <span class="demo-name">Home Fashion 07</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-08.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-08.jpg"
-                                        src="images/demo/home-08.jpg" alt="home-08">
-                                </div>
-                                <span class="demo-name">Home Fashion 08</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-skincare.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-skincare.jpg"
-                                        src="images/demo/home-skincare.jpg" alt="home-skincare">
-                                </div>
-                                <span class="demo-name">Home Skincare</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-headphone.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-headphone.jpg"
-                                        src="images/demo/home-headphone.jpg" alt="home-headphone">
-                                </div>
-                                <span class="demo-name">Home Headphone</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-giftcard.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-giftcard.jpg"
-                                        src="images/demo/home-giftcard.jpg" alt="home-gift-card">
-                                </div>
-                                <span class="demo-name">Home Gift Card</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-furniture.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-furniture.jpg"
-                                        src="images/demo/home-furniture.jpg" alt="home-furniture">
-                                </div>
-                                <span class="demo-name">Home Furniture</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-furniture-02.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-furniture2.jpg"
-                                        src="images/demo/home-furniture2.jpg" alt="home-furniture-2">
-                                </div>
-                                <span class="demo-name">Home Furniture 2</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-skateboard.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-skateboard.jpg"
-                                        src="images/demo/home-skateboard.jpg" alt="home-skateboard">
-                                </div>
-                                <span class="demo-name">Home Skateboard</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-stroller.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-stroller.jpg"
-                                        src="images/demo/home-stroller.jpg" alt="home-stroller">
-                                </div>
-                                <span class="demo-name">Home Stroller</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-decor.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-decor.jpg"
-                                        src="images/demo/home-decor.jpg" alt="home-decor">
-                                </div>
-                                <span class="demo-name">Home Decor</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-electronic.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-electronic.jpg"
-                                        src="images/demo/home-electronic.jpg" alt="home-electronic">
-                                </div>
-                                <span class="demo-name">Home Electronic</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-setup-gear.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-setup-gear.jpg"
-                                        src="images/demo/home-setup-gear.jpg" alt="home-setup-gear">
-                                </div>
-                                <span class="demo-name">Home Setup Gear</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-dog-accessories.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-dog-accessories.jpg"
-                                        src="images/demo/home-dog-accessories.jpg" alt="home-dog-accessories">
-                                </div>
-                                <span class="demo-name">Home Dog Accessories</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-kitchen-wear.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-kitchen.jpg"
-                                        src="images/demo/home-kitchen.jpg" alt="home-kitchen-wear">
-                                </div>
-                                <span class="demo-name">Home Kitchen Wear</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-phonecase.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-phonecase.jpg"
-                                        src="images/demo/home-phonecase.jpg" alt="home-phonecase">
-                                </div>
-                                <span class="demo-name">Home Phonecase</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-paddle-boards.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home_paddle_board.jpg"
-                                        src="images/demo/home_paddle_board.jpg" alt="home-paddle_board">
-                                </div>
-                                <span class="demo-name">Home Paddle Boards</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-glasses.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-glasses.jpg"
-                                        src="images/demo/home-glasses.jpg" alt="home-glasses">
-                                </div>
-                                <span class="demo-name">Home Glasses</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-pod-store.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-pod-store.jpg"
-                                        src="images/demo/home-pod-store.jpg" alt="home-pod-store">
-                                </div>
-                                <span class="demo-name">Home POD Store</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-activewear.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-activewear.jpg"
-                                        src="images/demo/home-activewear.jpg" alt="home-activewear">
-                                </div>
-                                <span class="demo-name">Activewear</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-handbag.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-handbag.jpg"
-                                        src="images/demo/home-handbag.jpg" alt="home-handbag">
-                                </div>
-                                <span class="demo-name">Home Handbag</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-tee.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-tee.jpg"
-                                        src="images/demo/home-tee.jpg" alt="home-tee">
-                                </div>
-                                <span class="demo-name">Home Tee</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-sock.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-socks.jpg"
-                                        src="images/demo/home-socks.jpg" alt="home-sock">
-                                </div>
-                                <span class="demo-name">Home Sock</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-jewerly.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-jewelry.jpg"
-                                        src="images/demo/home-jewelry.jpg" alt="home-jewelry">
-                                </div>
-                                <span class="demo-name">Home Jewelry</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-sneaker.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-sneaker.jpg"
-                                        src="images/demo/home-sneaker.jpg" alt="home-sneaker">
-                                </div>
-                                <span class="demo-name">Home Sneaker</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-accessories.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-accessories.jpg"
-                                        src="images/demo/home-accessories.jpg" alt="home-accessories">
-                                </div>
-                                <span class="demo-name">Home Accessories</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-grocery.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-gocery.jpg"
-                                        src="images/demo/home-gocery.jpg" alt="home-grocery">
-                                </div>
-                                <span class="demo-name">Home Grocery</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-baby.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-baby.jpg"
-                                        src="images/demo/home-baby.jpg" alt="home-baby">
-                                </div>
-                                <span class="demo-name">Home Baby</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-cosmetic.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-cosmetic.png"
-                                        src="images/demo/home-cosmetic.png" alt="home-cosmetic">
-                                </div>
-                                <span class="demo-name">Home Cosmetic</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-plant.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-plant.png"
-                                        src="images/demo/home-plant.png" alt="home-plant">
-                                </div>
-                                <span class="demo-name">Home Plant</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-swimwear.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-swimwear.png"
-                                        src="images/demo/home-swimwear.png" alt="home-swimwear">
-                                </div>
-                                <span class="demo-name">Home Swimwear</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-electric-bike.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-electric-bike.png"
-                                        src="images/demo/home-electric-bike.png" alt="home-electric-bike">
-                                </div>
-                                <span class="demo-name">Home Electric Bike</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-footwear.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-footwear.jpg"
-                                        src="images/demo/home-footwear.jpg" alt="home-footwear">
-                                </div>
-                                <span class="demo-name">Home Footwear</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-book-store.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-bookstore.png"
-                                        src="images/demo/home-bookstore.png" alt="home-bookstore">
-                                </div>
-                                <span class="demo-name">Home Bookstore</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-gaming-accessories.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-gaming-accessories.png"
-                                        src="images/demo/home-gaming-accessories.png" alt="home-gaming-accessories">
-                                </div>
-                                <span class="demo-name">Home Gaming Accessories</span>
-                            </a>
-                        </div>
-                        <div class="demo-item">
-                            <a href="home-parallax.html">
-                                <div class="demo-image">
-                                    <img class="lazyload" data-src="images/demo/home-skincare.jpg"
-                                        src="images/demo/home-skincare.jpg" alt="home-skincare">
-                                </div>
-                                <span class="demo-name">Home Parallax</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-    <!-- /modalDemo -->
-
-    <!-- mobile menu -->
-    <div class="offcanvas offcanvas-start canvas-mb" id="mobileMenu">
-        <span class="icon-close icon-close-popup" data-bs-dismiss="offcanvas" aria-label="Close"></span>
-        <div class="mb-canvas-content">
-            <div class="mb-body">
-                <ul class="nav-ul-mb" id="wrapper-menu-navigation">
-                    <li class="nav-mb-item">
-                        <a href="#dropdown-menu-one" class="collapsed mb-menu-link current" data-bs-toggle="collapse"
-                            aria-expanded="true" aria-controls="dropdown-menu-one">
-                            <span>Home</span>
-                            <span class="btn-open-sub"></span>
-                        </a>
-                        <div id="dropdown-menu-one" class="collapse">
-                            <ul class="sub-nav-menu">
-                                <li><a href="index.html" class="sub-nav-link">Home Fashion 01</a></li>
-                                <li><a href="home-02.html" class="sub-nav-link">Home Fashion 02</a></li>
-                                <li><a href="home-03.html" class="sub-nav-link">Home Fashion 03</a></li>
-                                <li><a href="home-04.html" class="sub-nav-link">Home Fashion 04</a></li>
-                                <li><a href="home-05.html" class="sub-nav-link">Home Fashion 05</a></li>
-                                <li><a href="home-06.html" class="sub-nav-link">Home Fashion 06</a></li>
-                                <li><a href="home-07.html" class="sub-nav-link">Home Fashion 07</a></li>
-                                <li><a href="home-08.html" class="sub-nav-link">Home Fashion 08</a></li>
-                                <li><a href="home-giftcard.html" class="sub-nav-link">Home Gift Card</a></li>
-                                <li><a href="home-headphone.html" class="sub-nav-link">Home Headphone</a></li>
-                                <li><a href="home-multi-brand.html" class="sub-nav-link">Home Multi Brand</a></li>
-                                <li><a href="home-skincare.html" class="sub-nav-link">Home skincare</a></li>
-                                <li><a href="home-furniture.html" class="sub-nav-link">Home Furniture</a></li>
-                                <li><a href="home-furniture-02.html" class="sub-nav-link">Home Furniture 2</a></li>
-                                <li><a href="home-skateboard.html" class="sub-nav-link">Home Skateboard</a></li>
-                                <li><a href="home-stroller.html" class="sub-nav-link">Home Stroller</a></li>
-                                <li><a href="home-decor.html" class="sub-nav-link">Home Decor</a></li>
-                                <li><a href="home-electronic.html" class="sub-nav-link">Home Electronic</a></li>
-                                <li><a href="home-setup-gear.html" class="sub-nav-link">Home Setup Gear</a></li>
-                                <li><a href="home-dog-accessories.html" class="sub-nav-link">Home Dog Accessories</a>
-                                </li>
-                                <li><a href="home-kitchen-wear.html" class="sub-nav-link">Home Kitchen Wear</a></li>
-                                <li><a href="home-phonecase.html" class="sub-nav-link">Home Phonecase</a></li>
-                                <li><a href="home-paddle-boards.html" class="sub-nav-link">Home Paddle Boards</a></li>
-                                <li><a href="home-glasses.html" class="sub-nav-link">Home Glasses</a></li>
-                                <li><a href="home-pod-store.html" class="sub-nav-link">Home POD Store</a></li>
-                                <li><a href="home-activewear.html" class="sub-nav-link">Home Activewear</a></li>
-                                <li><a href="home-handbag.html" class="sub-nav-link">Home Handbag</a></li>
-                                <li><a href="home-tee.html" class="sub-nav-link">Home Tee</a></li>
-                                <li><a href="home-sock.html" class="sub-nav-link">Home Sock</a></li>
-                                <li><a href="home-jewerly.html" class="sub-nav-link">Home Jewelry</a></li>
-                                <li><a href="home-sneaker.html" class="sub-nav-link">Home Sneaker</a></li>
-                                <li><a href="home-accessories.html" class="sub-nav-link">Home Accessories</a></li>
-                                <li><a href="home-grocery.html" class="sub-nav-link">Home Grocery</a></li>
-                                <li><a href="home-baby.html" class="sub-nav-link">Home Baby</a></li>
-                                <li><a href="home-personalized-pod.html" class="sub-nav-link">Home Personalized Pod</a>
-                                </li>
-                                <li><a href="home-pickleball.html" class="sub-nav-link">Home Pickleball</a></li>
-                                <li><a href="home-ceramic.html" class="sub-nav-link">Home Ceramic</a></li>
-                                <li><a href="home-food.html" class="sub-nav-link">Home Food</a></li>
-                                <li><a href="home-camp-and-hike.html" class="sub-nav-link">Home Camp And Hike</a></li>
-                                <li><a href="home-cosmetic.html" class="sub-nav-link">Home Cosmetic</a></li>
-                                <li><a href="home-plant.html" class="sub-nav-link">Home Plant</a></li>
-                                <li><a href="home-swimwear.html" class="sub-nav-link">Home Swimwear</a></li>
-                                <li><a href="home-electric-bike.html" class="sub-nav-link">Home Electric Bike</a></li>
-                                <li><a href="home-footwear.html" class="sub-nav-link">Home Footwear</a></li>
-                                <li><a href="home-book-store.html" class="sub-nav-link">Home Book Store</a></li>
-                                <li><a href="home-gaming-accessories.html" class="sub-nav-link">Home Gaming
-                                        Accessories</a></li>
-                                <li><a href="home-drinkwear.html" class="sub-nav-link">Home Drinkwear</a></li>
-                                <li><a href="home-supplement.html" class="sub-nav-link">Home Supplement</a></li>
-                                <li><a href="home-parallax.html" class="sub-nav-link">Home Parallax</a></li>
-                            </ul>
-                        </div>
-
-                    </li>
-                    <li class="nav-mb-item">
-                        <a href="#dropdown-menu-two" class="collapsed mb-menu-link current" data-bs-toggle="collapse"
-                            aria-expanded="true" aria-controls="dropdown-menu-two">
-                            <span>Shop</span>
-                            <span class="btn-open-sub"></span>
-                        </a>
-                        <div id="dropdown-menu-two" class="collapse">
-                            <ul class="sub-nav-menu" id="sub-menu-navigation">
-                                <li><a href="#sub-shop-one" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-shop-one">
-                                        <span>Shop layouts</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-shop-one" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="shop-default.html" class="sub-nav-link">Default</a></li>
-                                            <li><a href="shop-left-sidebar.html" class="sub-nav-link">Left sidebar</a>
-                                            </li>
-                                            <li><a href="shop-right-sidebar.html" class="sub-nav-link">Right sidebar</a>
-                                            </li>
-                                            <li><a href="shop-fullwidth.html" class="sub-nav-link">Fullwidth</a></li>
-                                            <li><a href="shop-collection-sub.html" class="sub-nav-link">Sub
-                                                    collection</a></li>
-                                            <li><a href="shop-collection-list.html" class="sub-nav-link">Collections
-                                                    list</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li>
-                                    <a href="#sub-shop-two" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-shop-two">
-                                        <span>Features</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-shop-two" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="shop-link.html" class="sub-nav-link">Pagination links</a></li>
-                                            <li><a href="shop-loadmore.html" class="sub-nav-link">Pagination
-                                                    loadmore</a></li>
-                                            <li><a href="shop-infinite-scrolling.html" class="sub-nav-link">Pagination
-                                                    infinite scrolling</a></li>
-                                            <li><a href="shop-filter-sidebar.html" class="sub-nav-link">Filter
-                                                    sidebar</a></li>
-                                            <li><a href="shop-filter-hidden.html" class="sub-nav-link">Filter hidden</a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li>
-                                    <a href="#sub-shop-three" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-shop-three">
-                                        <span>Product styles</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-shop-three" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-
-                                            <li><a href="product-style-01.html" class="sub-nav-link">Product style
-                                                    01</a></li>
-                                            <li><a href="product-style-02.html" class="sub-nav-link">Product style
-                                                    02</a></li>
-                                            <li><a href="product-style-03.html" class="sub-nav-link">Product style
-                                                    03</a></li>
-                                            <li><a href="product-style-04.html" class="sub-nav-link">Product style
-                                                    04</a></li>
-                                            <li><a href="product-style-05.html" class="sub-nav-link">Product style
-                                                    05</a></li>
-                                            <li><a href="product-style-06.html" class="sub-nav-link">Product style
-                                                    06</a></li>
-                                            <li><a href="product-style-07.html" class="sub-nav-link">Product style
-                                                    07</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-                    <li class="nav-mb-item">
-                        <a href="#dropdown-menu-three" class="collapsed mb-menu-link current" data-bs-toggle="collapse"
-                            aria-expanded="true" aria-controls="dropdown-menu-three">
-                            <span>Products</span>
-                            <span class="btn-open-sub"></span>
-                        </a>
-                        <div id="dropdown-menu-three" class="collapse">
-                            <ul class="sub-nav-menu" id="sub-menu-navigation1">
-                                <li>
-                                    <a href="#sub-product-one" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-product-one">
-                                        <span>Product layouts</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-product-one" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="product-detail.html" class="sub-nav-link">Product default</a>
-                                            </li>
-                                            <li><a href="product-grid-1.html" class="sub-nav-link">Product grid 1</a>
-                                            </li>
-                                            <li><a href="product-grid-2.html" class="sub-nav-link">Product grid 2</a>
-                                            </li>
-                                            <li><a href="product-stacked.html" class="sub-nav-link">Product stacked</a>
-                                            </li>
-                                            <li><a href="product-right-thumbnails.html" class="sub-nav-link">Product
-                                                    right thumbnails</a></li>
-                                            <li><a href="product-bottom-thumbnails.html" class="sub-nav-link">Product
-                                                    bottom thumbnails</a></li>
-                                            <li><a href="product-drawer-sidebar.html" class="sub-nav-link">Product
-                                                    drawer sidebar</a></li>
-                                            <li><a href="product-description-accordion.html"
-                                                    class="sub-nav-link">Product description accordion</a></li>
-                                            <li><a href="product-description-list.html" class="sub-nav-link">Product
-                                                    description list</a></li>
-                                            <li><a href="product-description-vertical.html" class="sub-nav-link">Product
-                                                    description vertical</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li>
-                                    <a href="#sub-product-two" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-product-two">
-                                        <span>Product details</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-product-two" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="product-inner-zoom.html" class="sub-nav-link">Product inner
-                                                    zoom</a></li>
-                                            <li><a href="product-zoom-magnifier.html" class="sub-nav-link">Product zoom
-                                                    magnifier</a></li>
-                                            <li><a href="product-no-zoom.html" class="sub-nav-link">Product no zoom</a>
-                                            </li>
-                                            <li><a href="product-photoswipe-popup.html" class="sub-nav-link">Product
-                                                    photoswipe popup</a></li>
-                                            <li><a href="product-zoom-popup.html" class="sub-nav-link">Product external
-                                                    zoom and photoswipe popup</a></li>
-                                            <li><a href="product-video.html" class="sub-nav-link">Product video</a></li>
-                                            <li><a href="product-3d.html" class="sub-nav-link">Product 3D, AR models</a>
-                                            </li>
-                                            <li><a href="product-options-customizer.html" class="sub-nav-link">Product
-                                                    options & customizer</a></li>
-                                            <li><a href="product-advanced-types.html" class="sub-nav-link">Advanced
-                                                    product types</a></li>
-                                            <li><a href="product-giftcard.html" class="sub-nav-link">Recipient
-                                                    information form for gift card products</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li>
-                                    <a href="#sub-product-three" class="sub-nav-link collapsed"
-                                        data-bs-toggle="collapse" aria-expanded="true"
-                                        aria-controls="sub-product-three">
-                                        <span>Product swatchs</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-product-three" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="product-color-swatch.html" class="sub-nav-link">Product color
-                                                    swatch</a></li>
-                                            <li><a href="product-rectangle.html" class="sub-nav-link">Product
-                                                    rectangle</a></li>
-                                            <li><a href="product-rectangle-color.html" class="sub-nav-link">Product
-                                                    rectangle color</a></li>
-                                            <li><a href="product-swatch-image.html" class="sub-nav-link">Product swatch
-                                                    image</a></li>
-                                            <li><a href="product-swatch-image-rounded.html" class="sub-nav-link">Product
-                                                    swatch image rounded</a></li>
-                                            <li><a href="product-swatch-dropdown.html" class="sub-nav-link">Product
-                                                    swatch dropdown</a></li>
-                                            <li><a href="product-swatch-dropdown-color.html"
-                                                    class="sub-nav-link">Product swatch dropdown color</a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li>
-                                    <a href="#sub-product-four" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-product-four">
-                                        <span>Product features</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-product-four" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="product-frequently-bought-together.html"
-                                                    class="sub-nav-link">Frequently bought together</a></li>
-                                            <li><a href="product-frequently-bought-together-2.html"
-                                                    class="sub-nav-link">Frequently bought together 2</a></li>
-                                            <li><a href="product-upsell-features.html" class="sub-nav-link">Product
-                                                    upsell features</a></li>
-                                            <li><a href="product-pre-orders.html" class="sub-nav-link">Product
-                                                    pre-orders</a></li>
-                                            <li><a href="product-notification.html" class="sub-nav-link">Back in stock
-                                                    notification</a></li>
-                                            <li><a href="product-pickup.html" class="sub-nav-link">Product pickup</a>
-                                            </li>
-                                            <li><a href="product-images-grouped.html" class="sub-nav-link">Variant
-                                                    images grouped</a></li>
-                                            <li><a href="product-complimentary.html" class="sub-nav-link">Complimentary
-                                                    products</a></li>
-                                            <li><a href="product-quick-order-list.html"
-                                                    class="sub-nav-link line-clamp">Quick order list<div
-                                                        class="demo-label"><span class="demo-new">New</span></div></a>
-                                            </li>
-                                            <li><a href="product-detail-volume-discount.html"
-                                                    class="sub-nav-link line-clamp">Volume Discount<div
-                                                        class="demo-label"><span class="demo-new">New</span></div></a>
-                                            </li>
-                                            <li><a href="product-detail-volume-discount-grid.html"
-                                                    class="sub-nav-link line-clamp">Volume Discount Grid<div
-                                                        class="demo-label"><span class="demo-new">New</span></div></a>
-                                            </li>
-                                            <li><a href="product-detail-buyx-gety.html"
-                                                    class="sub-nav-link line-clamp">Buy X Get Y<div class="demo-label">
-                                                        <span class="demo-new">New</span>
-                                                    </div></a></li>
-                                        </ul>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-                    <li class="nav-mb-item">
-                        <a href="#dropdown-menu-four" class="collapsed mb-menu-link current" data-bs-toggle="collapse"
-                            aria-expanded="true" aria-controls="dropdown-menu-four">
-                            <span>Pages</span>
-                            <span class="btn-open-sub"></span>
-                        </a>
-                        <div id="dropdown-menu-four" class="collapse">
-                            <ul class="sub-nav-menu" id="sub-menu-navigation2">
-                                <li><a href="about-us.html" class="sub-nav-link">About us</a></li>
-                                <li><a href="brands.html" class="sub-nav-link line-clamp">Brands<div class="demo-label">
-                                            <span class="demo-new">New</span>
-                                        </div></a></li>
-                                <li><a href="brands-v2.html" class="sub-nav-link">Brands V2</a></li>
-                                <li><a href="contact-1.html" class="sub-nav-link">Contact 1</a></li>
-                                <li><a href="contact-2.html" class="sub-nav-link">Contact 2</a></li>
-                                <li><a href="faq-1.html" class="sub-nav-link">FAQ 01</a></li>
-                                <li><a href="faq-2.html" class="sub-nav-link">FAQ 02</a></li>
-                                <li><a href="our-store.html" class="sub-nav-link">Our store</a></li>
-                                <li><a href="store-locations.html" class="sub-nav-link">Store locator</a></li>
-                                <li><a href="timeline.html" class="sub-nav-link line-clamp">Timeline<div
-                                            class="demo-label"><span class="demo-new">New</span></div></a></li>
-                                <li><a href="view-cart.html" class="sub-nav-link line-clamp">View cart</a></li>
-                                <li><a href="checkout.html" class="sub-nav-link line-clamp">Check out</a></li>
-                                <li><a href="payment-confirmation.html" class="sub-nav-link line-clamp">Payment
-                                        Confirmation</a></li>
-                                <li><a href="payment-failure.html" class="sub-nav-link line-clamp">Payment Failure</a>
-                                </li>
-                                <li><a href="#sub-account" class="sub-nav-link collapsed" data-bs-toggle="collapse"
-                                        aria-expanded="true" aria-controls="sub-account">
-                                        <span>My Account</span>
-                                        <span class="btn-open-sub"></span>
-                                    </a>
-                                    <div id="sub-account" class="collapse">
-                                        <ul class="sub-nav-menu sub-menu-level-2">
-                                            <li><a href="my-account.html" class="sub-nav-link">My account</a></li>
-                                            <li><a href="my-account-orders.html" class="sub-nav-link">My order</a></li>
-                                            <li><a href="my-account-orders-details.html" class="sub-nav-link">My order
-                                                    details</a></li>
-                                            <li><a href="my-account-address.html" class="sub-nav-link">My address</a>
-                                            </li>
-                                            <li><a href="my-account-edit.html" class="sub-nav-link">My account
-                                                    details</a></li>
-                                            <li><a href="my-account-wishlist.html" class="sub-nav-link">My wishlist</a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li><a href="invoice.html" class="sub-nav-link line-clamp">Invoice</a></li>
-                                <li><a href="404.html" class="sub-nav-link line-clamp">404</a></li>
-                                <li><a href="icons.html" class="sub-nav-link line-clamp">Icons</a></li>
-                            </ul>
-                        </div>
-
-                    </li>
-                    <li class="nav-mb-item">
-                        <a href="#dropdown-menu-five" class="collapsed mb-menu-link current" data-bs-toggle="collapse"
-                            aria-expanded="true" aria-controls="dropdown-menu-five">
-                            <span>Blog</span>
-                            <span class="btn-open-sub"></span>
-                        </a>
-                        <div id="dropdown-menu-five" class="collapse">
-                            <ul class="sub-nav-menu">
-                                <li><a href="blog-grid.html" class="sub-nav-link">Grid layout</a></li>
-                                <li><a href="blog-sidebar-left.html" class="sub-nav-link">Left sidebar</a></li>
-                                <li><a href="blog-sidebar-right.html" class="sub-nav-link">Right sidebar</a></li>
-                                <li><a href="blog-list.html" class="sub-nav-link">Blog list</a></li>
-                                <li><a href="blog-detail.html" class="sub-nav-link">Single Post</a></li>
-                            </ul>
-                        </div>
-
-                    </li>
-                    <li class="nav-mb-item">
-                        <a href="https://themeforest.net/item/ecomus-ultimate-html5-template/53417990?s_rank=3"
-                            class="mb-menu-link">Buy now</a>
-                    </li>
-                </ul>
-                <div class="mb-other-content">
-                    <div class="d-flex group-icon">
-                        <a href="wishlist.html" class="site-nav-icon"><i class="icon icon-heart"></i>Wishlist</a>
-                        <a href="home-search.html" class="site-nav-icon"><i class="icon icon-search"></i>Search</a>
-                    </div>
-                    <div class="mb-notice">
-                        <a href="contact-1.html" class="text-need">Need help ?</a>
-                    </div>
-                    <ul class="mb-info">
-                        <li>Address: 1234 Fashion Street, Suite 567, <br> New York, NY 10001</li>
-                        <li>Email: <b>info@fashionshop.com</b></li>
-                        <li>Phone: <b>(212) 555-1234</b></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="mb-bottom">
-                <a href="login.html" class="site-nav-icon"><i class="icon icon-account"></i>Login</a>
-                <div class="bottom-bar-language">
-                    <div class="tf-currencies">
-                        <select class="image-select center style-default type-currencies">
-                            <option data-thumbnail="{% static 'images/country/fr.svg' %}">EUR � | France</option>
-                            <option data-thumbnail="{% static 'images/country/de.svg' %}">EUR � | Germany</option>
-                            <option selected data-thumbnail="{% static 'images/country/us.svg' %}">USD $ | United States</option>
-                            <option data-thumbnail="{% static 'images/country/vn.svg' %}">VND ? | Vietnam</option>
-                        </select>
-                    </div>
-                    <div class="tf-languages">
-                        <select class="image-select center style-default type-languages">
-                            <option>English</option>
-                            <option>???????</option>
-                            <option>????</option>
-                            <option>????</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- /mobile menu -->
+    
+    
 
 
 
@@ -2577,438 +1591,280 @@
     <!-- /modal quick_add -->
 
     <!-- modal quick_view -->
-    <div class="modal fade modalDemo popup-quickview" id="quick_view">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="header">
-                    <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
-                </div>
-                <div class="wrap">
-                    <div class="tf-product-media-wrap">
-                        <div dir="ltr" class="swiper tf-single-slide">
-                            <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <div class="item">
-                                        <img src="images/products/orange-1.jpg" alt="">
-                                    </div>
-                                </div>
-                                <div class="swiper-slide">
-                                    <div class="item">
-                                        <img src="images/products/pink-1.jpg" alt="">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-button-next button-style-arrow single-slide-prev"></div>
-                            <div class="swiper-button-prev button-style-arrow single-slide-next"></div>
-                        </div>
-                    </div>
-                    <div class="tf-product-info-wrap position-relative">
-                        <div class="tf-product-info-list">
-                            <div class="tf-product-info-title">
-                                <h5><a class="link" href="product-detail.html">Ribbed Tank Top</a></h5>
-                            </div>
-                            <div class="tf-product-info-badges">
-                                <div class="badges text-uppercase">Best seller</div>
-                                <div class="product-status-content">
-                                    <i class="icon-lightning"></i>
-                                    <p class="fw-6">Selling fast! 48 people have this in their carts.</p>
-                                </div>
-                            </div>
-                            <div class="tf-product-info-price">
-                                <div class="price">$18.00</div>
-                            </div>
-                            <div class="tf-product-description">
-                                <p>Nunc arcu faucibus a et lorem eu a mauris adipiscing conubia ac aptent ligula
-                                    facilisis a auctor habitant parturient a a.Interdum fermentum.</p>
-                            </div>
-                            <div class="tf-product-info-variant-picker">
-                                <div class="variant-picker-item">
-                                    <div class="variant-picker-label">
-                                        Color: <span class="fw-6 variant-picker-label-value">Orange</span>
-                                    </div>
-                                    <div class="variant-picker-values">
-                                        <input id="values-orange-1" type="radio" name="color-1" checked>
-                                        <label class="hover-tooltip radius-60" for="values-orange-1"
-                                            data-value="Orange">
-                                            <span class="btn-checkbox bg-color-orange"></span>
-                                            <span class="tooltip">Orange</span>
-                                        </label>
-                                        <input id="values-black-1" type="radio" name="color-1">
-                                        <label class=" hover-tooltip radius-60" for="values-black-1" data-value="Black">
-                                            <span class="btn-checkbox bg-color-black"></span>
-                                            <span class="tooltip">Black</span>
-                                        </label>
-                                        <input id="values-white-1" type="radio" name="color-1">
-                                        <label class="hover-tooltip radius-60" for="values-white-1" data-value="White">
-                                            <span class="btn-checkbox bg-color-white"></span>
-                                            <span class="tooltip">White</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="variant-picker-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="variant-picker-label">
-                                            Size: <span class="fw-6 variant-picker-label-value">S</span>
-                                        </div>
-                                        <div class="find-size btn-choose-size fw-6">Find your size</div>
-                                    </div>
-                                    <div class="variant-picker-values">
-                                        <input type="radio" name="size-1" id="values-s-1" checked>
-                                        <label class="style-text" for="values-s-1" data-value="S">
-                                            <p>S</p>
-                                        </label>
-                                        <input type="radio" name="size-1" id="values-m-1">
-                                        <label class="style-text" for="values-m-1" data-value="M">
-                                            <p>M</p>
-                                        </label>
-                                        <input type="radio" name="size-1" id="values-l-1">
-                                        <label class="style-text" for="values-l-1" data-value="L">
-                                            <p>L</p>
-                                        </label>
-                                        <input type="radio" name="size-1" id="values-xl-1">
-                                        <label class="style-text" for="values-xl-1" data-value="XL">
-                                            <p>XL</p>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="tf-product-info-quantity">
-                                <div class="quantity-title fw-6">Quantity</div>
-                                <div class="wg-quantity">
-                                    <span class="btn-quantity minus-btn">-</span>
-                                    <input type="text" name="number" value="1">
-                                    <span class="btn-quantity plus-btn">+</span>
-                                </div>
-                            </div>
-                            <div class="tf-product-info-buy-button">
-                                <form class="">
-                                    <a href="#"
-                                        class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Add
-                                            to cart -&nbsp;</span><span class="tf-qty-price">$8.00</span></a>
-                                    <a href="#"
-                                        class="tf-product-btn-wishlist hover-tooltip box-icon bg_white wishlist btn-icon-action">
-                                        <span class="icon icon-heart"></span>
-                                        <span class="tooltip">Add to Wishlist</span>
-                                        <span class="icon icon-delete"></span>
-                                    </a>
-                                    <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                        class="tf-product-btn-wishlist hover-tooltip box-icon bg_white compare btn-icon-action">
-                                        <span class="icon icon-compare"></span>
-                                        <span class="tooltip">Add to Compare</span>
-                                        <span class="icon icon-check"></span>
-                                    </a>
-                                    <div class="w-100">
-                                        <a href="#" class="btns-full">Buy with <img src="images/payments/paypal.png"
-                                                alt=""></a>
-                                        <a href="#" class="payment-more-option">More payment options</a>
-                                    </div>
-                                </form>
-                            </div>
-                            <div>
-                                <a href="product-detail.html" class="tf-btn fw-6 btn-line">View full details<i
-                                        class="icon icon-arrow1-top-left"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
     <!-- /modal quick_view -->
-
-    <!-- Script para control de variantes y stock -->
+    
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('=== SISTEMA DE VARIANTES CARGADO (SOLO TALLAS) ===');
-        
-        // Datos de variantes del backend
-        const variantesMap = {{ variantes_map_json|safe }};
-        console.log('Mapa de variantes:', variantesMap);
-        
-        // Variables globales
-        let tallaSeleccionada = null;
-        let varianteActual = null;
-        
-        // Elementos del DOM
-        const sizeInputs = document.querySelectorAll('input[name="size1"]');
-        const quantityInput = document.querySelector('.quantity-product');
-        const totalPriceElements = document.querySelectorAll('.total-price');
-        const btnIncrease = document.querySelector('.btn-increase');
-        const btnDecrease = document.querySelector('.btn-decrease');
-        const sizeLabel = document.querySelector('.value-currentSize');
-        
-        // Inicializar con la primera talla disponible
-        if (sizeInputs.length > 0) {
-            // Buscar la primera talla seleccionada
-            for (let i = 0; i < sizeInputs.length; i++) {
-                if (sizeInputs[i].checked) {
-                    tallaSeleccionada = sizeInputs[i].value;
-                    break;
-                }
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== SISTEMA DE VARIANTES CARGADO (SOLO TALLAS) ===');
+
+            // Datos seguros desde Django
+            const variantesMap = JSON.parse('{{ variantes_map_json|escapejs }}');
+            const precioBase = parseFloat('{{ producto.precio_base|default:0 }}');
+
+            console.log('Mapa de variantes:', variantesMap);
+
+            let tallaSeleccionada = null;
+            let varianteActual = null;
+
+            const sizeInputs = document.querySelectorAll('input[name="size1"]');
+            const quantityInput = document.querySelector('.quantity-product');
+            const totalPriceElements = document.querySelectorAll('.total-price');
+            const btnIncrease = document.querySelector('.btn-increase');
+            const btnDecrease = document.querySelector('.btn-decrease');
+            const sizeLabel = document.querySelector('.value-currentSize');
+
+            if (sizeInputs.length > 0) {
+                sizeInputs.forEach(input => {
+                    if (input.checked) tallaSeleccionada = input.value;
+                });
             }
-        }
-        
-        // Event listeners para cambio de talla
-        sizeInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                tallaSeleccionada = this.value;
-                console.log('Talla seleccionada:', tallaSeleccionada);
-                
-                // Actualizar label de talla
-                if (sizeLabel) {
-                    const label = this.nextElementSibling;
-                    if (label) {
-                        sizeLabel.textContent = label.dataset.value;
+
+            sizeInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    tallaSeleccionada = this.value;
+
+                    if (sizeLabel) {
+                        const label = this.nextElementSibling;
+                        if (label) sizeLabel.textContent = label.dataset.value;
                     }
-                }
-                
-                // Actualizar variante
-                actualizarVariante();
+
+                    actualizarVariante();
+                });
             });
-        });
-        
-        // Función para actualizar variante según talla seleccionada
-        function actualizarVariante() {
-            if (!tallaSeleccionada) return;
-            
-            console.log('Buscando variante para talla:', tallaSeleccionada);
-            
-            // Buscar en variantesMap usando solo la talla
-            varianteActual = variantesMap[tallaSeleccionada];
-            
-            if (varianteActual) {
-                console.log('Variante encontrada - Stock:', varianteActual.stock);
-                window.currentVariantId = varianteActual.id;
-                actualizarStock(varianteActual.stock);
-                actualizarPrecio(varianteActual.precio);
-            } else {
-                console.log('Variante no encontrada para talla:', tallaSeleccionada);
-                actualizarStock(0);
-            }
-        }
-        
-        function actualizarStock(stock) {
-            window.currentMaxStock = stock;
-            console.log('Stock actualizado:', stock);
-            
-            // Establecer el máximo del input
-            if (quantityInput) {
-                quantityInput.setAttribute('max', stock);
-                quantityInput.value = 1;
-            }
-            actualizarBotones();
-            actualizarPrecio(varianteActual?.precio || {{ producto.precio_base|default:0 }});
-        }
-        
-        function actualizarPrecio(precio) {
-            const qty = parseInt(quantityInput?.value) || 1;
-            const total = (parseFloat(precio) * qty).toFixed(2);
-            totalPriceElements.forEach(el => el.textContent = '$' + total);
-        }
-        
-        function actualizarBotones() {
-            const qty = parseInt(quantityInput?.value) || 1;
-            console.log('Actualizando botones - Qty:', qty, 'Max:', window.currentMaxStock);
-            
-            if (btnIncrease) {
-                if (qty >= window.currentMaxStock || window.currentMaxStock === 0) {
-                    btnIncrease.disabled = true;
-                    btnIncrease.style.opacity = '0.5';
-                    btnIncrease.style.pointerEvents = 'none';
+
+            function actualizarVariante() {
+                if (!tallaSeleccionada) return;
+
+                varianteActual = variantesMap[tallaSeleccionada];
+
+                if (varianteActual) {
+                    window.currentVariantId = varianteActual.id;
+                    actualizarStock(varianteActual.stock);
+                    actualizarPrecio(varianteActual.precio);
                 } else {
-                    btnIncrease.disabled = false;
-                    btnIncrease.style.opacity = '1';
-                    btnIncrease.style.pointerEvents = 'auto';
+                    actualizarStock(0);
+                    actualizarPrecio(precioBase);
                 }
             }
-            
-            if (btnDecrease) {
-                btnDecrease.disabled = qty <= 1;
-                btnDecrease.style.opacity = qty <= 1 ? '0.5' : '1';
-                btnDecrease.style.pointerEvents = qty <= 1 ? 'none' : 'auto';
-            }
-        }
-        
-        if (btnIncrease) {
-            btnIncrease.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                
-                const qty = parseInt(quantityInput.value) || 1;
-                const maxStock = parseInt(quantityInput.getAttribute('max')) || window.currentMaxStock || 999;
-                
-                if (qty < maxStock) {
-                    quantityInput.value = qty + 1;
-                    actualizarBotones();
-                    actualizarPrecio(varianteActual?.precio || {{ producto.precio_base|default:0 }});
+
+            function actualizarStock(stock) {
+                window.currentMaxStock = stock;
+
+                if (quantityInput) {
+                    quantityInput.setAttribute('max', stock);
+                    quantityInput.value = 1;
                 }
-                return false;
-            }, true);
-        }
-        
-        if (btnDecrease) {
-            btnDecrease.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                
-                const qty = parseInt(quantityInput.value) || 1;
-                if (qty > 1) {
-                    quantityInput.value = qty - 1;
-                    actualizarBotones();
-                    actualizarPrecio(varianteActual?.precio || {{ producto.precio_base|default:0 }});
-                }
-                return false;
-            }, true);
-        }
-        
-        if (quantityInput) {
-            quantityInput.addEventListener('input', function() {
-                let val = parseInt(this.value) || 1;
-                const maxStock = parseInt(this.getAttribute('max')) || window.currentMaxStock || 999;
-                
-                if (val > maxStock) {
-                    val = maxStock;
-                }
-                if (val < 1) {
-                    val = 1;
-                }
-                
-                this.value = val;
+
                 actualizarBotones();
-                actualizarPrecio(varianteActual?.precio || {{ producto.precio_base|default:0 }});
-            });
-        }
-        
-        // Inicializar al cargar
-        if (tallaSeleccionada) {
-            actualizarVariante();
-        }
-        
-        console.log('=== INICIALIZACI�N COMPLETA ===');
-    });
+
+                const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                actualizarPrecio(precio);
+            }
+
+            function actualizarPrecio(precio) {
+                if (!quantityInput) return;
+
+                const qty = parseInt(quantityInput.value) || 1;
+                const total = (parseFloat(precio) * qty).toFixed(2);
+
+                totalPriceElements.forEach(el => {
+                    el.textContent = '$' + total;
+                });
+            }
+
+            function actualizarBotones() {
+                if (!quantityInput) return;
+
+                const qty = parseInt(quantityInput.value) || 1;
+
+                if (btnIncrease) {
+                    btnIncrease.disabled = (qty >= window.currentMaxStock || window.currentMaxStock === 0);
+                    btnIncrease.style.opacity = btnIncrease.disabled ? '0.5' : '1';
+                    btnIncrease.style.pointerEvents = btnIncrease.disabled ? 'none' : 'auto';
+                }
+
+                if (btnDecrease) {
+                    btnDecrease.disabled = qty <= 1;
+                    btnDecrease.style.opacity = btnDecrease.disabled ? '0.5' : '1';
+                    btnDecrease.style.pointerEvents = btnDecrease.disabled ? 'none' : 'auto';
+                }
+            }
+
+            if (btnIncrease) {
+                btnIncrease.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const qty = parseInt(quantityInput.value) || 1;
+                    const maxStock = parseInt(quantityInput.getAttribute('max')) || window.currentMaxStock || 999;
+
+                    if (qty < maxStock) {
+                        quantityInput.value = qty + 1;
+                        actualizarBotones();
+
+                        const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                        actualizarPrecio(precio);
+                    }
+                }, true);
+            }
+
+            if (btnDecrease) {
+                btnDecrease.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const qty = parseInt(quantityInput.value) || 1;
+                    if (qty > 1) {
+                        quantityInput.value = qty - 1;
+                        actualizarBotones();
+
+                        const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                        actualizarPrecio(precio);
+                    }
+                }, true);
+            }
+
+            if (quantityInput) {
+                quantityInput.addEventListener('input', function() {
+                    let val = parseInt(this.value) || 1;
+                    const maxStock = parseInt(this.getAttribute('max')) || window.currentMaxStock || 999;
+
+                    if (val > maxStock) val = maxStock;
+                    if (val < 1) val = 1;
+
+                    this.value = val;
+                    actualizarBotones();
+
+                    const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                    actualizarPrecio(precio);
+                });
+            }
+
+            if (tallaSeleccionada) actualizarVariante();
+
+            console.log('=== INICIALIZACION COMPLETA ===');
+        });
     </script>
+
 
     <!-- JavaScript para Modal Sticky -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const stickySelect = document.getElementById('stickyVariantSelect');
-        const stickyQtyInput = document.querySelector('.sticky-qty-input');
-        const stickyMinusBtn = document.querySelector('.sticky-quantity .minus-btn');
-        const stickyPlusBtn = document.querySelector('.sticky-quantity .plus-btn');
-        const stickyAddCartBtn = document.querySelector('.sticky-add-cart');
-        
-        let currentStickyStock = 0;
-        
-        if (stickySelect) {
-            stickySelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                currentStickyStock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
-                if (stickyQtyInput) stickyQtyInput.value = 1;
-                updateStickyButtons();
-            });
+        document.addEventListener('DOMContentLoaded', function() {
+            const stickySelect = document.getElementById('stickyVariantSelect');
+            const stickyQtyInput = document.querySelector('.sticky-qty-input');
+            const stickyMinusBtn = document.querySelector('.sticky-quantity .minus-btn');
+            const stickyPlusBtn = document.querySelector('.sticky-quantity .plus-btn');
+            const stickyAddCartBtn = document.querySelector('.sticky-add-cart');
             
-            const firstOption = stickySelect.options[stickySelect.selectedIndex];
-            if (firstOption) currentStickyStock = parseInt(firstOption.getAttribute('data-stock')) || 0;
-        }
-        
-        if (stickyMinusBtn && stickyQtyInput) {
-            stickyMinusBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                let qty = parseInt(stickyQtyInput.value) || 1;
-                if (qty > 1) {
-                    stickyQtyInput.value = qty - 1;
+            let currentStickyStock = 0;
+            
+            if (stickySelect) {
+                stickySelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    currentStickyStock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
+                    if (stickyQtyInput) stickyQtyInput.value = 1;
                     updateStickyButtons();
-                }
-            });
-        }
-        
-        if (stickyPlusBtn && stickyQtyInput) {
-            stickyPlusBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                let qty = parseInt(stickyQtyInput.value) || 1;
-                if (qty < currentStickyStock) {
-                    stickyQtyInput.value = qty + 1;
+                });
+                
+                const firstOption = stickySelect.options[stickySelect.selectedIndex];
+                if (firstOption) currentStickyStock = parseInt(firstOption.getAttribute('data-stock')) || 0;
+            }
+            
+            if (stickyMinusBtn && stickyQtyInput) {
+                stickyMinusBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    let qty = parseInt(stickyQtyInput.value) || 1;
+                    if (qty > 1) {
+                        stickyQtyInput.value = qty - 1;
+                        updateStickyButtons();
+                    }
+                });
+            }
+            
+            if (stickyPlusBtn && stickyQtyInput) {
+                stickyPlusBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    let qty = parseInt(stickyQtyInput.value) || 1;
+                    if (qty < currentStickyStock) {
+                        stickyQtyInput.value = qty + 1;
+                        updateStickyButtons();
+                    }
+                });
+            }
+            
+            if (stickyQtyInput) {
+                stickyQtyInput.addEventListener('input', function() {
+                    let val = parseInt(this.value) || 1;
+                    if (val > currentStickyStock) val = currentStickyStock;
+                    if (val < 1) val = 1;
+                    this.value = val;
                     updateStickyButtons();
-                }
-            });
-        }
-        
-        if (stickyQtyInput) {
-            stickyQtyInput.addEventListener('input', function() {
-                let val = parseInt(this.value) || 1;
-                if (val > currentStickyStock) val = currentStickyStock;
-                if (val < 1) val = 1;
-                this.value = val;
-                updateStickyButtons();
-            });
-        }
-        
-        function updateStickyButtons() {
-            const qty = parseInt(stickyQtyInput?.value) || 1;
-            if (stickyPlusBtn) {
-                if (qty >= currentStickyStock || currentStickyStock === 0) {
-                    stickyPlusBtn.style.opacity = '0.5';
-                    stickyPlusBtn.style.pointerEvents = 'none';
-                } else {
-                    stickyPlusBtn.style.opacity = '1';
-                    stickyPlusBtn.style.pointerEvents = 'auto';
-                }
+                });
             }
-            if (stickyMinusBtn) {
-                if (qty <= 1) {
-                    stickyMinusBtn.style.opacity = '0.5';
-                    stickyMinusBtn.style.pointerEvents = 'none';
-                } else {
-                    stickyMinusBtn.style.opacity = '1';
-                    stickyMinusBtn.style.pointerEvents = 'auto';
+            
+            function updateStickyButtons() {
+                const qty = parseInt(stickyQtyInput?.value) || 1;
+                if (stickyPlusBtn) {
+                    if (qty >= currentStickyStock || currentStickyStock === 0) {
+                        stickyPlusBtn.style.opacity = '0.5';
+                        stickyPlusBtn.style.pointerEvents = 'none';
+                    } else {
+                        stickyPlusBtn.style.opacity = '1';
+                        stickyPlusBtn.style.pointerEvents = 'auto';
+                    }
                 }
-            }
-        }
-        
-        if (stickyAddCartBtn) {
-            stickyAddCartBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (!stickySelect || !stickyQtyInput) return;
-                
-                const selectedOption = stickySelect.options[stickySelect.selectedIndex];
-                const varianteId = selectedOption.value;
-                const cantidad = parseInt(stickyQtyInput.value) || 1;
-                
-                fetch('/api/cart/add/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: `variante_id=${varianteId}&cantidad=${cantidad}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) window.location.href = '/cart/';
-                })
-                .catch(error => console.error('Error:', error));
-            });
-        }
-        
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+                if (stickyMinusBtn) {
+                    if (qty <= 1) {
+                        stickyMinusBtn.style.opacity = '0.5';
+                        stickyMinusBtn.style.pointerEvents = 'none';
+                    } else {
+                        stickyMinusBtn.style.opacity = '1';
+                        stickyMinusBtn.style.pointerEvents = 'auto';
                     }
                 }
             }
-            return cookieValue;
-        }
-        
-        updateStickyButtons();
-    });
+            
+            if (stickyAddCartBtn) {
+                stickyAddCartBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (!stickySelect || !stickyQtyInput) return;
+                    
+                    const selectedOption = stickySelect.options[stickySelect.selectedIndex];
+                    const varianteId = selectedOption.value;
+                    const cantidad = parseInt(stickyQtyInput.value) || 1;
+                    
+                    fetch('/api/cart/add/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: `variante_id=${varianteId}&cantidad=${cantidad}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) window.location.href = '/cart/';
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            }
+            
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            
+            updateStickyButtons();
+        });
     </script>
     
     <!-- Reviews JavaScript -->
@@ -3051,6 +1907,149 @@
                 max-height: 400px;
             }
         }
+        /* ===== MODO MÓVIL: slider con swipe ===== */
+@media (max-width: 768px) {
+    #gallery-started {
+        display: flex !important;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 0;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #gallery-started .item {
+        min-width: 100%;
+        scroll-snap-align: start;
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
+
+    #gallery-started img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    /* Ocultar barra de scroll */
+    #gallery-started::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* ===== DESKTOP: tu grid original ===== */
+@media (min-width: 769px) {
+    #gallery-started {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+}
+/* ===== MODO MÓVIL: slider ===== */
+@media (max-width: 768px) {
+    #gallery-started {
+        display: flex !important;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 0;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #gallery-started .item {
+        min-width: 100%;
+        scroll-snap-align: start;
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
+
+    #gallery-started img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    #gallery-started::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Contador visible solo en móvil */
+    #mobile-image-counter {
+        text-align: center;
+        margin-top: 10px;
+        font-size: 14px;
+        color: #555;
+        font-weight: 500;
+    }
+}
+
+/* ===== DESKTOP ===== */
+@media (min-width: 769px) {
+    #gallery-started {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    #mobile-image-counter {
+        display: none;
+    }
+}
     </style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const gallery = document.getElementById("gallery-started");
+    const counter = document.getElementById("mobile-image-counter");
+
+    if (!gallery || !counter) return;
+
+    const items = gallery.querySelectorAll(".item");
+    const total = items.length;
+
+    function updateCounter() {
+        const scrollLeft = gallery.scrollLeft;
+        const width = gallery.clientWidth;
+        const index = Math.round(scrollLeft / width) + 1;
+        counter.textContent = index + "/" + total;
+    }
+
+    // Inicializar contador
+    counter.textContent = "1/" + total;
+
+    // Actualizar cuando se hace swipe
+    gallery.addEventListener("scroll", () => {
+        if (window.innerWidth <= 768) {
+            updateCounter();
+        }
+    });
+
+    // También actualizar si cambia el tamaño de pantalla
+    window.addEventListener("resize", () => {
+        if (window.innerWidth <= 768) {
+            updateCounter();
+        }
+    });
+});
+</script>
+
+<script>
+// Valida y aplica colores seguros desde data-color para evitar inyección de CSS
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.swatch-value[data-color]').forEach(function(el){
+    var val = (el.getAttribute('data-color') || '').trim();
+    var hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+    var rgb = /^rgba?\(\s*(\d{1,3}%?\s*,\s*){2}\d{1,3}%?(,\s*(0|1|0?\.\d+))?\s*\)$/i;
+    var name = /^[a-z]+$/i;
+    if (hex.test(val) || rgb.test(val) || name.test(val)) {
+      el.style.backgroundColor = val;
+    } else {
+      el.style.backgroundColor = 'transparent';
+      // Opcional: registro para facilitar depuración
+      console.warn('Ignored invalid color value:', val);
+    }
+  });
+});
+</script>
 
 {% endblock %}
+
