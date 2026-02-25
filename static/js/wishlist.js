@@ -64,18 +64,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.setAttribute('data-wishlist-id', data.wishlist_id);
                 button.querySelector('.tooltip').textContent = 'Remove from Wishlist';
                 
-                showNotification('Producto agregado a favoritos', 'success');
+                // NO mostrar notificación
                 
                 // Contar items en wishlist
                 updateWishlistCount();
             } else {
                 console.error('❌ Error:', data.message);
-                showNotification(data.message || 'Error al agregar a favoritos', 'error');
+                // NO mostrar notificación de error
             }
         })
         .catch(error => {
             console.error('❌ Error de red:', error);
-            showNotification('Error al agregar a favoritos', 'error');
+            // NO mostrar notificación de error
         });
     }
     
@@ -123,18 +123,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                showNotification('Producto removido de favoritos', 'success');
+                // NO mostrar notificación
                 
                 // Contar items en wishlist
                 updateWishlistCount();
             } else {
                 console.error('❌ Error:', data.message);
-                showNotification(data.message || 'Error al remover de favoritos', 'error');
+                // NO mostrar notificación de error
             }
         })
         .catch(error => {
             console.error('❌ Error de red:', error);
-            showNotification('Error al remover de favoritos', 'error');
+            // NO mostrar notificación de error
         });
     }
     

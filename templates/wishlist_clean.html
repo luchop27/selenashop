@@ -24,7 +24,7 @@
                                 <!-- Product Image -->
                                 <div class="position-relative overflow-hidden" style="height: 250px;">
                                     {% if item.product.imagenes.all %}
-                                        <img src="{{ item.product.imagenes.first.imagen.url }}" 
+                                        <img src="{{ item.product.imagenes.first.src }}" 
                                              alt="{{ item.product.nombre }}" 
                                              class="card-img-top w-100 h-100 object-fit-cover">
                                     {% else %}

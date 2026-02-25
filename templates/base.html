@@ -228,13 +228,13 @@
                                                                     <a href="{{ producto.get_absolute_url }}" class="product-img">
                                                                         {% if producto.imagenes.all %}
                                                                             <img class="lazyload img-product"
-                                                                                data-src="{{ producto.imagenes.all.0.imagen.url }}"
-                                                                                src="{{ producto.imagenes.all.0.imagen.url }}"
+                                                                                data-src="{{ producto.imagenes.all.0.src }}"
+                                                                                src="{{ producto.imagenes.all.0.src }}"
                                                                                 alt="{{ producto.nombre }}">
                                                                             {% if producto.imagenes.all|length > 1 %}
                                                                                 <img class="lazyload img-hover"
-                                                                                    data-src="{{ producto.imagenes.all.1.imagen.url }}"
-                                                                                    src="{{ producto.imagenes.all.1.imagen.url }}"
+                                                                                    data-src="{{ producto.imagenes.all.1.src }}"
+                                                                                    src="{{ producto.imagenes.all.1.src }}"
                                                                                     alt="{{ producto.nombre }}">
                                                                             {% endif %}
                                                                         {% else %}
@@ -253,8 +253,8 @@
                                                                            data-product-name="{{ producto.nombre|escapejs }}"
                                                                            data-product-price="{{ producto.precio_base }}"
                                                                            data-product-desc="{{ producto.descripcion_corta|default:producto.descripcion_larga|escapejs }}"
-                                                                           data-product-main-image="{% if producto.imagenes.all %}{{ producto.imagenes.all.0.imagen.url }}{% endif %}"
-                                                                           data-product-hover-image="{% if producto.imagenes.all|length > 1 %}{{ producto.imagenes.all.1.imagen.url }}{% endif %}"
+                                                                           data-product-main-image="{% if producto.imagenes.all %}{{ producto.imagenes.all.0.src }}{% endif %}"
+                                                                           data-product-hover-image="{% if producto.imagenes.all|length > 1 %}{{ producto.imagenes.all.1.src }}{% endif %}"
                                                                            data-product-url="{{ producto.get_absolute_url }}">
                                                                             <span class="icon icon-view"></span>
                                                                             <span class="tooltip">Vista Rápida</span>

@@ -55,23 +55,23 @@
                 <!-- Upload images -->
                 <div class="wg-box mb-30">
                     <fieldset>
-                        <div class="body-title mb-10">Subir imágenes <span class="tf-color-1">*</span></div>
+                        <div class="body-title mb-10">Subir imágenes y videos <span class="tf-color-1">*</span></div>
                         <div class="upload-image mb-16">
                             <div class="up-load" id="upload-area" style="min-height: 200px; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center;">
                                 <label class="uploadfile" for="imageFiles" style="cursor: pointer; display: block;">
                                     <span class="icon">
                                         <i class="icon-upload-cloud"></i>
                                     </span>
-                                    <div class="text-tiny">Arrastra tus imágenes aquí o selecciona <span class="text-secondary">clic para examinar</span></div>
-                                    <input type="file" id="imageFiles" name="imagenes" multiple accept="image/*" style="display: none;">
+                                    <div class="text-tiny">Arrastra tus imágenes/videos aquí o selecciona <span class="text-secondary">clic para examinar</span></div>
+                                    <input type="file" id="imageFiles" name="imagenes" multiple accept="image/*,video/*" style="display: none;">
                                 </label>
                             </div>
                         </div>
-                        <div class="body-text mb-16">Puedes añadir 5 o más imágenes. Presta atención a la calidad de las fotos. Las imágenes deben mostrar todos los detalles del producto.</div>
+                        <div class="body-text mb-16">Puedes añadir 5 o más imágenes/videos. Presta atención a la calidad. Los archivos deben mostrar todos los detalles del producto. Formatos soportados: JPG, PNG, GIF, WebP, MP4, WebM, MOV.</div>
                         
-                        <!-- Preview de imágenes -->
+                        <!-- Preview de imágenes y videos -->
                         <div id="images-preview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;">
-                            <!-- Las imágenes seleccionadas aparecerán aquí -->
+                            <!-- Las imágenes y videos seleccionados aparecerán aquí -->
                         </div>
                     </fieldset>
                 </div>
@@ -686,8 +686,22 @@ uploadArea.addEventListener('drop', function(e) {
 });
 
 function handleFiles(files) {
+    console.log('=== handleFiles llamado ===');
+    console.log('Total archivos recibidos:', files.length);
+    
     Array.from(files).forEach(file => {
-        if (file.type.startsWith('image/')) {
+        console.log('Procesando archivo:', file.name);
+        console.log('  Tipo:', file.type);
+        console.log('  Tamaño:', file.size);
+        
+        // Aceptar imágenes Y videos
+        const esImagen = file.type.startsWith('image/');
+        const esVideo = file.type.startsWith('video/');
+        
+        console.log('  Es imagen:', esImagen);
+        console.log('  Es video:', esVideo);
+        
+        if (esImagen || esVideo) {
             // Verificar si ya existe para evitar duplicados
             const existe = imageFiles.some(f => 
                 f.name === file.name && 
@@ -698,9 +712,12 @@ function handleFiles(files) {
             if (!existe) {
                 imageFiles.push(file);
                 displayImage(file, imageFiles.length - 1);
+                console.log('  ✓ Archivo agregado. Total en array:', imageFiles.length);
             } else {
-                console.log('Imagen duplicada ignorada:', file.name);
+                console.log('  ⚠ Archivo duplicado ignorado:', file.name);
             }
+        } else {
+            console.log('  ✗ Archivo rechazado (no es imagen ni video)');
         }
     });
     
@@ -709,29 +726,60 @@ function handleFiles(files) {
 }
 
 function displayImage(file, index) {
+    console.log('=== displayImage llamado ===');
+    console.log('Archivo:', file.name);
+    console.log('Index:', index);
+    
     const reader = new FileReader();
     
     reader.onload = function(e) {
+        console.log('  FileReader cargado exitosamente');
+        
         const imageDiv = document.createElement('div');
         imageDiv.className = 'image-preview-item';
         imageDiv.style.cssText = 'position: relative; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; aspect-ratio: 1;';
         imageDiv.dataset.index = index;
         
-        imageDiv.innerHTML = `
-            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">
-            <button type="button" onclick="removeImage(${index})" 
-                style="position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                ×
-            </button>
-            <div style="position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">
-                ${(file.size / 1024).toFixed(1)} KB
-            </div>
-        `;
+        // Verificar si es video o imagen
+        const isVideo = file.type.startsWith('video/');
+        console.log('  Es video:', isVideo);
+        
+        if (isVideo) {
+            imageDiv.innerHTML = `
+                <video src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" muted loop autoplay></video>
+                <button type="button" onclick="removeImage(${index})" 
+                    style="position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    ×
+                </button>
+                <div style="position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,255,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">
+                    VIDEO ${(file.size / 1024).toFixed(1)} KB
+                </div>
+            `;
+            console.log('  ✓ Preview de video creado');
+        } else {
+            imageDiv.innerHTML = `
+                <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">
+                <button type="button" onclick="removeImage(${index})" 
+                    style="position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    ×
+                </button>
+                <div style="position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">
+                    ${(file.size / 1024).toFixed(1)} KB
+                </div>
+            `;
+            console.log('  ✓ Preview de imagen creado');
+        }
         
         imagesPreview.appendChild(imageDiv);
+        console.log('  ✓ Elemento agregado al DOM');
+    };
+    
+    reader.onerror = function(error) {
+        console.error('  ✗ Error en FileReader:', error);
     };
     
     reader.readAsDataURL(file);
+    console.log('  FileReader iniciado...');
 }
 
 function removeImage(index) {

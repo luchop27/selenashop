@@ -70,11 +70,11 @@ def inicio(request):
         else:
             producto.display_price = f"{producto.precio_base:.2f}"
         
-        # Imagen principal
-        imagenes = list(producto.imagenes.all()[:2])
+        # Imagen principal (solo imágenes, no videos)
+        imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
         if imagenes:
-            producto.main_image_src = imagenes[0].imagen.url
-            producto.hover_image_src = imagenes[1].imagen.url if len(imagenes) > 1 else None
+            producto.main_image_src = imagenes[0].src
+            producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
         else:
             producto.main_image_src = None
             producto.hover_image_src = None
@@ -167,10 +167,10 @@ def inicio(request):
         else:
             producto.display_price = f"{producto.precio_base:.2f}"
 
-        imagenes = list(producto.imagenes.all()[:2])
+        imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
         if imagenes:
-            producto.main_image_src = imagenes[0].imagen.url
-            producto.hover_image_src = imagenes[1].imagen.url if len(imagenes) > 1 else producto.main_image_src
+            producto.main_image_src = imagenes[0].src
+            producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
         else:
             producto.main_image_src = ''
             producto.hover_image_src = ''
@@ -235,10 +235,10 @@ def inicio(request):
             p.display_price = f"{p.precio_base:.2f}"
 
         # imágenes
-        imagenes = list(p.imagenes.all()[:2])
+        imagenes = list(p.imagenes.filter(tipo_medio='imagen')[:2])
         if imagenes:
             # usar la propiedad .src si está disponible, fallback a .imagen.url
-            p.main_image_src = getattr(imagenes[0], 'src', None) or (imagenes[0].imagen.url if imagenes[0].imagen else '')
+            p.main_image_src = getattr(imagenes[0], 'src', None) or (imagenes[0].src)
             p.hover_image_src = (
                 getattr(imagenes[1], 'src', None)
                 if len(imagenes) > 1 else p.main_image_src
@@ -859,7 +859,7 @@ def product_detail(request, slug=None):
         
         # Preparar productos relacionados para el template
         for prod in productos_relacionados:
-            imagenes_rel = list(prod.imagenes.all()[:2])
+            imagenes_rel = list(prod.imagenes.filter(tipo_medio='imagen')[:2])
             if imagenes_rel:
                 prod.main_image = imagenes_rel[0]
                 prod.main_image_src = imagenes_rel[0].imagen.url if imagenes_rel[0].imagen else None
@@ -928,7 +928,7 @@ def product_detail(request, slug=None):
         
         # Preparar datos de productos recientes
         for prod in productos_recientes:
-            imagenes_rec = list(prod.imagenes.all()[:2])
+            imagenes_rec = list(prod.imagenes.filter(tipo_medio='imagen')[:2])
             if imagenes_rec:
                 prod.main_image_src = imagenes_rec[0].imagen.url if imagenes_rec[0].imagen else None
                 prod.hover_image_src = imagenes_rec[1].imagen.url if len(imagenes_rec) > 1 and imagenes_rec[1].imagen else None
@@ -985,7 +985,7 @@ def product_detail(request, slug=None):
                 if imagenes_variante.exists():
                     imagen_url = imagenes_variante.first().imagen.url
                 elif imagenes:  # Fallback a primera imagen
-                    imagen_url = imagenes[0].imagen.url
+                    imagen_url = imagenes[0].src
                 
                 variantes_map[key] = {
                     'stock': variante.stock,
@@ -1358,10 +1358,10 @@ def api_productos_nuevos(request):
         else:
             producto.display_price = f"{producto.precio_base:.2f}"
 
-        imagenes = list(producto.imagenes.all()[:2])
+        imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
         if imagenes:
-            producto.main_image_src = imagenes[0].imagen.url
-            producto.hover_image_src = imagenes[1].imagen.url if len(imagenes) > 1 else producto.main_image_src
+            producto.main_image_src = imagenes[0].src
+            producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
         else:
             producto.main_image_src = ''
             producto.hover_image_src = ''
@@ -2418,9 +2418,9 @@ def wishlist(request):
         producto.display_price = producto.precio_base
         
         # Imágenes
-        imagenes = list(producto.imagenes.all()[:2])
+        imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
         if imagenes:
-            producto.main_image_src = imagenes[0].imagen.url if imagenes[0].imagen else None
+            producto.main_image_src = imagenes[0].src
             producto.hover_image_src = imagenes[1].imagen.url if len(imagenes) > 1 and imagenes[1].imagen else None
         else:
             producto.main_image_src = None

@@ -35,8 +35,8 @@
                         <div class="tf-image-wrap box-img {% if forloop.counter == 1 %}item-1{% elif forloop.counter == 2 %}item-2{% else %}item-{% with counter=forloop.counter %}{{ counter }}{% endwith %}{% endif %}">
                             <div class="img-style">
                                 <img class="lazyload" 
-                                     src="{{ imagen.imagen.url }}"
-                                     data-src="{{ imagen.imagen.url }}" 
+                                     src="{{ imagen.src }}"
+                                     data-src="{{ imagen.src }}" 
                                      alt="{{ imagen.titulo|default:'img-slider' }}"
                                      loading="lazy">
                             </div>

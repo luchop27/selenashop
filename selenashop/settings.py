@@ -144,6 +144,19 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Configuración para archivos multimedia
+# No limitar el tamaño de archivos subidos (por defecto Django no tiene límite)
+# Si el servidor web tiene límites, configurarlos allí
+DATA_UPLOAD_MAX_MEMORY_SIZE = None  # Sin límite para archivos en memoria
+FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100MB en memoria antes de ir a disco
+
+# Tipos de archivo permitidos para videos
+ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi']
+ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif']
+
+# No comprimir imágenes ni videos - mantener calidad original
+# Django no comprime por defecto, pero esta configuración es para referencia
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 

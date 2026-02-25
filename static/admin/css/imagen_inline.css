@@ -1,0 +1,47 @@
+/* Estilos para el inline de imágenes/videos en el admin */
+
+.inline-group .tabular tr.has_original td {
+    vertical-align: top;
+}
+
+/* Por defecto, mostrar solo imagen (ocultar video) */
+.field-video {
+    display: none !important;
+}
+
+/* Cuando el atributo data-tipo es "video", ocultar imagen y mostrar video */
+tr.inline-related[data-tipo="video"] .field-imagen {
+    display: none !important;
+}
+
+tr.inline-related[data-tipo="video"] .field-video {
+    display: table-cell !important;
+}
+
+/* Vista previa de imágenes y videos en el admin */
+.field-imagen img,
+.field-video video {
+    max-width: 200px;
+    max-height: 150px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.field-video video {
+    display: block;
+}
+
+/* Ayuda visual */
+.field-tipo_medio select {
+    font-weight: bold;
+    color: #417690;
+}
+
+/* Información de ayuda */
+.help {
+    font-size: 11px;
+    color: #666;
+    display: block;
+    margin-top: 2px;
+}
