@@ -270,6 +270,22 @@
             `;
         }
         
+        // Reinicializar Swiper después de agregar imágenes
+        if (window.Swiper && typeof Swiper !== 'undefined') {
+            setTimeout(() => {
+                const swiperElement = document.querySelector('.swiper.tf-single-slide');
+                if (swiperElement && swiperElement.swiper) {
+                    swiperElement.swiper.destroy(true, true);
+                }
+                new Swiper('.swiper.tf-single-slide', {
+                    navigation: {
+                        nextEl: '.single-slide-prev',
+                        prevEl: '.single-slide-next',
+                    },
+                });
+            }, 100);
+        }
+        
         // Renderizar atributos
         const variantsContainer = document.getElementById('quickview-variants');
         variantsContainer.innerHTML = '';
