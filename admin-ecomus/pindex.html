@@ -145,7 +145,7 @@
                             </div>
                             <div>
                                 <div class="flex gap9 items-center">
-                                    <div class="body-text mt-2 mb-4">Clientes</div>
+                                    <div class="body-text mt-2 mb-4">Clientes Registrados</div>
                                     <div
                                         class="box-icon-trending {% if customers_change >= 0 %}up{% else %}down{% endif %} color-violet">
                                         <i
@@ -198,7 +198,7 @@
                             </div>
                             <div>
                                 <div class="flex gap10 items-center">
-                                    <div class="body-text mt-2 mb-4">Mi Balance</div>
+                                    <div class="body-text mt-2 mb-4">Balance Neto</div>
                                     <div
                                         class="box-icon-trending {% if balance_change >= 0 %}up{% else %}down{% endif %} color-blue">
                                         <i
@@ -259,10 +259,10 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap12">
-                                <h4>$37,802</h4>
-                                <div class="box-icon-trending up">
-                                    <i class="icon-trending-up"></i>
-                                    <div class="body-title number text-grey">0.56%</div>
+                                <h4>${{ total_earnings|floatformat:2|intcomma }}</h4>
+                                <div class="box-icon-trending {% if earnings_change >= 0 %}up{% else %}down{% endif %}">
+                                    <i class="icon-trending-{% if earnings_change >= 0 %}up{% else %}down{% endif %}"></i>
+                                    <div class="body-title number text-grey">{{ earnings_change|floatformat:2 }}%</div>
                                 </div>
                             </div>
                         </div>
@@ -274,10 +274,10 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap12">
-                                <h4>$28,305</h4>
-                                <div class="box-icon-trending up">
-                                    <i class="icon-trending-up"></i>
-                                    <div class="body-title number text-grey">0.56%</div>
+                                <h4>{{ total_orders|intcomma }}</h4>
+                                <div class="box-icon-trending {% if orders_change >= 0 %}up{% else %}down{% endif %}">
+                                    <i class="icon-trending-{% if orders_change >= 0 %}up{% else %}down{% endif %}"></i>
+                                    <div class="body-title number text-grey">{{ orders_change|floatformat:2 }}%</div>
                                 </div>
                             </div>
                         </div>
@@ -285,350 +285,56 @@
                     <div id="line-chart-7"></div>
                 </div>
                 <!-- /Revenue -->
-                <div class="flex gap20 flex-wrap-mobile">
-                    <!-- top-product -->
-                    <div class="wg-box w-half">
-                        <div class="flex items-center justify-between">
-                            <h5>Ventas Promocionales</h5>
-                            <div class="dropdown default style-box">
-                                <button class="btn btn-secondary dropdown-toggle" type="button"
-                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <a href="product-list.html" class="view-all">Weekly<i
-                                            class="icon-chevron-down"></i></a>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a href="#">Anual</a>
-                                    </li>
-                                    <li>
-                                        <a href="#">Mensual</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap40">
-                            <div>
-                                <div class="mb-1">
-                                    <div class="block-legend">
-                                        <div class="text-tiny">Visitantes</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap10">
-                                    <h4>7,802</h4>
-                                    <div class="box-icon-trending up">
-                                        <i class="icon-trending-up"></i>
-                                        <div class="body-title number text-grey">0.56%</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="morris-donut-1" class="text-center"></div>
-                        <div class="flex gap20">
-                            <div class="block-legend style-1 w-full">
-                                <div class="dot t4"></div>
-                                <div class="text-tiny">Redes Sociales</div>
-                            </div>
-                            <div class="block-legend style-1 w-full">
-                                <div class="dot t2"></div>
-                                <div class="text-tiny">Sitio Web</div>
-                            </div>
-                            <div class="block-legend style-1 w-full">
-                                <div class="dot t3"></div>
-                                <div class="text-tiny">Tienda</div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- /top-product -->
-                    <!-- top-countries -->
-                    <div class="wg-box w-half">
+                <div class="wg-box">
                         <div class="flex items-center justify-between">
                             <h5>Productos Más Vendidos</h5>
                             <div class="dropdown default style-box">
                                 <button class="btn btn-secondary dropdown-toggle" type="button"
                                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <a href="product-list.html" class="view-all">Weekly<i
+                                    <a href="{% url 'productos:admin_productos_list' %}" class="view-all">Actualizado<i
                                             class="icon-chevron-down"></i></a>
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a href="#">Anual</a>
-                                    </li>
-                                    <li>
-                                        <a href="#">Mensual</a>
+                                        <a href="{% url 'productos:admin_productos_list' %}">Ver todos</a>
                                     </li>
                                 </ul>
                             </div>
                         </div>
                         <ul class="flex flex-column h-full has-divider-line">
+                            {% for product in top_products %}
                             <li class="wg-product">
                                 <div class="name flex-grow">
                                     <div class="image">
-                                        <img src="images/products/product-1.jpg" alt="">
+                                        {% if product.imagen_url %}
+                                        <img src="{{ product.imagen_url }}" alt="{{ product.producto__nombre|default:product.nombre_producto }}">
+                                        {% else %}
+                                        <img src="{% static 'panel_admin/images/products/product-1.jpg' %}" alt="Sin imagen">
+                                        {% endif %}
                                     </div>
                                     <div>
                                         <div class="title">
-                                            <a href="#" class="body-text">Neptune Longsleeve</a>
+                                            <a href="{% url 'productos:admin_productos_list' %}" class="body-text">
+                                                {{ product.producto__nombre|default:product.nombre_producto }}
+                                            </a>
                                         </div>
-                                        <div class="price text-tiny">$138</div>
+                                        <div class="price text-tiny">${{ product.total_ingresos|floatformat:2|intcomma }}</div>
                                     </div>
                                 </div>
-                                <div class="sale body-text">952 Ventas</div>
+                                <div class="sale body-text">{{ product.total_vendidos|intcomma }} ventas</div>
                             </li>
+                            {% empty %}
                             <li class="wg-product">
                                 <div class="name flex-grow">
-                                    <div class="image">
-                                        <img src="images/products/product-2.jpg" alt="">
-                                    </div>
                                     <div>
                                         <div class="title">
-                                            <a href="#" class="body-text">Ribbed Tank Top</a>
+                                            <span class="body-text">No hay ventas registradas aún.</span>
                                         </div>
-                                        <div class="price text-tiny">$108</div>
                                     </div>
                                 </div>
-                                <div class="sale body-text">952 Ventas</div>
                             </li>
-                            <li class="wg-product">
-                                <div class="name flex-grow">
-                                    <div class="image">
-                                        <img src="images/products/product-3.jpg" alt="">
-                                    </div>
-                                    <div>
-                                        <div class="title">
-                                            <a href="#" class="body-text">Ribbed modal T-shirt</a>
-                                        </div>
-                                        <div class="price text-tiny">$125</div>
-                                    </div>
-                                </div>
-                                <div class="sale body-text">902 Sales</div>
-                            </li>
-                            <li class="wg-product">
-                                <div class="name flex-grow">
-                                    <div class="image">
-                                        <img src="images/products/product-4.jpg" alt="">
-                                    </div>
-                                    <div>
-                                        <div class="title">
-                                            <a href="#" class="body-text">Oversized Motif
-                                                T-shirt</a>
-                                        </div>
-                                        <div class="price text-tiny">$98</div>
-                                    </div>
-                                </div>
-                                <div class="sale body-text">882 Sales</div>
-                            </li>
-                            <li class="wg-product">
-                                <div class="name flex-grow">
-                                    <div class="image">
-                                        <img src="images/products/product-5.jpg" alt="">
-                                    </div>
-                                    <div>
-                                        <div class="title">
-                                            <a href="#" class="body-text">V-neck linen T-shirt</a>
-                                        </div>
-                                        <div class="price text-tiny">$158</div>
-                                    </div>
-                                </div>
-                                <div class="sale body-text">869 Sales</div>
-                            </li>
-                            <li class="wg-product">
-                                <div class="name flex-grow">
-                                    <div class="image">
-                                        <img src="images/products/product-6.jpg" alt="">
-                                    </div>
-                                    <div>
-                                        <div class="title">
-                                            <a href="#" class="body-text">Jersey thong body</a>
-                                        </div>
-                                        <div class="price text-tiny">$78</div>
-                                    </div>
-                                </div>
-                                <div class="sale body-text">833 Sales</div>
-                            </li>
+                            {% endfor %}
                         </ul>
-                    </div>
-                    <!-- /top-countries -->
-                </div>
-            </div>
-            <div class="tf-section-5">
-                <div class="wg-box">
-                    <div class="flex items-center justify-between">
-                        <h5>Pedidos Recientes</h5>
-                    </div>
-                    <div class="wg-table table-recent-orders">
-                        <ul class="table-title flex gap20 mb-14">
-                            <li>
-                                <div class="body-title text-main-dark">Producto</div>
-                            </li>
-                            <li>
-                                <div class="body-title text-main-dark">Cliente</div>
-                            </li>
-                            <li>
-                                <div class="body-title text-main-dark">ID Producto</div>
-                            </li>
-                            <li>
-                                <div class="body-title text-main-dark">Cantidad</div>
-                            </li>
-                            <li>
-                                <div class="body-title text-main-dark">Precio</div>
-                            </li>
-                            <li>
-                                <div class="body-title text-main-dark">Estado</div>
-                            </li>
-                        </ul>
-                        <div class="divider mb-14"></div>
-                        <ul class="flex flex-column has-divider-line has-line-bot">
-                            <li class="item wg-product gap20">
-                                <div class="name">
-                                    <div class="image">
-                                        <img src="images/products/product-1.jpg" alt="">
-                                    </div>
-                                    <div class="title mb-0">
-                                        <a href="#" class="body-text">Oversized Motif T-shirt</a>
-                                    </div>
-                                </div>
-                                <div class="body-text text-main-dark mt-4">Leslie Alexander</div>
-                                <div class="body-text text-main-dark mt-4">1452</div>
-                                <div class="body-text text-main-dark mt-4">X1</div>
-                                <div class="body-text text-main-dark mt-4">$138</div>
-                                <div>
-                                    <div class="block-available fw-7">Pagado</div>
-                                </div>
-                            </li>
-                            <li class="item wg-product gap20">
-                                <div class="name">
-                                    <div class="image">
-                                        <img src="images/products/product-2.jpg" alt="">
-                                    </div>
-                                    <div class="title mb-0">
-                                        <a href="#" class="body-text">Oversized Motif T-shirt</a>
-                                    </div>
-                                </div>
-                                <div class="body-text text-main-dark mt-4">Leslie Alexander</div>
-                                <div class="body-text text-main-dark mt-4">1452</div>
-                                <div class="body-text text-main-dark mt-4">X1</div>
-                                <div class="body-text text-main-dark mt-4">$138</div>
-                                <div>
-                                    <div class="block-pending fw-7">Pendiente</div>
-                                </div>
-                            </li>
-                            <li class="item wg-product gap20">
-                                <div class="name">
-                                    <div class="image">
-                                        <img src="images/products/product-3.jpg" alt="">
-                                    </div>
-                                    <div class="title mb-0">
-                                        <a href="#" class="body-text">Oversized Motif T-shirt</a>
-                                    </div>
-                                </div>
-                                <div class="body-text text-main-dark mt-4">Leslie Alexander</div>
-                                <div class="body-text text-main-dark mt-4">1452</div>
-                                <div class="body-text text-main-dark mt-4">X1</div>
-                                <div class="body-text text-main-dark mt-4">$138</div>
-                                <div>
-                                    <div class="block-available fw-7">Cancelado</div>
-                                </div>
-                            </li>
-                            <li class="item wg-product gap20">
-                                <div class="name">
-                                    <div class="image">
-                                        <img src="images/products/product-7.jpg" alt="">
-                                    </div>
-                                    <div class="title mb-0">
-                                        <a href="#" class="body-text">Oversized Motif T-shirt</a>
-                                    </div>
-                                </div>
-                                <div class="body-text text-main-dark mt-4">Leslie Alexander</div>
-                                <div class="body-text text-main-dark mt-4">1452</div>
-                                <div class="body-text text-main-dark mt-4">X1</div>
-                                <div class="body-text text-main-dark mt-4">$138</div>
-                                <div>
-                                    <div class="block-published fw-7">Procesando</div>
-                                </div>
-                            </li>
-                            <li class="item wg-product gap20">
-                                <div class="name">
-                                    <div class="image">
-                                        <img src="images/products/product-4.jpg" alt="">
-                                    </div>
-                                    <div class="title mb-0">
-                                        <a href="#" class="body-text">Oversized Motif T-shirt</a>
-                                    </div>
-                                </div>
-                                <div class="body-text text-main-dark mt-4">Leslie Alexander</div>
-                                <div class="body-text text-main-dark mt-4">1452</div>
-                                <div class="body-text text-main-dark mt-4">X1</div>
-                                <div class="body-text text-main-dark mt-4">$138</div>
-                                <div>
-                                    <div class="block-published fw-7">Processing</div>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="flex items-center justify-between flex-wrap gap10">
-                        <div class="text-tiny">Mostrando 1-5 de 15</div>
-                        <ul class="wg-pagination">
-                            <li>
-                                <a href="#"><i class="icon-chevron-left"></i></a>
-                            </li>
-                            <li>
-                                <a href="#">1</a>
-                            </li>
-                            <li class="active">
-                                <a href="#">2</a>
-                            </li>
-                            <li>
-                                <a href="#">3</a>
-                            </li>
-                            <li>
-                                <a href="#"><i class="icon-chevron-right"></i></a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="wg-box">
-                    <div class="flex items-center justify-between">
-                        <h5>Ubicación de Usuarios</h5>
-                    </div>
-                    <div class="wrap-usa-vectormap">
-                        <div id="usa-vectormap"></div>
-                        <div class="bot">
-                            <div class="flex items-center justify-between gap20 mb-20">
-                                <div class="block-legend">
-                                    <div class="dot t6"></div>
-                                    <div class="text-tiny text-surface-2">California <span
-                                            class="fw-7 text-main-dark">40%</span></div>
-                                </div>
-                                <div class="block-legend">
-                                    <div class="dot t6"></div>
-                                    <div class="text-tiny text-surface-2">Arizona <span
-                                            class="fw-7 text-main-dark">15%</span></div>
-                                </div>
-                                <div class="block-legend">
-                                    <div class="dot t3"></div>
-                                    <div class="text-tiny text-surface-2">Texas <span
-                                            class="fw-7 text-main-dark">10%</span></div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between gap20">
-                                <div class="block-legend">
-                                    <div class="dot t3"></div>
-                                    <div class="text-tiny text-surface-2">Georda <span
-                                            class="fw-7 text-main-dark">3.5%</span></div>
-                                </div>
-                                <div class="block-legend">
-                                    <div class="dot t3"></div>
-                                    <div class="text-tiny text-surface-2">North Carolina <span
-                                            class="fw-7 text-main-dark">2%</span></div>
-                                </div>
-                                <div class="block-legend">
-                                    <div class="dot t3"></div>
-                                    <div class="text-tiny text-surface-2">Florida <span
-                                            class="fw-7 text-main-dark">1.5%</span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
