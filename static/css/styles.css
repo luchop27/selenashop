@@ -2130,12 +2130,13 @@ label {
 }
 
 .header-default .wrapper-header {
-  min-height: 64px;
+  min-height: 64px; 
 }
 .header-default .wrapper-header .nav-icon li:last-child .nav-icon-item {
   margin-right: 10px;
 }
 .header-default .box-nav-ul {
+  
   gap: 22px;
 }
 
@@ -10003,9 +10004,10 @@ header.header-bg {
   opacity: 0;
   visibility: hidden;
 }
+
 .card-product .card-product-wrapper {
   position: relative;
-  border-radius: 10px;
+  border-radius: 0 !important;
   overflow: hidden;
   z-index: 20;
   aspect-ratio: 1/1.4;
