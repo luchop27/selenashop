@@ -1,61 +1,230 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
+
+{% block extra_css %}
+<style>
+.contact-section-wrapper {
+  padding: 40px 15px;
+}
+.contact-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 480px;
+  border: 0.5px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+@media (max-width: 768px) {
+  .contact-section {
+    grid-template-columns: 1fr;
+  }
+}
+.map-side {
+  position: relative;
+  min-height: 480px;
+  overflow: hidden;
+}
+.map-side iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 20px;
+  background: rgba(255,255,255,0.92);
+  border-top: 0.5px solid rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rating-num { font-size: 13px; font-weight: 500; color: #444; }
+.rating-stars { color: #8B7D5C; font-size: 13px; letter-spacing: 2px; }
+.rating-text { font-size: 12px; color: #888; }
+.info-side {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  border-left: 0.5px solid #e0e0e0;
+  background: white;
+}
+.section-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8B7D5C;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.section-heading {
+  font-size: 26px;
+  font-weight: 500;
+  color: #222;
+  line-height: 1.2;
+  margin-bottom: 28px;
+}
+.info-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 0.5px solid #e0e0e0;
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards;
+}
+.info-item:last-child {
+  border-bottom: none;
+}
+.icon-wrap {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #f7f4ef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.item-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+.item-value {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+}
+.item-value.gold {
+  color: #8B7D5C;
+  font-weight: 500;
+}
+.social-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards;
+  animation-delay: 0.5s;
+}
+.social-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0.5px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: #777;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  text-decoration: none;
+}
+.social-btn:hover {
+  border-color: #8B7D5C;
+  color: #8B7D5C;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- page-title -->
-<div class="tf-page-title style-2">
-    <div class="container-full">
-        <div class="heading text-center">Contact Us</div>
+<div class="contact-section-wrapper">
+  <section class="contact-section">
+    <!-- LADO IZQUIERDO: mapa -->
+    <div class="map-side">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d317859.6089702069!2d-0.075949!3d51.508112!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48760349331f38dd%3A0xa8bf49dde1d56467!2sTower%20of%20London!5e0!3m2!1sen!2sus!4v1719221598456!5m2!1sen!2sus"
+        width="100%" height="100%"
+        style="border:0; display:block;"
+        allowfullscreen loading="lazy">
+      </iframe>
+      <div class="map-overlay">
+        <div class="rating-num">4.7</div>
+        <div class="rating-stars">★★★★★</div>
+        <div class="rating-text">117,805 reseñas · Google Maps</div>
+      </div>
     </div>
-</div>
-<!-- /page-title -->
-<!-- map -->
-<section class="flat-spacing-9">
-    <div class="container">
-        <div class="tf-grid-layout gap-0 lg-col-2">
-            <div class="w-100">
-                <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d317859.6089702069!2d-0.075949!3d51.508112!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48760349331f38dd%3A0xa8bf49dde1d56467!2sTower%20of%20London!5e0!3m2!1sen!2sus!4v1719221598456!5m2!1sen!2sus"
-                    width="100%" height="894" style="border:0;" allowfullscreen="" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"></iframe>
-            </div>
-            <div class="tf-content-left has-mt">
-                <div class="sticky-top">
-                    <h5 class="mb_20">Visit Our Store</h5>
-                    <div class="mb_20">
-                        <p class="mb_15"><strong>Address</strong></p>
-                        <p>66 Mott St, New York, New York, Zip Code: 10006, AS</p>
-                    </div>
-                    <div class="mb_20">
-                        <p class="mb_15"><strong>Phone</strong></p>
-                        <p>(623) 934-2400</p>
-                    </div>
-                    <div class="mb_20">
-                        <p class="mb_15"><strong>Email</strong></p>
-                        <p>EComposer@example.com</p>
-                    </div>
-                    <div class="mb_36">
-                        <p class="mb_15"><strong>Open Time</strong></p>
-                        <p class="mb_15">Our store has re-opened for shopping, </p>
-                        <p>exchange Every day 11am to 7pm</p>
-                    </div>
-                    <div>
-                        <ul class="tf-social-icon d-flex gap-20 style-default">
-                            <li><a href="https://www.facebook.com/selenamaite.ec/?ref=pl_edit_xav_ig_profile_page_web#" target="_blank" rel="noopener noreferrer" class="box-icon link round social-facebook border-line-black"><i
-                                        class="icon fs-14 icon-fb"></i></a></li>
-                            <li><a href="#" class="box-icon link round social-twiter border-line-black"><i
-                                        class="icon fs-12 icon-Icon-x"></i></a></li>
-                            <li><a href="https://www.instagram.com/selenaonlineshop_ec?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="box-icon link round social-instagram border-line-black"><i
-                                        class="icon fs-14 icon-instagram"></i></a></li>
-                            <li><a href="#" class="box-icon link round social-tiktok border-line-black"><i
-                                        class="icon fs-14 icon-tiktok"></i></a></li>
-                            <li><a href="#" class="box-icon link round social-pinterest border-line-black"><i
-                                        class="icon fs-14 icon-pinterest-1"></i></a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+
+    <!-- LADO DERECHO: información -->
+    <div class="info-side">
+      <span class="section-eyebrow">encuéntranos</span>
+      <h2 class="section-heading">Visita nuestra<br>tienda</h2>
+
+      <div class="info-items">
+        <div class="info-item" style="animation-delay: 0.1s;">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8B7D5C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          </div>
+          <div class="item-content">
+            <span class="item-label">dirección</span>
+            <span class="item-value">Machala, Ecuador<br>Tu dirección exacta aquí</span>
+          </div>
         </div>
+
+        <div class="info-item" style="animation-delay: 0.2s;">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8B7D5C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.22 2.18 2 2 0 012.22 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+          </div>
+          <div class="item-content">
+            <span class="item-label">teléfono</span>
+            <span class="item-value gold">(08) 8942 1299</span>
+          </div>
+        </div>
+
+        <div class="info-item" style="animation-delay: 0.3s;">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8B7D5C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="item-content">
+            <span class="item-label">correo</span>
+            <span class="item-value">selenaboutique@gmail.com</span>
+          </div>
+        </div>
+
+        <div class="info-item" style="animation-delay: 0.4s;">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#8B7D5C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="item-content">
+            <span class="item-label">horario</span>
+            <span class="item-value">Lun – Sáb · 8:30am – 10:30pm<br>Dom · Cerrado</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="social-row">
+        <a href="https://www.facebook.com/selenamaite.ec/" target="_blank" rel="noopener noreferrer" class="social-btn">f</a>
+        <a href="#" class="social-btn">𝕏</a>
+        <a href="https://www.instagram.com/selenaonlineshop_ec/" target="_blank" rel="noopener noreferrer" class="social-btn">ig</a>
+        <a href="#" class="social-btn">tt</a>
+        <a href="#" class="social-btn">pt</a>
+      </div>
     </div>
-</section>
-<!-- /map -->
+  </section>
+</div>
 {% endblock %}

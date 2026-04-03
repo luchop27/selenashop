@@ -71,6 +71,10 @@
   
       $("#price-min-value").text(filters.minPrice);
       $("#price-max-value").text(filters.maxPrice);
+      document.getElementById("input-precio-min").value = filters.minPrice;
+      document.getElementById("input-precio-max").value = filters.maxPrice;
+      document.getElementById("input-precio-min").value = filters.minPrice;
+      document.getElementById("input-precio-max").value = filters.maxPrice;
   
       applyFilters();
       updateMetaFilter();

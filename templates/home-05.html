@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block content %}
 <style>
@@ -94,6 +94,59 @@
     .tf-sw-testimonial .swiper-slide {
         height: auto;
     }
+  .opt-a { display: grid; grid-template-columns: 1.4fr 1fr; border: 0.5px solid #eaeaea; border-radius: 12px; overflow: hidden; margin: 60px auto 0 auto; max-width: 950px; background: #fff; box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
+  .img-hero { position: relative; overflow: hidden; background: #000; aspect-ratio: 2 / 3; height: auto; }
+  .slide { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .slide img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .img-facade { z-index: 1; animation: revealFacade 10s ease-in-out infinite; }
+  .img-interior { z-index: 2; animation: revealInterior 10s ease-in-out infinite; }
+
+  @keyframes revealFacade {
+    0%        { clip-path: inset(0 0 0 0);    transform: scale(1); }
+    40%       { clip-path: inset(0 0 0 0);    transform: scale(1.02); }
+    55%       { clip-path: inset(0 100% 0 0); transform: scale(1.03); }
+    95%, 100% { clip-path: inset(0 100% 0 0); transform: scale(1); }
+  }
+
+  @keyframes revealInterior {
+    0%, 45%   { clip-path: inset(0 0 0 100%); transform: scale(1.01); }
+    60%       { clip-path: inset(0 0 0 0);    transform: scale(1.02); }
+    95%       { clip-path: inset(0 0 0 0);    transform: scale(1.01); }
+    100%      { clip-path: inset(0 0 0 100%); transform: scale(1); }
+  }
+
+  .line-wipe { position: absolute; top: 0; bottom: 0; width: 3px; background: white; z-index: 5; opacity: 0; animation: lineWipe 10s ease-in-out infinite; }
+  @keyframes lineWipe { 0% { left: 0%; opacity: 0; } 38% { left: 0%; opacity: 0; } 42% { left: 0%; opacity: 1; } 53% { left: 100%; opacity: 1; } 54%, 100% { left: 100%; opacity: 0; } }
+
+  .counter { position: absolute; bottom: 16px; z-index: 10; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.06em; }
+  .counter span { color: white; font-weight: 500; }
+  .c-facade { right: 20px; animation: cFA 10s ease-in-out infinite; }
+  .c-int { right: 20px; animation: cIA 10s ease-in-out infinite; }
+
+  @keyframes cFA { 0%, 40% { opacity: 1; } 52%, 100% { opacity: 0; } }
+  @keyframes cIA { 0%, 50% { opacity: 0; } 60%, 92% { opacity: 1; } 100% { opacity: 0; } }
+
+  .progress-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: #8B7D5C; z-index: 10; animation: progressAnim 10s linear infinite; }
+  @keyframes progressAnim { 0% { width: 0%; } 100% { width: 100%; } }
+
+  .tag-foto { position: absolute; top: 16px; left: 16px; z-index: 10; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: white; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; }
+  .tag-fachada { animation: tagA 10s ease-in-out infinite; }
+  .tag-int { animation: tagB 10s ease-in-out infinite; }
+
+  @keyframes tagA { 0%, 40% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  @keyframes tagB { 0%, 50% { opacity: 0; } 62%, 92% { opacity: 1; } 100% { opacity: 0; } }
+
+  .info-row { display: flex; flex-direction: column; justify-content: center; padding: 4rem; gap: 2rem; background: linear-gradient(135deg, #fffaf5 0%, #f4eee6 100%); }
+  .info-block { display: flex; flex-direction: column; gap: 6px; padding-left: 1.2rem; border-left: 3px solid #8B7D5C; }
+  .info-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8B7D5C; font-weight: 700; opacity: 0.9; }
+  .info-value { font-size: 14px; color: #333; line-height: 1.6; }
+  .info-value.gold { color: #8B7D5C; font-weight: 600; font-size: 15px; }
+
+  @media (max-width: 768px) { 
+    .opt-a { grid-template-columns: 1fr; max-width: 100%; } 
+    .info-row { padding: 2.5rem 1.5rem; gap: 1.5rem; border-bottom: 1px solid #eee; background: #fff;} 
+    .img-hero { aspect-ratio: 1 / 1; min-height: unset; } 
+  }
 </style>
 
 
@@ -360,55 +413,43 @@
         </section>
         <!-- /Testimonial -->
         <!-- Store -->
-        <section class="flat-spacing-6  ">
+        <section class="flat-spacing-6 pt_0">
             <div class="container">
                 <div class="flat-title wow fadeInUp" data-wow-delay="0s">
                     <span class="title">Visita nuestra tienda</span>
                 </div>
-                <div class="flat-tab-store flat-animate-tab">
-                    <ul class="widget-tab-2" role="tablist">
-                        <li class="nav-tab-item" role="presentation">
-                            <a href="#hongkong" class="active" data-bs-toggle="tab">Machala</a>
-                        </li>
-                        <li class="nav-tab-item" role="presentation">
-                            <a href="#london" data-bs-toggle="tab">Bodega</a>
-                        </li>
-                        
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane active show" id="hongkong" role="tabpanel">
-                            <div class="widget-card-store align-items-center tf-grid-layout md-col-2">
-                                <div class="store-item-info">
-                                    <h5 class="store-heading">Tienda Machala</h5>
-                                    <div class="description">
-                                        <p>301 Front St WToronto,<br>Ecomus@support.com <br>(08) 8942 1299</p>
-                                        <p>Lunes - Viernes, 8:30am - 10:30pm<br>Sábado, 8:30am - 10:30pm <br>Domingo Cerrado
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="store-img">
-                                    <img class="lazyload" data-src="{% static 'images/shop/store/tienda.png' %}" src="{% static 'images/shop/store/tienda.png' %}" alt="store-img">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane" id="london" role="tabpanel">
-                            <div class="widget-card-store align-items-center tf-grid-layout md-col-2">
-                                <div class="store-item-info">
-                                    <h5 class="store-heading">Bodega Machala</h5>
-                                    <div class="description">
-                                        <p>301 Front St WToronto,<br>Ecomus@support.com <br>(08) 8942 1299</p>
-                                        <p>Lunes - Viernes, 8:30am - 10:30pm<br>Sábado, 8:30am - 10:30pm <br>Domingo Cerrado
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="store-img">
-                                    <img class="lazyload" data-src="{% static 'images/shop/store/bodega.jpeg' %}" src="{% static 'images/shop/store/bodega.jpeg' %}" alt="store-img">
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                </div>
+                <section class="opt-a">
+  <div class="info-row">
+    <div class="info-block">
+      <span class="info-label">ubicación</span>
+      <span class="info-value">Machala, Ecuador</span>
+    </div>
+    <div class="info-block">
+      <span class="info-label">horario</span>
+      <span class="info-value">Lunes a Sábado · 9:00am a 6:00pm<br>Envíos a todo el Ecuador</span>
+    </div>
+    <div class="info-block">
+      <span class="info-label">contacto</span>
+      <span class="info-value gold">0989184413</span>
+    </div>
+  </div>
+  
+  <div class="img-hero">
+    <div class="slide img-facade">
+      <img src="{% static 'images/fachada_interior/fachada.png' %}" alt="Fachada Machala" />
+    </div>
+    <div class="slide img-interior">
+      <img src="{% static 'images/fachada_interior/interior.jpeg' %}" alt="Interior Machala" />
+    </div>
+    <div class="line-wipe"></div>
+    <span class="tag-foto tag-fachada">fachada</span>
+    <span class="tag-foto tag-int">interior</span>
+    <div class="counter c-facade"><span>01</span> / 02</div>
+    <div class="counter c-int"><span>02</span> / 02</div>
+    <div class="progress-bar"></div>
+  </div>
+  
+</section>
             </div>
         </section>
         <!-- /Store -->
@@ -638,7 +679,7 @@
             
             e.preventDefault();
             
-            var productId = btn.getAttribute('data-product-id');
+            var productId = btn.getAttribute('data-product-id') || btn.getAttribute('data-producto-id');
             if (productId) {
                 // Cargar desde API (con stock real)
                 loadProductQuickView(productId);

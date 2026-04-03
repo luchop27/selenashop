@@ -32,12 +32,12 @@
                     e.preventDefault();
                     console.log('Quick View: Botón clickeado');
                     
-                    const productoId = this.getAttribute('data-producto-id');
+                    const productoId = this.getAttribute('data-producto-id') || this.getAttribute('data-product-id');
                     console.log('Quick View: Producto ID =', productoId);
                     
                     if (!productoId) {
                         console.error('Quick View: No se pudo obtener el ID del producto');
-                        alert('Error: No se pudo identificar el producto');
+                        console.error('Producto sin ID'); document.getElementById('quickview-title').textContent = 'Producto no encontrado';
                         return;
                     }
                     
@@ -478,13 +478,13 @@
 
         function addToCartFromQuickView() {
             const modal = document.getElementById('quick_view');
-            const productoId = modal.dataset.productoId;
+            const productoId = modal.dataset.productoId || modal.dataset.productId;
             const variantId = modal.dataset.selectedVariantId;
             const quantity = parseInt(modal.querySelector('input[name="number"]').value);
             const maxStock = parseInt(modal.dataset.maxStock) || 0;
             
             if (!productoId) {
-                alert('Error: No se pudo identificar el producto');
+                console.error('Producto sin ID'); document.getElementById('quickview-title').textContent = 'Producto no encontrado';
                 return;
             }
 

@@ -21667,3 +21667,8 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
   to { transform: translateX(40px) rotate(360deg); }
 }
 
+
+/* --- FIX STICKY RIGHT COLUMN --- */
+.tf-main-product > .container > .row { align-items: stretch !important; }
+.tf-product-info-wrap.sticky-top { position: sticky !important; top: 100px !important; z-index: 1020 !important; align-self: flex-start; height: max-content; }
+

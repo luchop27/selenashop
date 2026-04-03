@@ -292,7 +292,11 @@ def inicio(request):
             product_price = ''
             if producto:
                 product_title = getattr(producto, 'nombre', '')
-                product_url = f'/product/{getattr(producto, "id", "")}/'
+                from django.urls import reverse
+                try:
+                    product_url = reverse('productos:producto_detail', kwargs={'slug': getattr(producto, 'slug')})
+                except Exception:
+                    product_url = f'/producto/{getattr(producto, "slug", getattr(producto, "id", ""))}/'
                 first_img = producto.imagenes.first() if hasattr(producto, 'imagenes') else None
                 if first_img and getattr(first_img, 'imagen', None):
                     try:

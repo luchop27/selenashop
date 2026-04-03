@@ -267,3 +267,81 @@
         </div>
     </div>
     <!-- /modal quick_add -->
+    <!-- Filter -->
+    <div class="offcanvas offcanvas-start canvas-filter" id="filterShop">
+        <div class="canvas-wrapper">
+            <header class="canvas-header">
+                <div class="filter-icon">
+                    <span class="icon icon-filter"></span>
+                    <span>Filtrar</span>
+                </div>
+                <span class="icon-close icon-close-popup" data-bs-dismiss="offcanvas" aria-label="Close"></span>
+            </header>
+            <div class="canvas-body">
+                <div class="widget-facet wd-categories">
+                    <div class="facet-title" data-bs-target="#categories" data-bs-toggle="collapse" aria-expanded="true"
+                        aria-controls="categories">
+                        <span>Categorías</span>
+                        <span class="icon icon-arrow-up"></span>
+                    </div>
+                    <div id="categories" class="collapse show">
+                        <ul class="list-categoris current-scrollbar mb_36">
+                            {% for categoria in categorias_menu %}
+                                <li class="cate-item {% if request.GET.categoria == categoria.slug %}current{% endif %}">
+                                    <a href="{% url 'core:shop-collection-sub' %}?categoria={{ categoria.slug }}{% if coleccion_actual %}&coleccion={{ coleccion_actual.slug }}{% endif %}">
+                                        <span>{{ categoria.nombre }}</span>
+                                    </a>
+                                    
+                                    {% if categoria.subcategorias.exists %}
+                                        <ul class="sub-menu" style="padding-left: 20px; margin-top: 5px;">
+                                            {% for subcategoria in categoria.subcategorias.all %}
+                                                {% if subcategoria.estado %}
+                                                    <li class="cate-item {% if request.GET.categoria == subcategoria.slug %}current{% endif %}" style="font-size: 13px;">
+                                                        <a href="{% url 'core:shop-collection-sub' %}?categoria={{ subcategoria.slug }}{% if coleccion_actual %}&coleccion={{ coleccion_actual.slug }}{% endif %}">
+                                                            <span>→ {{ subcategoria.nombre }}</span>
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <form action="{% url 'core:shop-collection-sub' %}" method="get" id="facet-filter-form" class="facet-filter-form">
+    {% if categoria_actual %}
+        <input type="hidden" name="categoria" value="{{ categoria_actual.slug }}">
+    {% endif %}
+    {% if coleccion_actual %}
+        <input type="hidden" name="coleccion" value="{{ coleccion_actual.slug }}">
+    {% endif %}
+    <input type="hidden" name="precio_min" id="input-precio-min" value="{{ request.GET.precio_min|default:'' }}">
+    <input type="hidden" name="precio_max" id="input-precio-max" value="{{ request.GET.precio_max|default:'' }}">
+
+    <div class="widget-facet">
+        <div class="facet-title" data-bs-target="#price" data-bs-toggle="collapse" aria-expanded="true" aria-controls="price">
+            <span>Precio</span>
+            <span class="icon icon-arrow-up"></span>
+        </div>
+        <div id="price" class="collapse show">
+            <div class="widget-price filter-price">
+                <div class="price-val-range" id="price-value-range" data-min="0" data-max="500"></div>
+                <div class="box-title-price">
+                    <span class="title-price">Precio :</span>
+                    <div class="caption-price">
+                        <div class="price-val" id="price-min-value" data-currency="$"></div>
+                        <span>-</span>
+                        <div class="price-val" id="price-max-value" data-currency="$"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</form>     {# cierra form facet-filter-form #}
+            </div>      {# cierra canvas-body #}
+        </div>      {# cierra canvas-wrapper #}
+    </div>      {# cierra offcanvas filterShop #}
+

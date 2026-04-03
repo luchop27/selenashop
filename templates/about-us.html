@@ -1,86 +1,210 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
+
+<style>
+/* ------------------------------------- */
+/*  Section 1: About Boutique CSS        */
+/* ------------------------------------- */
+.boutique-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 520px;
+  border: 0.5px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  margin: 60px auto;
+  max-width: 1200px;
+}
+
+@media (max-width: 768px) {
+  .boutique-section {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+}
+
+.text-pane {
+  padding: 4rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(145deg, #ffffff, #faf9f6);
+}
+
+.timeline-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #8B7D5C;
+  transform-origin: top;
+  animation: drawLine 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.est-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2rem;
+  opacity: 0;
+  animation: fadeRight 0.8s ease forwards;
+  animation-delay: 0.3s;
+}
+
+.est-dot {
+  width: 6px;
+  height: 6px;
+  background: #8B7D5C;
+  border-radius: 50%;
+}
+
+.est-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #8B7D5C;
+  font-weight: 500;
+}
+
+.title-wrap {
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.title-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.2;
+  color: #222;
+  margin: 0;
+  transform: translateY(100%);
+  animation: revealUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation-delay: 0.5s;
+}
+
+.title-text span {
+  font-style: italic;
+  color: #8B7D5C;
+  font-weight: 400;
+}
+
+.desc-wrap {
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards;
+  animation-delay: 0.7s;
+}
+
+.desc-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #555;
+  margin-bottom: 1.5rem;
+}
+
+.highlight-text {
+  font-size: 16px;
+  color: #222;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-left: 2px solid #8B7D5C;
+  padding-left: 1rem;
+  margin: 2rem 0;
+}
+
+.image-pane {
+  position: relative;
+  overflow: hidden;
+}
+
+.reveal-wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.reveal-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reveal-overlay {
+  position: absolute;
+  inset: 0;
+  background: #8B7D5C;
+  transform-origin: left;
+  animation: slideOut 2s cubic-bezier(0.77, 0, 0.18, 1) forwards;
+}
+
+@keyframes drawLine {
+  0% { transform: scaleY(0); }
+  100% { transform: scaleY(1); }
+}
+
+@keyframes fadeRight {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes revealUp {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideOut {
+  0% { transform: scaleX(1); }
+  40%, 100% { transform: scaleX(0); transform-origin: right; }
+}
+</style>
+
+<div class="container" style="padding-top: 40px;">
+    <!-- SECTION 1: ABOUT US (Existing) -->
+    <section class="boutique-section">
+      <div class="text-pane">
+        <div class="timeline-line"></div>
         
-        <section class="flat-spacing-15">
-            <div class="container">
-                <div class="tf-grid-layout md-col-2 tf-img-with-text style-4">
-                    <div class="tf-content-wrap px-0 d-flex justify-content-center w-100">
-                        <div>
-                            <div class="heading" style="font-size: 2.5rem; color: #918567;">{{ about_us.mision_titulo }}</div>
-                            <div class="text"  style="font-size: 1rem; ">
-                                {{ about_us.mision_texto|linebreaks }}
-                            </div>
-                            <div style="margin-top: 20px;"> 
-                                <ul class="tf-social-icon d-flex gap-10">
-                                        <li><a href="https://www.facebook.com/selenamaite.ec/?ref=pl_edit_xav_ig_profile_page_web#" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-facebook social-line"><i
-                                                    class="icon fs-14 icon-fb"></i></a></li>
-                                        <li><a href="#" class="box-icon w_34 round social-twiter social-line"><i
-                                                    class="icon fs-12 icon-Icon-x"></i></a></li>
-                                        <li><a href="https://www.instagram.com/selenaonlineshop_ec?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="box-icon w_34 round social-instagram social-line"><i
-                                                    class="icon fs-14 icon-instagram"></i></a></li>
-                                        <li><a href="#" class="box-icon w_34 round social-tiktok social-line"><i
-                                                    class="icon fs-14 icon-tiktok"></i></a></li>
-                                        <li><a href="#" class="box-icon w_34 round social-pinterest social-line"><i
-                                                    class="icon fs-14 icon-pinterest-1"></i></a></li>
-                                </ul>
-                             </div>
-                        </div>
-                        
-                    </div>
-                    
-                    {% if imagenes_slider %}
-                    <div class="grid-img-group">
-                        {% for imagen in imagenes_slider %}
-                        <div class="tf-image-wrap box-img {% if forloop.counter == 1 %}item-1{% elif forloop.counter == 2 %}item-2{% else %}item-{% with counter=forloop.counter %}{{ counter }}{% endwith %}{% endif %}">
-                            <div class="img-style">
-                                <img class="lazyload" 
-                                     src="{{ imagen.src }}"
-                                     data-src="{{ imagen.src }}" 
-                                     alt="{{ imagen.titulo|default:'img-slider' }}"
-                                     loading="lazy">
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="grid-img-group">
-                        <div class="tf-image-wrap box-img item-1">
-                            <div class="img-style">
-                                <img class="lazyload" 
-                                     src="{% static 'images/collections/collection-71.jpg' %}"
-                                     data-src="{% static 'images/collections/collection-71.jpg' %}" 
-                                     alt="img-slider"
-                                     loading="lazy">
-                            </div>
-                        </div>
-                        <div class="tf-image-wrap box-img item-2">
-                            <div class="img-style">
-                                <img class="lazyload" 
-                                     src="{% static 'images/collections/collection-70.jpg' %}"
-                                     data-src="{% static 'images/collections/collection-70.jpg' %}" 
-                                     alt="img-slider"
-                                     loading="lazy">
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </section>
-        <!-- /image-text -->
-        
-        
-        <div class="container">
-            <div class="line"></div>
+    
+
+        <div class="title-wrap">
+          <h2 class="title-text">Selena <span>Boutique</span></h2>
         </div>
-        
-        <!-- Footer -->
-       
-        <!-- /Footer -->
 
-    </div>
+        <div class="desc-wrap">
+          <p class="desc-text">
+            Nacimos de la pasión por la moda elegante y accesible. Desde nuestros inicios 
+            en Machala, hemos buscado empoderar a cada mujer, ofreciendo prendas que 
+            combinan tendencias globales con un ajuste perfecto.
+          </p>
+          <div class="highlight-text">
+            "No solo vestimos cuerpos, abrazamos la confianza y el estilo único de cada mujer ecuatoriana."
+          </div>
+          <p class="desc-text">
+            Hoy en día, Selena Boutique es más que una tienda; es un espacio donde la 
+            calidad se encuentra con la exclusividad, cuidadosamente curada para ti.
+          </p>
+        </div>
 
-    <!-- Javascript -->
-    {% endblock %}
-</html>
+              </div>
+
+      <div class="image-pane">
+        <div class="reveal-wrap">
+          <img class="reveal-img" src="{% static 'images/Imagen_about/about.jpeg' %}" alt="Selena Boutique" />
+          <div class="reveal-overlay"></div>
+        </div>
+      </div>
+    </section>
+</div>
+
+{% endblock %}
