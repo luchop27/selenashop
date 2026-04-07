@@ -201,17 +201,18 @@
                                         </ul>
                                     {% endif %}
                                     <div class="list-product-btn">
-                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action" 
+                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}" 
                                             data-product-id="{{ producto.id }}"
-                                            {% if producto.in_wishlist %}data-wishlist-id="{{ producto.wishlist_item_id }}"{% endif %}>
+                                            data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
                                             <span class="icon icon-heart"></span>
-                                            <span class="tooltip">Add to Wishlist</span>
+                                            <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                             <span class="icon icon-delete"></span>
                                         </button>
-                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action d-md-none" 
-                                                data-product-id="{{ producto.id }}">
+                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action d-md-none {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}" 
+                                                data-product-id="{{ producto.id }}"
+                                                data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
                                             <span class="icon icon-heart"></span>
-                                            <span class="tooltip">Add to Wishlist</span>
+                                            <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                             <span class="icon icon-delete"></span>
                                         </button>
                                         <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
@@ -289,16 +290,18 @@
                                         {% endif %}
                                     </a>
                                     <div class="list-product-btn">
-                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action"
-                                                data-product-id="{{ producto.id }}">
+                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}"
+                                                data-product-id="{{ producto.id }}"
+                                                data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
                                             <span class="icon icon-heart"></span>
-                                            <span class="tooltip">Add to Wishlist</span>
+                                            <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                             <span class="icon icon-delete"></span>
                                         </button>
-                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action d-md-none"
-                                                data-product-id="{{ producto.id }}">
+                                        <button type="button" class="box-icon bg_white wishlist btn-icon-action d-md-none {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}"
+                                                data-product-id="{{ producto.id }}"
+                                                data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
                                             <span class="icon icon-heart"></span>
-                                            <span class="tooltip">Add to Wishlist</span>
+                                            <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                             <span class="icon icon-delete"></span>
                                         </button>
                                         <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"

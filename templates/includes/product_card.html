@@ -13,9 +13,11 @@
             {% endif %}
         </a>
         <div class="list-product-btn column-right"> 
-            <a href="#" class="box-icon wishlist bg_white round btn-icon-action"> 
+            <a href="#" class="box-icon wishlist bg_white round btn-icon-action {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}" 
+               data-product-id="{{ producto.id }}" 
+               data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}"> 
                 <span class="icon icon-heart"></span> 
-                <span class="tooltip">Add to Wishlist</span> 
+                <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span> 
                 <span class="icon icon-delete"></span> 
             </a> 
             <a href="#quick_view" data-bs-toggle="modal" class="box-icon quickview bg_white round tf-btn-loading btn-open-quickview d-md-none" 
