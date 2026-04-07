@@ -132,6 +132,61 @@
         .mega-menu .tf-product-header .card-product {
             padding: 10px;
         }
+
+        /* Ajustes puntuales para wishlist (sin tocar CSS externo) */
+        .count-wishlist {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .wishlist-toast-container {
+            position: fixed;
+            top: 86px;
+            right: 18px;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .wishlist-toast {
+            font-size: 12px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .wishlist-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .wishlist-toast.success,
+        .wishlist-toast.info {
+            background: #111;
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .wishlist-toast.remove {
+            background: #fff;
+            color: #111;
+            border-color: #ddd;
+        }
+
+        .wishlist-toast.error {
+            background: #b42318;
+            color: #fff;
+            border-color: #922018;
+        }
         
     </style>
     

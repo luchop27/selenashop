@@ -1625,10 +1625,21 @@ def producto_quick_view(request, producto_id):
         total_stock = producto.variantes.aggregate(
             total=Sum('stock')
         )['total'] or 0
+
+        # Estado del wishlist para el usuario actual (si está autenticado)
+        in_wishlist = False
+        wishlist_item_id = None
+        if request.user.is_authenticated:
+            from apps.usuarios.models import Wishlist
+            wishlist_item = Wishlist.objects.filter(usuario=request.user, producto=producto).first()
+            if wishlist_item:
+                in_wishlist = True
+                wishlist_item_id = wishlist_item.id
         
         data = {
             'id': producto.id,
             'nombre': producto.nombre,
+            'url': producto.get_absolute_url(),
             'precio': str(producto.precio_base),
             'descripcion_corta': producto.descripcion_corta or '',
             'descripcion_larga': producto.descripcion_larga or '',
@@ -1639,7 +1650,9 @@ def producto_quick_view(request, producto_id):
             'variantes_stock': variantes_stock,  # JSON para control de stock en JS
             'variante_default_id': variante_default_id,  # Para productos sin atributos
             'atributos': list(atributos_dict.values()),
-            'tiene_tallas': producto.tiene_tallas
+            'tiene_tallas': producto.tiene_tallas,
+            'in_wishlist': in_wishlist,
+            'wishlist_item_id': wishlist_item_id,
         }
         
         return JsonResponse(data)

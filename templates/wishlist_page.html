@@ -38,9 +38,9 @@
 
         <!-- Products Grid -->
         {% if productos %}
-        <div class="tf-list-layout wrapper-shop">
+        <div class="tf-grid-layout wrapper-shop tf-col-4">
             {% for producto in productos %}
-                <div class="card-product list-layout" data-availability="{{ producto.availability }}">
+            <div class="card-product grid" data-availability="{{ producto.availability }}">
                     <div class="card-product-wrapper">
                         <a href="{{ producto.get_absolute_url }}" class="product-img">
                             {% if producto.main_image_src %}

@@ -43,24 +43,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Si ya existia en wishlist, el backend responde in_wishlist=true.
                 if (data.success || data.in_wishlist) {
                     const alreadyInWishlist = !data.success && !!data.in_wishlist;
-
-                    button.classList.add('active');
-                    if (data.wishlist_id) {
-                        button.setAttribute('data-wishlist-id', data.wishlist_id);
-                    }
-
-                    const tooltip = button.querySelector('.tooltip');
-                    if (tooltip) {
-                        tooltip.textContent = 'Eliminar de Favoritos';
-                    }
+                    syncWishlistButtons(productId, true, data.wishlist_id || '');
 
                     if (!alreadyInWishlist) {
                         updateWishlistCount(1);
                     }
+
+                    showWishlistToast(
+                        data.message || (alreadyInWishlist ? 'El producto ya esta en favoritos' : 'Producto agregado a favoritos'),
+                        alreadyInWishlist ? 'info' : 'success'
+                    );
+                    return;
                 }
+
+                showWishlistToast(data.message || 'No se pudo agregar a favoritos', 'error');
             })
             .catch(error => {
                 console.error('Error al agregar a favoritos:', error);
+                showWishlistToast('No se pudo agregar a favoritos', 'error');
             });
     }
 
@@ -79,15 +79,12 @@ document.addEventListener('DOMContentLoaded', function() {
         })
             .then(response => response.json())
             .then(data => {
-                if (!data.success) return;
-
-                button.classList.remove('active');
-                button.setAttribute('data-wishlist-id', '');
-
-                const tooltip = button.querySelector('.tooltip');
-                if (tooltip) {
-                    tooltip.textContent = 'Agregar a Favoritos';
+                if (!data.success) {
+                    showWishlistToast(data.message || 'No se pudo quitar de favoritos', 'error');
+                    return;
                 }
+
+                syncWishlistButtons(productId, false, '');
 
                 const isWishlistPage = window.location.pathname.includes('/wishlist');
                 if (isWishlistPage) {
@@ -105,9 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 updateWishlistCount(-1);
+                showWishlistToast(data.message || 'Producto removido de favoritos', 'remove');
             })
             .catch(error => {
                 console.error('Error al remover de favoritos:', error);
+                showWishlistToast('No se pudo quitar de favoritos', 'error');
             });
     }
 
@@ -121,6 +120,49 @@ document.addEventListener('DOMContentLoaded', function() {
             counter.textContent = String(next);
             counter.style.display = next > 0 ? 'inline-flex' : 'none';
         });
+    }
+
+    function syncWishlistButtons(productId, inWishlist, wishlistId) {
+        if (!productId) return;
+
+        const buttons = document.querySelectorAll(`${wishlistSelector}[data-product-id="${productId}"]`);
+        buttons.forEach(btn => {
+            btn.classList.toggle('active', !!inWishlist);
+            btn.setAttribute('data-wishlist-id', inWishlist ? (wishlistId || '') : '');
+
+            const tooltip = btn.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.textContent = inWishlist ? 'Eliminar de Favoritos' : 'Agregar a Favoritos';
+            }
+        });
+    }
+
+    function showWishlistToast(message, tone) {
+        if (!message) return;
+
+        let container = document.getElementById('wishlist-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'wishlist-toast-container';
+            container.className = 'wishlist-toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `wishlist-toast ${tone || 'info'}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 220);
+        }, 2200);
     }
 
     function getCookie(name) {

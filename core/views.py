@@ -61,9 +61,18 @@ def inicio(request):
         .annotate(precio_minimo=Min('variantes__precio'))
         .order_by('-created_at')[:12]  # Ãšltimos 12 productos
     )
+
+    wishlist_map = {}
+    if request.user.is_authenticated:
+        from apps.usuarios.models import Wishlist
+        wishlist_items = Wishlist.objects.filter(usuario=request.user).values('id', 'producto_id')
+        wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
     
     # Preparar datos auxiliares para cada producto (igual que en shop_collection_sub)
     for producto in productos_destacados:
+        producto.wishlist_item_id = wishlist_map.get(producto.id)
+        producto.in_wishlist = producto.id in wishlist_map
+
         # Precio a mostrar
         if producto.precio_minimo:
             producto.display_price = f"{producto.precio_minimo:.2f}"
@@ -162,6 +171,9 @@ def inicio(request):
     productos_nuevos = list(productos_nuevos_qs)
     # Preparar campos auxiliares para la plantilla (mismo esquema que productos_destacados)
     for producto in productos_nuevos:
+        producto.wishlist_item_id = wishlist_map.get(producto.id)
+        producto.in_wishlist = producto.id in wishlist_map
+
         if getattr(producto, 'precio_minimo', None):
             producto.display_price = f"{producto.precio_minimo:.2f}"
         else:
@@ -1231,8 +1243,20 @@ def api_productos_nuevos(request):
 
     productos_slice = list(qs[offset:offset + limit])
 
+    wishlist_map = {}
+    if request.user.is_authenticated and productos_slice:
+        from apps.usuarios.models import Wishlist
+        wishlist_items = Wishlist.objects.filter(
+            usuario=request.user,
+            producto_id__in=[p.id for p in productos_slice]
+        ).values('id', 'producto_id')
+        wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
+
     # Preparar campos auxiliares (misma lÃ³gica que en inicio)
     for producto in productos_slice:
+        producto.wishlist_item_id = wishlist_map.get(producto.id)
+        producto.in_wishlist = producto.id in wishlist_map
+
         if getattr(producto, 'precio_minimo', None):
             producto.display_price = f"{producto.precio_minimo:.2f}"
         else:
