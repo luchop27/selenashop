@@ -164,6 +164,19 @@
     animation: quickviewShake 0.28s ease-in-out 2;
 }
 
+/* Force Quick View above sticky header/dropdowns */
+#quick_view.modal,
+#quick_view.modal.show,
+.popup-quickview.modal,
+.popup-quickview.modal.show {
+    z-index: 2030 !important;
+}
+
+.modal-backdrop,
+.modal-backdrop.show {
+    z-index: 1900 !important;
+}
+
 @keyframes quickviewShake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-2px); }

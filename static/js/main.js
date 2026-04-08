@@ -486,12 +486,6 @@
     //   $("#shoppingCart").modal("show");
     // });
 
-    $(".btn-add-note").click(function () {
-      $(".add-note").addClass("open");
-    });
-    $(".btn-add-gift").click(function () {
-      $(".add-gift").addClass("open");
-    });
     $(".btn-estimate-shipping").click(function () {
       $(".estimate-shipping").addClass("open");
     });

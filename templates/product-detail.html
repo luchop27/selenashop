@@ -385,9 +385,6 @@ html, body {
                                     <span class="inner">Descripción</span>
                                 </li>
                                 <li class="item-title">
-                                    <span class="inner">Información Adicional</span>
-                                </li>
-                                <li class="item-title">
                                     <span class="inner">Reseñas</span>
                                 </li>
                                 <li class="item-title">
@@ -422,78 +419,10 @@ html, body {
                                                     {{ global_content.features_content|safe }}
                                                 </ul>
                                                 {% endif %}
-                                                
-                                                {% if global_content.materials_content %}
-                                                <h3 class="fs-16 fw-5">Cuidado de Materiales</h3>
-                                                <ul class="mb-0">
-                                                    {{ global_content.materials_content|safe }}
-                                                </ul>
-                                                {% endif %}
-                                            </div>
-                                            <div class="left">
-                                                <h3 class="fs-16 fw-5">Cuidado de Materiales</h3>
-                                                {% if global_content.care_text_1 %}
-                                                <div class="d-flex gap-10 mb_15 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_1 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_1 }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% if global_content.care_text_2 %}
-                                                <div class="d-flex gap-10 mb_15 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_2 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_2 }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% if global_content.care_text_3 %}
-                                                <div class="d-flex gap-10 mb_15 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_3 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_3 }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% if global_content.care_text_4 %}
-                                                <div class="d-flex gap-10 mb_15 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_4 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_4 }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% if global_content.care_text_5 %}
-                                                <div class="d-flex gap-10 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_5 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_5 }}</span>
-                                                </div>
-                                                {% endif %}
                                             </div>
                                         </div>
                                         {% endif %}
                                     </div>
-                                </div>
-                                <div class="widget-content-inner">
-                                    <table class="tf-pr-attrs">
-                                        <tbody>
-                                            <tr class="tf-attr-pa-color">
-                                                <th class="tf-attr-label">Color</th>
-                                                <td class="tf-attr-value">
-                                                    <p>White, Pink, Black</p>
-                                                </td>
-                                            </tr>
-                                            <tr class="tf-attr-pa-size">
-                                                <th class="tf-attr-label">Size</th>
-                                                <td class="tf-attr-value">
-                                                    <p>S, M, L, XL</p>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
                                 </div>
                                 <div class="widget-content-inner">
                                     <div class="tab-reviews write-cancel-review-wrap">
@@ -508,7 +437,7 @@ html, body {
                                                         <i class="icon icon-star" style="color: #ddd;"></i>
                                                         <i class="icon icon-star" style="color: #ddd;"></i>
                                                     </div>
-                                                    <p id="totalRatingsText">(0 Ratings)</p>
+                                                    <p id="totalRatingsText">(0 valoraciones)</p>
                                                 </div>
                                                 <div class="rating-score">
                                                     <div class="item" data-rating="5">
@@ -585,11 +514,11 @@ html, body {
                                             <div class="heading">
                                                 <h5>Escribe una reseña:</h5>
                                                 <div class="list-rating-check">
-                                                    <span class="rating-star" data-rating="5">?</span>
-                                                    <span class="rating-star" data-rating="4">?</span>
-                                                    <span class="rating-star" data-rating="3">?</span>
-                                                    <span class="rating-star" data-rating="2">?</span>
-                                                    <span class="rating-star" data-rating="1">?</span>
+                                                    <span class="rating-star" data-rating="1" role="button" tabindex="0" aria-label="1 estrella">&#9734;</span>
+                                                    <span class="rating-star" data-rating="2" role="button" tabindex="0" aria-label="2 estrellas">&#9734;</span>
+                                                    <span class="rating-star" data-rating="3" role="button" tabindex="0" aria-label="3 estrellas">&#9734;</span>
+                                                    <span class="rating-star" data-rating="4" role="button" tabindex="0" aria-label="4 estrellas">&#9734;</span>
+                                                    <span class="rating-star" data-rating="5" role="button" tabindex="0" aria-label="5 estrellas">&#9734;</span>
                                                 </div>
                                                 <input type="hidden" id="reviewRating" name="rating" value="0" required>
                                             </div>
@@ -726,11 +655,11 @@ html, body {
     <section class="flat-spacing-6 pt_0">
         <div class="container">
             <div class="flat-title wow fadeInUp" data-wow-delay="0s">
-                <span class="title">People Also Bought</span>
+                <span class="title">Personas también compraron</span>
                 <div class="d-flex gap-16 align-items-center box-pagi-arr">
                     <div class="nav-sw-arrow nav-next-slider nav-next-product"><span
                             class="icon icon-arrow1-left"></span></div>
-                    <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-line fs-12 fw-6">VIEW ALL</a>
+                    <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-line fs-12 fw-6">VER TODO</a>
                     <div class="nav-sw-arrow nav-prev-slider nav-prev-product"><span
                             class="icon icon-arrow1-right"></span></div>
                 </div>
@@ -767,37 +696,20 @@ html, body {
                                             </a>
                                             
                                             <div class="list-product-btn gap-0">
-                                                <!-- Quick Add -->
-                                                <a href="#quick_add" data-bs-toggle="modal"
-                                                    class="box-icon bg_white quick-add tf-btn-loading shadow-none">
-                                                    <span class="icon icon-bag"></span>
-                                                    <span class="tooltip">Quick Add</span>
-                                                </a>
-                                                
-                                                <!-- Wishlist -->
                                                 <button type="button" 
-                                                    class="box-icon bg_white wishlist btn-icon-action shadow-none" 
+                                                    class="box-icon bg_white wishlist btn-icon-action shadow-none{% if producto.in_wishlist %} active{% endif %}" 
                                                     data-product-id="{{ producto.id }}"
-                                                    {% if producto.in_wishlist %}data-wishlist-id="{{ producto.wishlist_item_id }}"{% endif %}>
+                                                    data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
                                                     <span class="icon icon-heart"></span>
-                                                    <span class="tooltip">{% if producto.in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}</span>
+                                                    <span class="tooltip">{% if producto.in_wishlist %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                                     <span class="icon icon-delete"></span>
                                                 </button>
-                                                
-                                                <!-- Compare -->
-                                                <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                                    class="box-icon bg_white compare btn-icon-action shadow-none">
-                                                    <span class="icon icon-compare"></span>
-                                                    <span class="tooltip">Add to Compare</span>
-                                                    <span class="icon icon-check"></span>
-                                                </a>
-                                                
-                                                <!-- Quick View -->
+
                                                 <a href="#quick_view" data-bs-toggle="modal"
                                                     class="box-icon bg_white quickview btn-open-quickview tf-btn-loading shadow-none"
                                                     data-producto-id="{{ producto.id }}">
                                                     <span class="icon icon-view"></span>
-                                                    <span class="tooltip">Quick View</span>
+                                                    <span class="tooltip">Vista rápida</span>
                                                 </a>
                                             </div>
                                             
@@ -859,7 +771,7 @@ html, body {
         <section class="flat-spacing-4 pt_0">
             <div class="container">
                 <div class="flat-title">
-                    <span class="title">Recently Viewed</span>
+                    <span class="title">Vistos recientemente</span>
                 </div>
                 <div class="hover-sw-nav hover-sw-2">
                     <div dir="ltr" class="swiper tf-sw-recent wrap-sw-over" data-preview="4" data-tablet="3"
@@ -888,22 +800,13 @@ html, body {
                                                 {% endif %}
                                             </a>
                                             <div class="list-product-btn">
-                                                <a href="#quick_add" data-bs-toggle="modal"
-                                                    class="box-icon bg_white quick-add tf-btn-loading">
-                                                    <span class="icon icon-bag"></span>
-                                                    <span class="tooltip">Quick Add</span>
-                                                </a>
                                                 <a href="javascript:void(0);"
-                                                    class="box-icon bg_white wishlist btn-icon-action">
+                                                    class="box-icon bg_white wishlist btn-icon-action{% if producto.in_wishlist %} active{% endif %}"
+                                                    data-product-id="{{ producto.id }}"
+                                                    data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
                                                     <span class="icon icon-heart"></span>
-                                                    <span class="tooltip">Add to Wishlist</span>
+                                                    <span class="tooltip">{% if producto.in_wishlist %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                                     <span class="icon icon-delete"></span>
-                                                </a>
-                                                <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                                    class="box-icon bg_white compare btn-icon-action">
-                                                    <span class="icon icon-compare"></span>
-                                                    <span class="tooltip">Add to Compare</span>
-                                                    <span class="icon icon-check"></span>
                                                 </a>
                                                 <a href="#quick_view" data-bs-toggle="modal"
                                                     class="box-icon bg_white quickview tf-btn-loading"
@@ -917,7 +820,7 @@ html, body {
                                                     data-product-colors="{% for c in producto.colors %}{{ c.valor }}{% if not forloop.last %},{% endif %}{% endfor %}"
                                                     data-product-sizes="{{ producto.sizes|join:',' }}">
                                                     <span class="icon icon-view"></span>
-                                                    <span class="tooltip">Quick View</span>
+                                                    <span class="tooltip">Vista rápida</span>
                                                 </a>
                                             </div>
                                             {% if producto.sizes %}

@@ -3,6 +3,11 @@
  * Permite agregar/remover productos del wishlist del usuario
  */
 
+if (window.__wishlistScriptInitialized) {
+    console.warn('Wishlist ya inicializado, se evita doble binding de eventos.');
+} else {
+    window.__wishlistScriptInitialized = true;
+
 document.addEventListener('DOMContentLoaded', function() {
     const wishlistSelector = '.wishlist.btn-icon-action';
     const wishlistButtons = document.querySelectorAll('.wishlist.btn-icon-action');
@@ -17,6 +22,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         e.preventDefault();
 
+        if (button.dataset.wishlistBusy === '1') {
+            return;
+        }
+
         const productId = button.getAttribute('data-product-id');
         const wishlistId = button.getAttribute('data-wishlist-id');
         const hasValidWishlistId = !!wishlistId && wishlistId !== 'None' && wishlistId !== '';
@@ -30,7 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function addToWishlist(productId, button) {
-        fetch('/api/wishlist/add/', {
+        setWishlistBusy(button, true);
+
+        fetch('/api/favoritos/agregar/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -61,13 +72,17 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error al agregar a favoritos:', error);
                 showWishlistToast('No se pudo agregar a favoritos', 'error');
+            })
+            .finally(() => {
+                setWishlistBusy(button, false);
             });
     }
 
     function removeFromWishlist(productId, wishlistId, button) {
         const hasValidWishlistId = !!wishlistId && wishlistId !== 'None' && wishlistId !== '';
+        setWishlistBusy(button, true);
 
-        fetch('/api/wishlist/remove/', {
+        fetch('/api/favoritos/eliminar/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -86,19 +101,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 syncWishlistButtons(productId, false, '');
 
-                const isWishlistPage = window.location.pathname.includes('/wishlist');
+                const isWishlistPage = window.location.pathname.includes('/wishlist') || window.location.pathname.includes('/favoritos');
                 if (isWishlistPage) {
                     const productCard = button.closest('.card-product');
                     if (productCard) {
-                        productCard.style.transition = 'opacity 0.3s ease';
+                        productCard.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
                         productCard.style.opacity = '0';
+                        productCard.style.transform = 'scale(0.98)';
                         setTimeout(() => {
                             productCard.remove();
-                            if (document.querySelectorAll('.card-product').length === 0) {
-                                window.location.reload();
-                            }
-                        }, 300);
+                        }, 250);
                     }
+                    updateWishlistResultsCounter(-1);
                 }
 
                 updateWishlistCount(-1);
@@ -107,7 +121,68 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error al remover de favoritos:', error);
                 showWishlistToast('No se pudo quitar de favoritos', 'error');
+            })
+            .finally(() => {
+                setWishlistBusy(button, false);
             });
+    }
+
+    function setWishlistBusy(button, busy) {
+        if (!button) return;
+        button.dataset.wishlistBusy = busy ? '1' : '0';
+        button.style.pointerEvents = busy ? 'none' : 'auto';
+    }
+
+    function updateWishlistResultsCounter(delta) {
+        const counterEl = document.getElementById('wishlist-results-count');
+        if (!counterEl) return;
+
+        const currentFromData = parseInt(counterEl.dataset.count || '', 10);
+        const currentFromTextMatch = (counterEl.textContent || '').match(/\d+/);
+        const currentFromText = currentFromTextMatch ? parseInt(currentFromTextMatch[0], 10) : 0;
+        const current = Number.isNaN(currentFromData) ? currentFromText : currentFromData;
+
+        const next = Math.max((current || 0) + delta, 0);
+        counterEl.dataset.count = String(next);
+        counterEl.textContent = `Mostrando ${next} resultado${next === 1 ? '' : 's'}`;
+
+        const pageSummary = document.querySelector('.tf-page-title .text-2');
+        if (pageSummary) {
+            pageSummary.textContent = next > 0
+                ? `Tienes ${next} producto${next === 1 ? '' : 's'} en tu lista de favoritos`
+                : 'Tu lista de favoritos está vacía';
+        }
+
+        if (next !== 0) return;
+
+        const grid = document.querySelector('.wrapper-shop');
+        if (grid) {
+            grid.remove();
+        }
+
+        if (document.getElementById('wishlist-empty-dynamic')) {
+            return;
+        }
+
+        const sectionContainer = document.querySelector('section.flat-spacing-2 .container');
+        if (!sectionContainer) return;
+
+        const continueShoppingLink = document.querySelector('.tf-control-filter a');
+        const shopUrl = continueShoppingLink ? continueShoppingLink.getAttribute('href') : '/collections/';
+
+        const emptyState = document.createElement('div');
+        emptyState.id = 'wishlist-empty-dynamic';
+        emptyState.className = 'text-center py-5';
+        emptyState.innerHTML = `
+            <h4 class="fw-5 mb-3">Tu lista de favoritos está vacía</h4>
+            <p class="text-secondary mb-4">Agrega productos a tu lista de favoritos haciendo clic en el icono del corazón</p>
+            <a href="${shopUrl}" class="tf-btn btn-fill">
+                <span>Explorar productos</span>
+                <i class="icon icon-arrow-right"></i>
+            </a>
+        `;
+
+        sectionContainer.appendChild(emptyState);
     }
 
     function updateWishlistCount(delta) {
@@ -148,6 +223,14 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.appendChild(container);
         }
 
+        // Fijar siempre notificaciones en esquina inferior derecha.
+        container.style.position = 'fixed';
+        container.style.top = 'auto';
+        container.style.left = 'auto';
+        container.style.right = '20px';
+        container.style.bottom = '20px';
+        container.style.zIndex = '1200';
+
         const toast = document.createElement('div');
         toast.className = `wishlist-toast ${tone || 'info'}`;
         toast.textContent = message;
@@ -180,3 +263,5 @@ document.addEventListener('DOMContentLoaded', function() {
         return cookieValue;
     }
 });
+
+}

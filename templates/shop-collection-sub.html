@@ -7,7 +7,9 @@
     <div class="tf-page-title">
             <div class="container-full" >
                 <div class="heading text-center"  style="color: #918567;">
-                    {% if categoria_actual %}
+                    {% if titulo_filtro_categoria %}
+                        {{ titulo_filtro_categoria }}
+                    {% elif categoria_actual %}
                         {{ categoria_actual.nombre }}
                     {% elif coleccion_actual %}
                         {{ coleccion_actual.nombre }}
@@ -38,15 +40,15 @@
                             <div class="swiper-slide" lazy="true">
                                 <div class="collection-item style-2 hover-img">
                                     <div class="collection-inner">
-                                        <a href="{% url 'core:shop-collection-sub' %}?categoria={{ categoria.slug }}{% if coleccion_actual %}&coleccion={{ coleccion_actual.slug }}{% endif %}" class="collection-image img-style" style="min-height: 320px; display: block; border-radius: 10px;">
+                                        <a href="{% url 'core:shop-collection-sub' %}?categoria={{ categoria.slug }}{% if coleccion_actual %}&coleccion={{ coleccion_actual.slug }}{% endif %}" class="collection-image img-style" style="min-height: 320px; display: block;">
                                             {% if categoria.imagen %}
                                                 <img class="lazyload" data-src="{{ categoria.imagen.url }}"
                                                     src="{{ categoria.imagen.url }}" alt="{{ categoria.nombre }}" 
-                                                    style="width: 100%; object-fit: cover; display: block; border-radius: 10px;">
+                                                    style="width: 100%; object-fit: cover; display: block;">
                                             {% else %}
                                                 <img class="lazyload" data-src="{% static 'images/collections/collection-14.jpg' %}"
                                                     src="{% static 'images/collections/collection-14.jpg' %}" alt="{{ categoria.nombre }}"
-                                                    style="width: 100%; object-fit: cover; display: block; border-radius: 10px;">
+                                                    style="width: 100%; object-fit: cover; display: block;">
                                             {% endif %}
                                         </a>
                                         <div class="collection-content">
@@ -64,10 +66,10 @@
                             <div class="swiper-slide" lazy="true">
                                 <div class="collection-item style-2 hover-img">
                                     <div class="collection-inner">
-                                        <a href="{% url 'core:shop-collection-sub' %}" class="collection-image img-style" style="min-height: 320px; display: block; border-radius: 10px;">
+                                        <a href="{% url 'core:shop-collection-sub' %}" class="collection-image img-style" style="min-height: 320px; display: block;">
                                             <img class="lazyload" data-src="{% static 'images/collections/collection-14.jpg' %}"
                                                 src="{% static 'images/collections/collection-14.jpg' %}" alt="collection-img"
-                                                style="width: 100%; object-fit: cover; display: block; border-radius: 10px;">
+                                                style="width: 100%; object-fit: cover; display: block;">
                                         </a>
                                         <div class="collection-content">
                                             <a href="{% url 'core:shop-collection-sub' %}"

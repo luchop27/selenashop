@@ -14,19 +14,140 @@ from apps.productos.models import Producto
 from .decorators import admin_required, superuser_required
 
 
+def _get_testimonials_data():
+    """Carga reseñas para componentes tipo "Clientes Felices"."""
+    testimonials = []
+
+    try:
+        from apps.resenas.models import Resena
+
+        qs_resenas = list(
+            Resena.objects
+            .filter(verificado=True)
+            .select_related('usuario', 'producto')
+            .order_by('-creado_en')[:5]
+        )
+
+        if not qs_resenas:
+            qs_resenas = list(
+                Resena.objects
+                .all()
+                .select_related('usuario', 'producto')
+                .order_by('-creado_en')[:5]
+            )
+
+        for r in qs_resenas:
+            usuario = getattr(r, 'usuario', None)
+            if usuario:
+                nombre = ''
+                try:
+                    nombre = usuario.get_full_name() if callable(getattr(usuario, 'get_full_name', None)) else ''
+                except Exception:
+                    nombre = ''
+                if not nombre:
+                    nombre = getattr(usuario, 'nombre', '') or getattr(usuario, 'username', '') or getattr(usuario, 'email', '') or 'Cliente'
+            else:
+                nombre = 'Cliente'
+
+            producto = getattr(r, 'producto', None)
+            product_image = ''
+            product_title = ''
+            product_url = '#'
+            product_price = ''
+
+            if producto:
+                product_title = getattr(producto, 'nombre', '')
+                try:
+                    product_url = producto.get_absolute_url()
+                except Exception:
+                    product_url = '#'
+
+                first_img = producto.imagenes.first() if hasattr(producto, 'imagenes') else None
+                if first_img and getattr(first_img, 'imagen', None):
+                    try:
+                        product_image = first_img.imagen.url
+                    except Exception:
+                        product_image = ''
+
+                try:
+                    product_price = str(getattr(producto, 'precio_base', '') or '')
+                except Exception:
+                    product_price = ''
+
+            time_ago = r.get_tiempo_transcurrido() if hasattr(r, 'get_tiempo_transcurrido') else getattr(r, 'creado_en', '')
+
+            testimonials.append({
+                'rating': getattr(r, 'calificacion', 5) or 5,
+                'heading': getattr(r, 'titulo', '') or '',
+                'text': getattr(r, 'comentario', '') or '',
+                'author_name': nombre,
+                'metas': getattr(r, 'metas', '') or time_ago,
+                'product_image': product_image,
+                'product_title': product_title,
+                'product_url': product_url,
+                'product_price': product_price,
+            })
+    except Exception:
+        testimonials = []
+
+    if not testimonials:
+        testimonials = [
+            {
+                'rating': 5,
+                'heading': 'Excelente servicio',
+                'text': 'Me encantó la calidad del producto y la rapidez en el envío.',
+                'author_name': 'María López',
+                'metas': 'Cliente de España',
+                'product_image': '/static/images/shop/products/img-p2.png',
+                'product_title': 'Jersey thong body',
+                'product_url': '#',
+                'product_price': '105.95',
+            },
+            {
+                'rating': 5,
+                'heading': 'Muy buena calidad',
+                'text': 'La tela es suave y el tallaje es perfecto. Volveré a comprar.',
+                'author_name': 'Carlos Ruiz',
+                'metas': 'Cliente de México',
+                'product_image': '/static/images/shop/products/img-p3.png',
+                'product_title': 'Cotton jersey top',
+                'product_url': '#',
+                'product_price': '7.95',
+            },
+            {
+                'rating': 5,
+                'heading': 'Recomiendo 100%',
+                'text': 'Muy buena atención al cliente y producto tal como se describe.',
+                'author_name': 'Ana Gómez',
+                'metas': 'Cliente de USA',
+                'product_image': '/static/images/shop/products/img-p4.png',
+                'product_title': 'Ribbed modal T-shirt',
+                'product_url': '#',
+                'product_price': '18.95',
+            },
+        ]
+
+    return testimonials
+
+
 def inicio(request):
     """Renderiza la plantilla home-05.html (nuevo index)"""
     from apps.productos.models import Coleccion, Categoria, Producto
     from django.db.models import Count, Min
     
-    # Obtener colecciones activas para el slider superior (excluyendo "bÃ¡sica")
+    # Obtener colecciones activas para el slider superior (excluyendo coleccion basica)
     from django.db.models import Q
     colecciones = (
         Coleccion.objects
         .filter(activo=True)
-        .exclude(Q(nombre__iexact='basica') | Q(nombre__iexact='bÃ¡sica'))  # Excluir colecciÃ³n bÃ¡sica (con o sin tilde)
+        .exclude(
+            Q(slug__iexact='basica') |
+            Q(slug__iexact='coleccion-basica') |
+            Q(nombre__iexact='basica') |
+            Q(nombre__iexact='coleccion basica')
+        )
         .annotate(num_productos=Count('productos'))
-        .order_by('-destacada', '-created_at')[:5]  # MÃ¡ximo 5 para el slider
+        .order_by('-destacada', '-created_at')[:5]  # Maximo 5 para el slider
     )
     
     # Obtener subcategorÃ­as de "Ropa" para la secciÃ³n Featured Collections
@@ -263,123 +384,7 @@ def inicio(request):
         p.short_description = p.descripcion_corta or (p.descripcion_larga[:150] if p.descripcion_larga else '')
 
     context['shop_gram_products'] = shop_gram_products
-    # --- Testimonial / ReseÃ±as: traer reseÃ±as verificadas recientes ---
-    try:
-        from apps.resenas.models import Resena
-
-        # Intentar reseÃ±as verificadas; si no hay, traer cualquier reseÃ±a reciente
-        qs_resenas = list(
-            Resena.objects
-            .filter(verificado=True)
-            .select_related('usuario', 'producto')
-            .order_by('-creado_en')[:5]
-        )
-
-        if not qs_resenas:
-            qs_resenas = list(
-                Resena.objects
-                .all()
-                .select_related('usuario', 'producto')
-                .order_by('-creado_en')[:5]
-            )
-
-        testimonials = []
-        for r in qs_resenas:
-            usuario = getattr(r, 'usuario', None)
-            if usuario:
-                nombre = ''
-                try:
-                    nombre = usuario.get_full_name() if callable(getattr(usuario, 'get_full_name', None)) else ''
-                except Exception:
-                    nombre = ''
-                if not nombre:
-                    nombre = getattr(usuario, 'nombre', '') or getattr(usuario, 'username', '') or getattr(usuario, 'email', '') or 'Cliente'
-            else:
-                nombre = 'Cliente'
-
-            producto = getattr(r, 'producto', None)
-            product_image = ''
-            product_title = ''
-            product_url = '#'
-            product_price = ''
-            if producto:
-                product_title = getattr(producto, 'nombre', '')
-                from django.urls import reverse
-                try:
-                    product_url = reverse('productos:producto_detail', kwargs={'slug': getattr(producto, 'slug')})
-                except Exception:
-                    product_url = f'/producto/{getattr(producto, "slug", getattr(producto, "id", ""))}/'
-                first_img = producto.imagenes.first() if hasattr(producto, 'imagenes') else None
-                if first_img and getattr(first_img, 'imagen', None):
-                    try:
-                        product_image = first_img.imagen.url
-                    except Exception:
-                        product_image = ''
-                try:
-                    precio_min = getattr(producto, 'precio_minimo', None)
-                    if precio_min:
-                        product_price = f"{precio_min:.2f}"
-                    else:
-                        product_price = str(getattr(producto, 'precio_base', ''))
-                except Exception:
-                    product_price = str(getattr(producto, 'precio_base', ''))
-
-            time_ago = r.get_tiempo_transcurrido() if hasattr(r, 'get_tiempo_transcurrido') else getattr(r, 'creado_en', '')
-
-            testimonials.append({
-                'rating': getattr(r, 'calificacion', 5) or 5,
-                'heading': getattr(r, 'titulo', '') or '',
-                'text': getattr(r, 'comentario', '') or '',
-                'author_name': nombre,
-                'metas': getattr(r, 'metas', '') or time_ago,
-                'product_image': product_image,
-                'product_title': product_title,
-                'product_url': product_url,
-                'product_price': product_price,
-            })
-
-    except Exception:
-        testimonials = []
-
-    # Si no hay reseÃ±as en la BD, usar un fallback de ejemplo para evitar el mensaje "No reviews yet".
-    if not testimonials:
-        testimonials = [
-            {
-                'rating': 5,
-                'heading': 'Excelente servicio',
-                'text': 'Me encantÃ³ la calidad del producto y la rapidez en el envÃ­o.',
-                'author_name': 'MarÃ­a LÃ³pez',
-                'metas': 'Cliente de EspaÃ±a',
-                'product_image': '/static/images/shop/products/img-p2.png',
-                'product_title': 'Jersey thong body',
-                'product_url': '#',
-                'product_price': '105.95',
-            },
-            {
-                'rating': 5,
-                'heading': 'Muy buena calidad',
-                'text': 'La tela es suave y el tallaje es perfecto. VolverÃ© a comprar.',
-                'author_name': 'Carlos Ruiz',
-                'metas': 'Cliente de MÃ©xico',
-                'product_image': '/static/images/shop/products/img-p3.png',
-                'product_title': 'Cotton jersey top',
-                'product_url': '#',
-                'product_price': '7.95',
-            },
-            {
-                'rating': 5,
-                'heading': 'Recomiendo 100%',
-                'text': 'Muy buena atenciÃ³n al cliente y producto tal como se describe.',
-                'author_name': 'Ana GÃ³mez',
-                'metas': 'Cliente de USA',
-                'product_image': '/static/images/shop/products/img-p4.png',
-                'product_title': 'Ribbed modal T-shirt',
-                'product_url': '#',
-                'product_price': '18.95',
-            },
-        ]
-
-    context['testimonials'] = testimonials
+    context['testimonials'] = _get_testimonials_data()
     return render(request, 'home-05.html', context)
 
 
@@ -454,6 +459,7 @@ def shop_collection_sub(request):
     categoria_actual = None
     coleccion_actual = None
     categorias_a_mostrar = []
+    titulo_filtro_categoria = None
 
     qs = (
         Producto.objects
@@ -480,13 +486,24 @@ def shop_collection_sub(request):
     # Filtrar por categorÃ­a si se especifica
     if categoria_param:
         # aceptar id numÃ©rico o slug
-        try:
-            cid = int(categoria_param)
-            categoria_actual = Categoria.objects.filter(id=cid, estado=True).first()
-            qs = qs.filter(categoria_id=cid)
-        except Exception:
+        if str(categoria_param).isdigit():
+            categoria_actual = Categoria.objects.filter(id=int(categoria_param), estado=True).first()
+        else:
             categoria_actual = Categoria.objects.filter(slug=categoria_param, estado=True).first()
-            qs = qs.filter(categoria__slug=categoria_param)
+
+        if categoria_actual:
+            categoria_ids = [categoria_actual.id]
+
+            # Si es una categorÃ­a raÃ­z (ej: ropa), incluir tambiÃ©n sus subcategorÃ­as activas.
+            if categoria_actual.padre_id is None:
+                categoria_ids.extend(
+                    Categoria.objects.filter(padre=categoria_actual, estado=True).values_list('id', flat=True)
+                )
+
+            qs = qs.filter(categoria_id__in=categoria_ids)
+
+            if categoria_actual.padre_id is None and categoria_actual.slug == 'ropa':
+                titulo_filtro_categoria = 'Toda la Ropa'
     
     # Determinar quÃ© categorÃ­as mostrar en el slider
     if categoria_actual:
@@ -638,6 +655,7 @@ def shop_collection_sub(request):
         'categoria_actual': categoria_actual,
         'coleccion_actual': coleccion_actual,
         'categorias_a_mostrar': categorias_a_mostrar,
+        'titulo_filtro_categoria': titulo_filtro_categoria,
     })
 
 
@@ -761,7 +779,10 @@ def product_detail(request, slug=None):
                 prod.main_image_src = None
                 prod.hover_image_src = None
             
-            prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
+            if getattr(prod, 'precio_minimo', None):
+                prod.display_price = f"{prod.precio_minimo:.2f}"
+            else:
+                prod.display_price = f"{prod.precio_base:.2f}"
             
             # Obtener tallas del producto relacionado
             prod_variantes = list(prod.variantes.all())
@@ -828,7 +849,10 @@ def product_detail(request, slug=None):
                 prod.main_image_src = None
                 prod.hover_image_src = None
             
-            prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
+            if getattr(prod, 'precio_minimo', None):
+                prod.display_price = f"{prod.precio_minimo:.2f}"
+            else:
+                prod.display_price = f"{prod.precio_base:.2f}"
             
             # Tallas
             prod_variantes_rec = list(prod.variantes.all())
@@ -841,6 +865,22 @@ def product_detail(request, slug=None):
                         tallas_rec.append(codigo)
                         tallas_vistas_rec.add(codigo)
             prod.sizes = tallas_rec
+
+        # Estado de wishlist para tarjetas sugeridas (misma lógica que Home)
+        suggested_products = list(productos_relacionados) + list(productos_recientes)
+        wishlist_map = {}
+        if request.user.is_authenticated and suggested_products:
+            from apps.usuarios.models import Wishlist
+
+            wishlist_items = Wishlist.objects.filter(
+                usuario=request.user,
+                producto_id__in=[p.id for p in suggested_products]
+            ).values('id', 'producto_id')
+            wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
+
+        for prod in suggested_products:
+            prod.wishlist_item_id = wishlist_map.get(prod.id)
+            prod.in_wishlist = prod.id in wishlist_map
         
         # Obtener informaciÃ³n adicional del producto
         from apps.productos.models import ShippingInfo, ReturnPolicy, GlobalProductContent
@@ -1177,10 +1217,75 @@ def view_cart(request):
             'stock': stock,
         })
     
-    # Obtener productos recomendados (productos aleatorios activos)
-    productos_recomendados = Producto.objects.filter(
-        activo=True
-    ).prefetch_related('imagenes', 'variantes').order_by('?')[:8]
+    cart_product_ids = [item['producto_id'] for item in cart_items]
+
+    # Obtener productos recomendados excluyendo los que ya estÃ¡n en el carrito
+    productos_recomendados_qs = (
+        Producto.objects
+        .filter(activo=True)
+        .exclude(id__in=cart_product_ids)
+        .select_related('categoria', 'coleccion')
+        .prefetch_related(
+            'imagenes',
+            'variantes',
+            'variantes__talla',
+            'variantes__atributos__valor_atributo__atributo',
+        )
+        .annotate(precio_minimo=Min('variantes__precio'))
+        .order_by('?')[:8]
+    )
+    productos_recomendados = list(productos_recomendados_qs)
+
+    wishlist_map = {}
+    user_wishlist_ids = []
+    if request.user.is_authenticated and productos_recomendados:
+        from apps.usuarios.models import Wishlist
+
+        wishlist_items = Wishlist.objects.filter(
+            usuario=request.user,
+            producto_id__in=[p.id for p in productos_recomendados]
+        ).values('id', 'producto_id')
+        wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
+        user_wishlist_ids = list(wishlist_map.keys())
+
+    for producto in productos_recomendados:
+        producto.wishlist_item_id = wishlist_map.get(producto.id)
+        producto.in_wishlist = producto.id in wishlist_map
+
+        if getattr(producto, 'precio_minimo', None):
+            producto.display_price = f"{producto.precio_minimo:.2f}"
+        else:
+            producto.display_price = f"{producto.precio_base:.2f}"
+
+        imagenes = list(producto.imagenes.all().order_by('posicion', 'created_at'))
+        producto.main_image_src = imagenes[0].src if imagenes else ''
+        producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
+
+        color_values = []
+        for variante in producto.variantes.all():
+            if variante.color and variante.color not in color_values:
+                color_values.append(variante.color)
+        producto.colors = [{'valor': c} for c in color_values]
+
+        size_values = []
+        for variante in producto.variantes.all():
+            if getattr(variante, 'talla', None) and getattr(variante.talla, 'codigo', None):
+                code = variante.talla.codigo
+                if code and code not in size_values:
+                    size_values.append(code)
+                continue
+
+            for va in getattr(variante, 'atributos', []).all() if hasattr(getattr(variante, 'atributos', None), 'all') else []:
+                val = getattr(va, 'valor_atributo', None)
+                if not val:
+                    continue
+                atributo = getattr(val, 'atributo', None)
+                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
+                if 'talla' in nombre_at or 'size' in nombre_at:
+                    valor = getattr(val, 'valor', None)
+                    if valor and valor not in size_values:
+                        size_values.append(valor)
+        producto.sizes = size_values
     
     context = {
         'cart_items': cart_items,
@@ -1188,6 +1293,8 @@ def view_cart(request):
         'note': cart.get_note(),
         'has_gift_wrap': cart.has_gift_wrap(),
         'productos_recomendados': productos_recomendados,
+        'user_wishlist_ids': user_wishlist_ids,
+        'testimonials': _get_testimonials_data(),
     }
     
     return render(request, 'view-cart.html', context)
@@ -1375,9 +1482,13 @@ def checkout(request):
     
     cart = Cart(request)
     
-    # Verificar si el carrito estÃ¡ vacÃ­o
+    # Verificar si el carrito está vacío
     if len(cart) == 0:
-        messages.warning(request, 'Tu carrito estÃ¡ vacÃ­o. Agrega productos antes de continuar.')
+        messages.warning(
+            request,
+            'Tu carrito está vacío. Agrega productos antes de continuar.',
+            extra_tags='storefront cart',
+        )
         return redirect('core:view_cart')
     
     # Preparar items del carrito para el template
@@ -1540,9 +1651,9 @@ def checkout_process(request):
     
     cart = Cart(request)
     
-    # Verificar si el carrito estÃ¡ vacÃ­o
+    # Verificar si el carrito está vacío
     if len(cart) == 0:
-        messages.error(request, 'Tu carrito estÃ¡ vacÃ­o.')
+        messages.error(request, 'Tu carrito está vacío.', extra_tags='storefront cart')
         return redirect('core:view_cart')
     
     try:
@@ -1556,7 +1667,7 @@ def checkout_process(request):
         other_city = request.POST.get('other_city', '').strip()
         address = request.POST.get('address', '').strip()
         order_note = request.POST.get('order_note', '').strip()
-        payment_method = request.POST.get('payment_method', 'bank_transfer')
+        payment_method = 'bank_transfer'
         
         # Si seleccionÃ³ "Otra ciudad", usar el campo other_city
         if city == 'Otra' and other_city:
@@ -2374,7 +2485,7 @@ def wishlist_add(request):
         return JsonResponse({
             'success': False,
             'require_login': True,
-            'message': 'Debes iniciar sesiÃ³n para usar la lista de deseos'
+            'message': 'Debes iniciar sesión para usar la lista de favoritos'
         }, status=401)
     
     product_id = request.POST.get('product_id')
@@ -2432,7 +2543,7 @@ def wishlist_remove(request):
     if not request.user.is_authenticated:
         return JsonResponse({
             'success': False,
-            'message': 'Debes iniciar sesiÃ³n para usar el wishlist'
+            'message': 'Debes iniciar sesión para usar la lista de favoritos'
         }, status=401)
     
     wishlist_id = request.POST.get('wishlist_id')
