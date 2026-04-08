@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+﻿from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
@@ -14,248 +14,13 @@ from apps.productos.models import Producto
 from .decorators import admin_required, superuser_required
 
 
-def inicio(request):
-    """Renderiza la plantilla home-05.html (nuevo index)"""
-    from apps.productos.models import Coleccion, Categoria, Producto
-    from django.db.models import Count, Min
-    
-    # Obtener colecciones activas para el slider superior (excluyendo "básica")
-    from django.db.models import Q
-    colecciones = (
-        Coleccion.objects
-        .filter(activo=True)
-        .exclude(Q(nombre__iexact='basica') | Q(nombre__iexact='básica'))  # Excluir colección básica (con o sin tilde)
-        .annotate(num_productos=Count('productos'))
-        .order_by('-destacada', '-created_at')[:5]  # Máximo 5 para el slider
-    )
-    
-    # Obtener subcategorías de "Ropa" para la sección Featured Collections
-    try:
-        categoria_ropa = Categoria.objects.get(nombre__iexact='Ropa', estado=True)
-        categorias_principales = (
-            Categoria.objects
-            .filter(estado=True, padre=categoria_ropa)
-            .annotate(num_productos=Count('productos'))
-            .order_by('nombre')[:10]
-        )
-    except Categoria.DoesNotExist:
-        # Si no existe la categoría Ropa, mostrar categorías principales
-        categorias_principales = (
-            Categoria.objects
-            .filter(estado=True, padre__isnull=True)
-            .annotate(num_productos=Count('productos'))
-            .order_by('nombre')[:10]
-        )
-    
-    # Obtener productos destacados para Editor's Picks
-    productos_destacados = (
-        Producto.objects
-        .filter(activo=True)
-        .select_related('categoria', 'coleccion')
-        .prefetch_related(
-            'imagenes',
-            'variantes',
-            'variantes__talla',
-            'variantes__atributos__valor_atributo__atributo',  # Sistema de atributos
-        )
-        .annotate(precio_minimo=Min('variantes__precio'))
-        .order_by('-created_at')[:12]  # Últimos 12 productos
-    )
-    
-    # Preparar datos auxiliares para cada producto (igual que en shop_collection_sub)
-    for producto in productos_destacados:
-        # Precio a mostrar
-        if producto.precio_minimo:
-            producto.display_price = f"{producto.precio_minimo:.2f}"
-        else:
-            producto.display_price = f"{producto.precio_base:.2f}"
-        
-        # Imagen principal (solo imágenes, no videos)
-        imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
-        if imagenes:
-            producto.main_image_src = imagenes[0].src
-            producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
-        else:
-            producto.main_image_src = None
-            producto.hover_image_src = None
-        
-        # Colores disponibles
-        colores_list = list(producto.variantes.values_list('color', flat=True).distinct())
-        producto.colors = [{'valor': c} for c in colores_list if c]
-        
-        # Tallas disponibles - USAR LA MISMA LÓGICA QUE shop_collection_sub
-        size_values = []
-        for v in producto.variantes.all():
-            # 1. Primero intentar desde FK talla directa
-            if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
-                code = v.talla.codigo
-                if code and code not in size_values:
-                    size_values.append(code)
-                continue
-            
-            # 2. Fallback: buscar en sistema de atributos (VarianteAtributo)
-            for va in getattr(v, 'atributos', []).all() if hasattr(getattr(v, 'atributos', None), 'all') else []:
-                val = getattr(va, 'valor_atributo', None)
-                if not val:
-                    continue
-                atributo = getattr(val, 'atributo', None)
-                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
-                if 'talla' in nombre_at or 'size' in nombre_at:
-                    valor = getattr(val, 'valor', None)
-                    if valor and valor not in size_values:
-                        size_values.append(valor)
-        
-        producto.sizes = size_values
-        print(f"DEBUG - Producto: {producto.nombre}, Tallas: {producto.sizes}")  # DEBUG
-        
-        # Disponibilidad
-        total_stock = sum(v.stock for v in producto.variantes.all())
-        producto.availability = 'in-stock' if total_stock > 0 else 'out-of-stock'
-    
-    # Obtener categorías con subcategorías para el menú de navegación
-    categorias_menu = (
-        Categoria.objects
-        .filter(estado=True, padre__isnull=True)
-        .prefetch_related('subcategorias')
-        .order_by('nombre')
-    )
-    
-    context = {
-        'colecciones': colecciones,
-        'categorias_principales': categorias_principales,
-        'productos_destacados': productos_destacados,
-        # Productos nuevos: los últimos añadidos (8 iniciales)
-        'productos_nuevos': None,
-        'categorias_menu': categorias_menu,
-    }
-    # Preparar 'productos_nuevos' (últimos 8 productos activos) pero solo de la categoría "Ropa"
-    from django.db.models import Min
-    # Intentar localizar la categoría principal de ropa y sus subcategorías
-    try:
-        categoria_ropa = Categoria.objects.get(nombre__iexact='Ropa', estado=True)
-    except Categoria.DoesNotExist:
-        # Fallback: buscar por nombre que contenga 'ropa' (insensible a mayúsculas)
-        categoria_ropa = Categoria.objects.filter(nombre__icontains='ropa', padre__isnull=True, estado=True).first()
+def _get_testimonials_data():
+    """Carga reseñas para componentes tipo "Clientes Felices"."""
+    testimonials = []
 
-    if categoria_ropa:
-        sub_ids = list(categoria_ropa.subcategorias.filter(estado=True).values_list('id', flat=True))
-        categorias_ids = sub_ids + [categoria_ropa.id]
-        productos_nuevos_qs = (
-            Producto.objects
-            .filter(activo=True, categoria_id__in=categorias_ids)
-            .select_related('categoria', 'coleccion')
-            .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
-            .annotate(precio_minimo=Min('variantes__precio'))
-            .order_by('-created_at')[:8]
-        )
-    else:
-        # Si no existe la categoría ropa, conservar el comportamiento anterior
-        productos_nuevos_qs = (
-            Producto.objects
-            .filter(activo=True)
-            .select_related('categoria', 'coleccion')
-            .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
-            .annotate(precio_minimo=Min('variantes__precio'))
-            .order_by('-created_at')[:8]
-        )
-
-    productos_nuevos = list(productos_nuevos_qs)
-    # Preparar campos auxiliares para la plantilla (mismo esquema que productos_destacados)
-    for producto in productos_nuevos:
-        if getattr(producto, 'precio_minimo', None):
-            producto.display_price = f"{producto.precio_minimo:.2f}"
-        else:
-            producto.display_price = f"{producto.precio_base:.2f}"
-
-        imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
-        if imagenes:
-            producto.main_image_src = imagenes[0].src
-            producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
-        else:
-            producto.main_image_src = ''
-            producto.hover_image_src = ''
-
-        colores_list = list(producto.variantes.values_list('color', flat=True).distinct())
-        producto.colors = [{'valor': c} for c in colores_list if c]
-
-        # tallas
-        size_values = []
-        for v in producto.variantes.all():
-            if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
-                code = v.talla.codigo
-                if code and code not in size_values:
-                    size_values.append(code)
-                continue
-            for va in getattr(v, 'atributos', []).all() if hasattr(getattr(v, 'atributos', None), 'all') else []:
-                val = getattr(va, 'valor_atributo', None)
-                if not val:
-                    continue
-                atributo = getattr(val, 'atributo', None)
-                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
-                if 'talla' in nombre_at or 'size' in nombre_at:
-                    valor = getattr(val, 'valor', None)
-                    if valor and valor not in size_values:
-                        size_values.append(valor)
-        producto.sizes = size_values
-
-    context['productos_nuevos'] = productos_nuevos
-    # --- Shop Gram: productos aleatorios de la categoría 'Ropa' ---
-    try:
-        categoria_ropa_main = Categoria.objects.filter(nombre__icontains='ropa', padre__isnull=True, estado=True).first()
-    except Exception:
-        categoria_ropa_main = None
-
-    if categoria_ropa_main:
-        sub_ids = list(categoria_ropa_main.subcategorias.filter(estado=True).values_list('id', flat=True))
-        categorias_ids = sub_ids + [categoria_ropa_main.id]
-        shop_qs = (
-            Producto.objects
-            .filter(activo=True, categoria_id__in=categorias_ids)
-            .select_related('categoria', 'coleccion')
-            .prefetch_related('imagenes', 'variantes')
-            .annotate(precio_minimo=Min('variantes__precio'))
-            .order_by('?')[:5]
-        )
-    else:
-        shop_qs = (
-            Producto.objects
-            .filter(activo=True)
-            .select_related('categoria', 'coleccion')
-            .prefetch_related('imagenes', 'variantes')
-            .annotate(precio_minimo=Min('variantes__precio'))
-            .order_by('?')[:5]
-        )
-
-    shop_gram_products = list(shop_qs)
-    for p in shop_gram_products:
-        # precio a mostrar
-        if getattr(p, 'precio_minimo', None):
-            p.display_price = f"{p.precio_minimo:.2f}"
-        else:
-            p.display_price = f"{p.precio_base:.2f}"
-
-        # imágenes
-        imagenes = list(p.imagenes.filter(tipo_medio='imagen')[:2])
-        if imagenes:
-            # usar la propiedad .src si está disponible, fallback a .imagen.url
-            p.main_image_src = getattr(imagenes[0], 'src', None) or (imagenes[0].src)
-            p.hover_image_src = (
-                getattr(imagenes[1], 'src', None)
-                if len(imagenes) > 1 else p.main_image_src
-            ) or (imagenes[1].imagen.url if len(imagenes) > 1 and imagenes[1].imagen else p.main_image_src)
-        else:
-            p.main_image_src = ''
-            p.hover_image_src = ''
-
-        # descripción corta para el modal
-        p.short_description = p.descripcion_corta or (p.descripcion_larga[:150] if p.descripcion_larga else '')
-
-    context['shop_gram_products'] = shop_gram_products
-    # --- Testimonial / Reseñas: traer reseñas verificadas recientes ---
     try:
         from apps.resenas.models import Resena
 
-        # Intentar reseñas verificadas; si no hay, traer cualquier reseña reciente
         qs_resenas = list(
             Resena.objects
             .filter(verificado=True)
@@ -271,7 +36,6 @@ def inicio(request):
                 .order_by('-creado_en')[:5]
             )
 
-        testimonials = []
         for r in qs_resenas:
             usuario = getattr(r, 'usuario', None)
             if usuario:
@@ -290,23 +54,25 @@ def inicio(request):
             product_title = ''
             product_url = '#'
             product_price = ''
+
             if producto:
                 product_title = getattr(producto, 'nombre', '')
-                product_url = f'/product/{getattr(producto, "id", "")}/'
+                try:
+                    product_url = producto.get_absolute_url()
+                except Exception:
+                    product_url = '#'
+
                 first_img = producto.imagenes.first() if hasattr(producto, 'imagenes') else None
                 if first_img and getattr(first_img, 'imagen', None):
                     try:
                         product_image = first_img.imagen.url
                     except Exception:
                         product_image = ''
+
                 try:
-                    precio_min = getattr(producto, 'precio_minimo', None)
-                    if precio_min:
-                        product_price = f"{precio_min:.2f}"
-                    else:
-                        product_price = str(getattr(producto, 'precio_base', ''))
+                    product_price = str(getattr(producto, 'precio_base', '') or '')
                 except Exception:
-                    product_price = str(getattr(producto, 'precio_base', ''))
+                    product_price = ''
 
             time_ago = r.get_tiempo_transcurrido() if hasattr(r, 'get_tiempo_transcurrido') else getattr(r, 'creado_en', '')
 
@@ -321,11 +87,9 @@ def inicio(request):
                 'product_url': product_url,
                 'product_price': product_price,
             })
-
     except Exception:
         testimonials = []
 
-    # Si no hay reseñas en la BD, usar un fallback de ejemplo para evitar el mensaje "No reviews yet".
     if not testimonials:
         testimonials = [
             {
@@ -363,12 +127,269 @@ def inicio(request):
             },
         ]
 
-    context['testimonials'] = testimonials
+    return testimonials
+
+
+def inicio(request):
+    """Renderiza la plantilla home-05.html (nuevo index)"""
+    from apps.productos.models import Coleccion, Categoria, Producto
+    from django.db.models import Count, Min
+    
+    # Obtener colecciones activas para el slider superior (excluyendo coleccion basica)
+    from django.db.models import Q
+    colecciones = (
+        Coleccion.objects
+        .filter(activo=True)
+        .exclude(
+            Q(slug__iexact='basica') |
+            Q(slug__iexact='coleccion-basica') |
+            Q(nombre__iexact='basica') |
+            Q(nombre__iexact='coleccion basica')
+        )
+        .annotate(num_productos=Count('productos'))
+        .order_by('-destacada', '-created_at')[:5]  # Maximo 5 para el slider
+    )
+    
+    # Obtener subcategorÃ­as de "Ropa" para la secciÃ³n Featured Collections
+    try:
+        categoria_ropa = Categoria.objects.get(nombre__iexact='Ropa', estado=True)
+        categorias_principales = (
+            Categoria.objects
+            .filter(estado=True, padre=categoria_ropa)
+            .annotate(num_productos=Count('productos'))
+            .order_by('nombre')[:10]
+        )
+    except Categoria.DoesNotExist:
+        # Si no existe la categorÃ­a Ropa, mostrar categorÃ­as principales
+        categorias_principales = (
+            Categoria.objects
+            .filter(estado=True, padre__isnull=True)
+            .annotate(num_productos=Count('productos'))
+            .order_by('nombre')[:10]
+        )
+    
+    # Obtener productos destacados para Editor's Picks
+    productos_destacados = (
+        Producto.objects
+        .filter(activo=True)
+        .select_related('categoria', 'coleccion')
+        .prefetch_related(
+            'imagenes',
+            'variantes',
+            'variantes__talla',
+            'variantes__atributos__valor_atributo__atributo',  # Sistema de atributos
+        )
+        .annotate(precio_minimo=Min('variantes__precio'))
+        .order_by('-created_at')[:12]  # Ãšltimos 12 productos
+    )
+
+    wishlist_map = {}
+    if request.user.is_authenticated:
+        from apps.usuarios.models import Wishlist
+        wishlist_items = Wishlist.objects.filter(usuario=request.user).values('id', 'producto_id')
+        wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
+    
+    # Preparar datos auxiliares para cada producto (igual que en shop_collection_sub)
+    for producto in productos_destacados:
+        producto.wishlist_item_id = wishlist_map.get(producto.id)
+        producto.in_wishlist = producto.id in wishlist_map
+
+        # Precio a mostrar
+        if producto.precio_minimo:
+            producto.display_price = f"{producto.precio_minimo:.2f}"
+        else:
+            producto.display_price = f"{producto.precio_base:.2f}"
+        
+        # Imagen principal (solo imÃ¡genes, no videos)
+        imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
+        if imagenes:
+            producto.main_image_src = imagenes[0].src
+            producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
+        else:
+            producto.main_image_src = None
+            producto.hover_image_src = None
+        
+        # Colores disponibles
+        colores_list = list(producto.variantes.values_list('color', flat=True).distinct())
+        producto.colors = [{'valor': c} for c in colores_list if c]
+        
+        # Tallas disponibles - USAR LA MISMA LÃ“GICA QUE shop_collection_sub
+        size_values = []
+        for v in producto.variantes.all():
+            # 1. Primero intentar desde FK talla directa
+            if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
+                code = v.talla.codigo
+                if code and code not in size_values:
+                    size_values.append(code)
+                continue
+            
+            # 2. Fallback: buscar en sistema de atributos (VarianteAtributo)
+            for va in getattr(v, 'atributos', []).all() if hasattr(getattr(v, 'atributos', None), 'all') else []:
+                val = getattr(va, 'valor_atributo', None)
+                if not val:
+                    continue
+                atributo = getattr(val, 'atributo', None)
+                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
+                if 'talla' in nombre_at or 'size' in nombre_at:
+                    valor = getattr(val, 'valor', None)
+                    if valor and valor not in size_values:
+                        size_values.append(valor)
+        
+        producto.sizes = size_values
+        print(f"DEBUG - Producto: {producto.nombre}, Tallas: {producto.sizes}")  # DEBUG
+        
+        # Disponibilidad
+        total_stock = sum(v.stock for v in producto.variantes.all())
+        producto.availability = 'in-stock' if total_stock > 0 else 'out-of-stock'
+    
+    # Obtener categorÃ­as con subcategorÃ­as para el menÃº de navegaciÃ³n
+    categorias_menu = (
+        Categoria.objects
+        .filter(estado=True, padre__isnull=True)
+        .prefetch_related('subcategorias')
+        .order_by('nombre')
+    )
+    
+    context = {
+        'colecciones': colecciones,
+        'categorias_principales': categorias_principales,
+        'productos_destacados': productos_destacados,
+        # Productos nuevos: los Ãºltimos aÃ±adidos (8 iniciales)
+        'productos_nuevos': None,
+        'categorias_menu': categorias_menu,
+    }
+    # Preparar 'productos_nuevos' (Ãºltimos 8 productos activos) pero solo de la categorÃ­a "Ropa"
+    from django.db.models import Min
+    # Intentar localizar la categorÃ­a principal de ropa y sus subcategorÃ­as
+    try:
+        categoria_ropa = Categoria.objects.get(nombre__iexact='Ropa', estado=True)
+    except Categoria.DoesNotExist:
+        # Fallback: buscar por nombre que contenga 'ropa' (insensible a mayÃºsculas)
+        categoria_ropa = Categoria.objects.filter(nombre__icontains='ropa', padre__isnull=True, estado=True).first()
+
+    if categoria_ropa:
+        sub_ids = list(categoria_ropa.subcategorias.filter(estado=True).values_list('id', flat=True))
+        categorias_ids = sub_ids + [categoria_ropa.id]
+        productos_nuevos_qs = (
+            Producto.objects
+            .filter(activo=True, categoria_id__in=categorias_ids)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('-created_at')[:8]
+        )
+    else:
+        # Si no existe la categorÃ­a ropa, conservar el comportamiento anterior
+        productos_nuevos_qs = (
+            Producto.objects
+            .filter(activo=True)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes', 'variantes__talla', 'variantes__atributos__valor_atributo__atributo')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('-created_at')[:8]
+        )
+
+    productos_nuevos = list(productos_nuevos_qs)
+    # Preparar campos auxiliares para la plantilla (mismo esquema que productos_destacados)
+    for producto in productos_nuevos:
+        producto.wishlist_item_id = wishlist_map.get(producto.id)
+        producto.in_wishlist = producto.id in wishlist_map
+
+        if getattr(producto, 'precio_minimo', None):
+            producto.display_price = f"{producto.precio_minimo:.2f}"
+        else:
+            producto.display_price = f"{producto.precio_base:.2f}"
+
+        imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
+        if imagenes:
+            producto.main_image_src = imagenes[0].src
+            producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
+        else:
+            producto.main_image_src = ''
+            producto.hover_image_src = ''
+
+        colores_list = list(producto.variantes.values_list('color', flat=True).distinct())
+        producto.colors = [{'valor': c} for c in colores_list if c]
+
+        # tallas
+        size_values = []
+        for v in producto.variantes.all():
+            if getattr(v, 'talla', None) and getattr(v.talla, 'codigo', None):
+                code = v.talla.codigo
+                if code and code not in size_values:
+                    size_values.append(code)
+                continue
+            for va in getattr(v, 'atributos', []).all() if hasattr(getattr(v, 'atributos', None), 'all') else []:
+                val = getattr(va, 'valor_atributo', None)
+                if not val:
+                    continue
+                atributo = getattr(val, 'atributo', None)
+                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
+                if 'talla' in nombre_at or 'size' in nombre_at:
+                    valor = getattr(val, 'valor', None)
+                    if valor and valor not in size_values:
+                        size_values.append(valor)
+        producto.sizes = size_values
+
+    context['productos_nuevos'] = productos_nuevos
+    # --- Shop Gram: productos aleatorios de la categorÃ­a 'Ropa' ---
+    try:
+        categoria_ropa_main = Categoria.objects.filter(nombre__icontains='ropa', padre__isnull=True, estado=True).first()
+    except Exception:
+        categoria_ropa_main = None
+
+    if categoria_ropa_main:
+        sub_ids = list(categoria_ropa_main.subcategorias.filter(estado=True).values_list('id', flat=True))
+        categorias_ids = sub_ids + [categoria_ropa_main.id]
+        shop_qs = (
+            Producto.objects
+            .filter(activo=True, categoria_id__in=categorias_ids)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('?')[:5]
+        )
+    else:
+        shop_qs = (
+            Producto.objects
+            .filter(activo=True)
+            .select_related('categoria', 'coleccion')
+            .prefetch_related('imagenes', 'variantes')
+            .annotate(precio_minimo=Min('variantes__precio'))
+            .order_by('?')[:5]
+        )
+
+    shop_gram_products = list(shop_qs)
+    for p in shop_gram_products:
+        # precio a mostrar
+        if getattr(p, 'precio_minimo', None):
+            p.display_price = f"{p.precio_minimo:.2f}"
+        else:
+            p.display_price = f"{p.precio_base:.2f}"
+
+        # imÃ¡genes
+        imagenes = list(p.imagenes.filter(tipo_medio='imagen')[:2])
+        if imagenes:
+            # usar la propiedad .src si estÃ¡ disponible, fallback a .imagen.url
+            p.main_image_src = getattr(imagenes[0], 'src', None) or (imagenes[0].src)
+            p.hover_image_src = (
+                getattr(imagenes[1], 'src', None)
+                if len(imagenes) > 1 else p.main_image_src
+            ) or (imagenes[1].imagen.url if len(imagenes) > 1 and imagenes[1].imagen else p.main_image_src)
+        else:
+            p.main_image_src = ''
+            p.hover_image_src = ''
+
+        # descripciÃ³n corta para el modal
+        p.short_description = p.descripcion_corta or (p.descripcion_larga[:150] if p.descripcion_larga else '')
+
+    context['shop_gram_products'] = shop_gram_products
+    context['testimonials'] = _get_testimonials_data()
     return render(request, 'home-05.html', context)
 
 
 def home_05(request):
-    """Alias para la función inicio"""
+    """Alias para la funciÃ³n inicio"""
     return inicio(request)
 
 def about_us(request):
@@ -384,7 +405,7 @@ def about_us(request):
             activo=True
         )
     
-    # Ahora esto funcionará correctamente
+    # Ahora esto funcionarÃ¡ correctamente
     imagenes_slider = about_us_config.imagenes_slider.filter(activo=True).order_by('posicion')
     
     categorias_menu = (
@@ -403,10 +424,10 @@ def about_us(request):
 
 
 def contacto(request):
-    """Vista para la página de Contacto"""
+    """Vista para la pÃ¡gina de Contacto"""
     from apps.productos.models import Categoria
     
-    # Obtener categorías con subcategorías para el menú de navegación
+    # Obtener categorÃ­as con subcategorÃ­as para el menÃº de navegaciÃ³n
     categorias_menu = (
         Categoria.objects
         .filter(estado=True, padre__isnull=True)
@@ -423,13 +444,13 @@ def contacto(request):
 def shop_collection_sub(request):
     """Lista de productos para la plantilla `shop-collection-sub.html`.
 
-    - Filtra por categoría si se pasa `?categoria=<id_or_slug>`
-    - Filtra por colección si se pasa `?coleccion=<slug>`
+    - Filtra por categorÃ­a si se pasa `?categoria=<id_or_slug>`
+    - Filtra por colecciÃ³n si se pasa `?coleccion=<slug>`
     - Ordena por id (asc)
-    - Anota precio mínimo de variantes y stock total
+    - Anota precio mÃ­nimo de variantes y stock total
     - Prepara campos auxiliares que la plantilla espera: display_price, main_image_src,
       hover_image_src, colors, availability
-    - Envía categorías o subcategorías según el contexto
+    - EnvÃ­a categorÃ­as o subcategorÃ­as segÃºn el contexto
     """
     from apps.productos.models import Categoria, Coleccion
     
@@ -438,6 +459,7 @@ def shop_collection_sub(request):
     categoria_actual = None
     coleccion_actual = None
     categorias_a_mostrar = []
+    titulo_filtro_categoria = None
 
     qs = (
         Producto.objects
@@ -454,61 +476,72 @@ def shop_collection_sub(request):
         .order_by('id')
     )
 
-    # Filtrar por colección si se especifica
+    # Filtrar por colecciÃ³n si se especifica
     if coleccion_param:
         coleccion_actual = Coleccion.objects.filter(slug=coleccion_param).first()
         if coleccion_actual:
             qs = qs.filter(coleccion=coleccion_actual)
-            print(f"DEBUG: Filtrando por colección: {coleccion_actual.nombre}")
+            print(f"DEBUG: Filtrando por colecciÃ³n: {coleccion_actual.nombre}")
 
-    # Filtrar por categoría si se especifica
+    # Filtrar por categorÃ­a si se especifica
     if categoria_param:
-        # aceptar id numérico o slug
-        try:
-            cid = int(categoria_param)
-            categoria_actual = Categoria.objects.filter(id=cid, estado=True).first()
-            qs = qs.filter(categoria_id=cid)
-        except Exception:
+        # aceptar id numÃ©rico o slug
+        if str(categoria_param).isdigit():
+            categoria_actual = Categoria.objects.filter(id=int(categoria_param), estado=True).first()
+        else:
             categoria_actual = Categoria.objects.filter(slug=categoria_param, estado=True).first()
-            qs = qs.filter(categoria__slug=categoria_param)
+
+        if categoria_actual:
+            categoria_ids = [categoria_actual.id]
+
+            # Si es una categorÃ­a raÃ­z (ej: ropa), incluir tambiÃ©n sus subcategorÃ­as activas.
+            if categoria_actual.padre_id is None:
+                categoria_ids.extend(
+                    Categoria.objects.filter(padre=categoria_actual, estado=True).values_list('id', flat=True)
+                )
+
+            qs = qs.filter(categoria_id__in=categoria_ids)
+
+            if categoria_actual.padre_id is None and categoria_actual.slug == 'ropa':
+                titulo_filtro_categoria = 'Toda la Ropa'
     
-    # Determinar qué categorías mostrar en el slider
+    # Determinar quÃ© categorÃ­as mostrar en el slider
     if categoria_actual:
-        print(f"DEBUG: Categoría actual: {categoria_actual.nombre} (ID: {categoria_actual.id})")
+        print(f"DEBUG: CategorÃ­a actual: {categoria_actual.nombre} (ID: {categoria_actual.id})")
         print(f"DEBUG: Tiene padre: {categoria_actual.padre}")
         
-        # Si la categoría tiene subcategorías, mostrarlas
+        # Si la categorÃ­a tiene subcategorÃ­as, mostrarlas
         subcategorias = Categoria.objects.filter(
             padre=categoria_actual,
             estado=True
         ).order_by('nombre')
         
-        print(f"DEBUG: Subcategorías encontradas: {subcategorias.count()}")
+        print(f"DEBUG: SubcategorÃ­as encontradas: {subcategorias.count()}")
         
         if subcategorias.exists():
-            # Tiene subcategorías, mostrarlas
+            # Tiene subcategorÃ­as, mostrarlas
             categorias_a_mostrar = list(subcategorias)
-            print(f"DEBUG: Mostrando subcategorías de {categoria_actual.nombre}")
+            print(f"DEBUG: Mostrando subcategorÃ­as de {categoria_actual.nombre}")
         elif categoria_actual.padre:
-            # Es una subcategoría, mostrar sus hermanas (otras subcategorías del mismo padre)
+            # Es una subcategorÃ­a, mostrar sus hermanas (otras subcategorÃ­as del mismo padre)
             categorias_a_mostrar = list(
                 Categoria.objects.filter(
                     padre=categoria_actual.padre,
                     estado=True
                 ).order_by('nombre')
             )
-            print(f"DEBUG: Es subcategoría, mostrando hermanas: {len(categorias_a_mostrar)}")
+            print(f"DEBUG: Es subcategorÃ­a, mostrando hermanas: {len(categorias_a_mostrar)}")
         else:
-            # Es categoría principal sin subcategorías, mostrar todas las categorías principales
+            # Es categorÃ­a principal sin subcategorÃ­as, mostrar todas las categorÃ­as principales
             categorias_a_mostrar = list(
                 Categoria.objects.filter(
                     padre__isnull=True,
                     estado=True
                 ).order_by('nombre')
             )
-            print(f"DEBUG: Es categoría principal sin hijos, mostrando principales: {len(categorias_a_mostrar)}")
+            print(f"DEBUG: Es categorÃ­a principal sin hijos, mostrando principales: {len(categorias_a_mostrar)}")
     elif coleccion_actual:
-        # Si se filtra por colección, mostrar las subcategorías de Ropa
+        # Si se filtra por colecciÃ³n, mostrar las subcategorÃ­as de Ropa
         try:
             categoria_ropa = Categoria.objects.get(slug='ropa', estado=True)
             categorias_a_mostrar = list(
@@ -517,18 +550,18 @@ def shop_collection_sub(request):
                     estado=True
                 ).order_by('nombre')
             )
-            print(f"DEBUG: Filtrando por colección, mostrando subcategorías de Ropa: {len(categorias_a_mostrar)}")
+            print(f"DEBUG: Filtrando por colecciÃ³n, mostrando subcategorÃ­as de Ropa: {len(categorias_a_mostrar)}")
         except Categoria.DoesNotExist:
-            # Si no existe la categoría Ropa, mostrar categorías principales
+            # Si no existe la categorÃ­a Ropa, mostrar categorÃ­as principales
             categorias_a_mostrar = list(
                 Categoria.objects.filter(
                     padre__isnull=True,
                     estado=True
                 ).order_by('nombre')
             )
-            print(f"DEBUG: Categoría Ropa no encontrada, mostrando principales: {len(categorias_a_mostrar)}")
+            print(f"DEBUG: CategorÃ­a Ropa no encontrada, mostrando principales: {len(categorias_a_mostrar)}")
     else:
-        # Si no hay categoría ni colección seleccionada, mostrar subcategorías de Ropa por defecto
+        # Si no hay categorÃ­a ni colecciÃ³n seleccionada, mostrar subcategorÃ­as de Ropa por defecto
         try:
             categoria_ropa = Categoria.objects.get(slug='ropa', estado=True)
             categorias_a_mostrar = list(
@@ -537,9 +570,9 @@ def shop_collection_sub(request):
                     estado=True
                 ).order_by('nombre')
             )
-            print(f"DEBUG: Sin filtros, mostrando subcategorías de Ropa: {len(categorias_a_mostrar)}")
+            print(f"DEBUG: Sin filtros, mostrando subcategorÃ­as de Ropa: {len(categorias_a_mostrar)}")
         except Categoria.DoesNotExist:
-            # Si no existe la categoría Ropa, mostrar categorías principales
+            # Si no existe la categorÃ­a Ropa, mostrar categorÃ­as principales
             categorias_a_mostrar = list(
                 Categoria.objects.filter(
                     padre__isnull=True,
@@ -548,29 +581,42 @@ def shop_collection_sub(request):
             )
             print(f"DEBUG: Sin filtros y Ropa no encontrada, mostrando principales: {len(categorias_a_mostrar)}")
     
-    print(f"DEBUG: Total categorías a mostrar: {len(categorias_a_mostrar)}")
+    print(f"DEBUG: Total categorÃ­as a mostrar: {len(categorias_a_mostrar)}")
     for cat in categorias_a_mostrar:
         print(f"  - {cat.nombre} (slug: {cat.slug}, imagen: {bool(cat.imagen)})")
 
     productos = list(qs)
 
+    wishlist_map = {}
+    if request.user.is_authenticated and productos:
+        from apps.usuarios.models import Wishlist
+
+        wishlist_items = Wishlist.objects.filter(
+            usuario=request.user,
+            producto_id__in=[p.id for p in productos]
+        ).values('id', 'producto_id')
+        wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
+
     # Preparar campos que la plantilla reutiliza (imagen principal, hover, precio, colores)
     for p in productos:
-        # precio a mostrar: variante (mín) o precio_base
+        p.wishlist_item_id = wishlist_map.get(p.id)
+        p.in_wishlist = p.id in wishlist_map
+
+        # precio a mostrar: variante (mÃ­n) o precio_base
         p.display_price = getattr(p, 'precio_variante', None) or p.precio_base
 
         imgs = list(p.imagenes.all().order_by('posicion', 'created_at'))
         p.main_image_src = imgs[0].src if imgs else ''
         p.hover_image_src = imgs[1].src if len(imgs) > 1 else p.main_image_src
 
-        # colores únicos desde variantes (puede omitirse si no hay)
+        # colores Ãºnicos desde variantes (puede omitirse si no hay)
         color_values = []
         for v in p.variantes.all():
             if v.color and v.color not in color_values:
                 color_values.append(v.color)
         p.colors = [{'valor': c} for c in color_values]
 
-        # tallas únicas desde variantes
+        # tallas Ãºnicas desde variantes
         size_values = []
         for v in p.variantes.all():
             # prefer direct foreign-key talla.codigo
@@ -594,7 +640,7 @@ def shop_collection_sub(request):
 
         p.sizes = size_values
 
-        # descripción corta para mostrar en el modal
+        # descripciÃ³n corta para mostrar en el modal
         p.short_description = p.descripcion_corta or (p.descripcion_larga[:180] if p.descripcion_larga else '')
 
         # disponibilidad calculada a partir del stock total
@@ -609,6 +655,7 @@ def shop_collection_sub(request):
         'categoria_actual': categoria_actual,
         'coleccion_actual': coleccion_actual,
         'categorias_a_mostrar': categorias_a_mostrar,
+        'titulo_filtro_categoria': titulo_filtro_categoria,
     })
 
 
@@ -627,13 +674,13 @@ def logout_usuario(request):
 
 @admin_required
 def dashboard_redirect(request):
-    """Redirección al dashboard si el usuario es admin"""
+    """RedirecciÃ³n al dashboard si el usuario es admin"""
     return redirect('core:admin_index')
 
 
 @admin_required
 def admin_index(request):
-    """Renderiza el índice del panel administrativo con métricas consolidadas."""
+    """Renderiza el Ã­ndice del panel administrativo con mÃ©tricas consolidadas."""
     from .services.admin_dashboard_service import get_admin_dashboard_context
 
     context = get_admin_dashboard_context()
@@ -660,10 +707,10 @@ def product_detail(request, slug=None):
             activo=True
         )
         
-        # Obtener todas las imágenes del producto
+        # Obtener todas las imÃ¡genes del producto
         imagenes = list(producto.imagenes.all())
         
-        print(f"DEBUG - Total imágenes del producto: {len(imagenes)}")
+        print(f"DEBUG - Total imÃ¡genes del producto: {len(imagenes)}")
         
         # Obtener todas las variantes
         variantes = list(producto.variantes.all())
@@ -672,7 +719,7 @@ def product_detail(request, slug=None):
         for v in variantes:
             print(f"DEBUG - Variante ID: {v.id}, Talla: {v.talla}, Color: {v.color}, Stock: {v.stock}")
         
-        # Extraer tallas únicas (solo variantes con stock > 0)
+        # Extraer tallas Ãºnicas (solo variantes con stock > 0)
         tallas_disponibles = []
         tallas_vistas = set()
         for variante in variantes:
@@ -700,7 +747,7 @@ def product_detail(request, slug=None):
                                 })
                                 tallas_vistas.add(valor)
         
-        # Calcular precio mínimo y máximo
+        # Calcular precio mÃ­nimo y mÃ¡ximo
         precios = [v.precio for v in variantes if v.precio]
         precio_min = min(precios) if precios else producto.precio_base
         precio_max = max(precios) if precios else producto.precio_base
@@ -708,7 +755,7 @@ def product_detail(request, slug=None):
         # Verificar si hay descuento (comparando con precio base del producto)
         tiene_descuento = precio_min < producto.precio_base if precio_min and producto.precio_base else False
         
-        # Productos relacionados (misma categoría/subcategoría)
+        # Productos relacionados (misma categorÃ­a/subcategorÃ­a)
         productos_relacionados = (
             Producto.objects
             .filter(activo=True, categoria=producto.categoria)
@@ -716,7 +763,7 @@ def product_detail(request, slug=None):
             .select_related('categoria', 'coleccion')
             .prefetch_related('imagenes', 'variantes')
             .annotate(precio_minimo=Min('variantes__precio'))
-            .order_by('-created_at')  # Más recientes primero
+            .order_by('-created_at')  # MÃ¡s recientes primero
             [:8]
         )
         
@@ -732,7 +779,10 @@ def product_detail(request, slug=None):
                 prod.main_image_src = None
                 prod.hover_image_src = None
             
-            prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
+            if getattr(prod, 'precio_minimo', None):
+                prod.display_price = f"{prod.precio_minimo:.2f}"
+            else:
+                prod.display_price = f"{prod.precio_base:.2f}"
             
             # Obtener tallas del producto relacionado
             prod_variantes = list(prod.variantes.all())
@@ -748,20 +798,20 @@ def product_detail(request, slug=None):
                         tallas_vistas_prod.add(codigo)
             prod.sizes = tallas_prod
         
-        # Productos recientes de cualquier subcategoría de ropa
+        # Productos recientes de cualquier subcategorÃ­a de ropa
         from apps.productos.models import Categoria
         
-        # Buscar la categoría "Ropa" o cualquier categoría principal
+        # Buscar la categorÃ­a "Ropa" o cualquier categorÃ­a principal
         try:
             categoria_ropa = Categoria.objects.get(nombre__icontains='Ropa', padre__isnull=True)
-            # Obtener todas las subcategorías de Ropa
+            # Obtener todas las subcategorÃ­as de Ropa
             subcategorias_ropa = categoria_ropa.subcategorias.filter(estado=True)
             subcategorias_ids = list(subcategorias_ropa.values_list('id', flat=True))
             
-            # Agregar la categoría principal también
+            # Agregar la categorÃ­a principal tambiÃ©n
             subcategorias_ids.append(categoria_ropa.id)
             
-            # Obtener productos de todas estas categorías
+            # Obtener productos de todas estas categorÃ­as
             productos_recientes = Producto.objects.filter(
                 activo=True,
                 categoria_id__in=subcategorias_ids
@@ -776,7 +826,7 @@ def product_detail(request, slug=None):
             ).order_by('-created_at')[:6]
             
         except Categoria.DoesNotExist:
-            # Si no existe la categoría "Ropa", mostrar productos de cualquier categoría
+            # Si no existe la categorÃ­a "Ropa", mostrar productos de cualquier categorÃ­a
             productos_recientes = Producto.objects.filter(
                 activo=True
             ).exclude(
@@ -799,7 +849,10 @@ def product_detail(request, slug=None):
                 prod.main_image_src = None
                 prod.hover_image_src = None
             
-            prod.display_price = prod.precio_minimo if prod.precio_minimo else prod.precio_base
+            if getattr(prod, 'precio_minimo', None):
+                prod.display_price = f"{prod.precio_minimo:.2f}"
+            else:
+                prod.display_price = f"{prod.precio_base:.2f}"
             
             # Tallas
             prod_variantes_rec = list(prod.variantes.all())
@@ -812,8 +865,24 @@ def product_detail(request, slug=None):
                         tallas_rec.append(codigo)
                         tallas_vistas_rec.add(codigo)
             prod.sizes = tallas_rec
+
+        # Estado de wishlist para tarjetas sugeridas (misma lógica que Home)
+        suggested_products = list(productos_relacionados) + list(productos_recientes)
+        wishlist_map = {}
+        if request.user.is_authenticated and suggested_products:
+            from apps.usuarios.models import Wishlist
+
+            wishlist_items = Wishlist.objects.filter(
+                usuario=request.user,
+                producto_id__in=[p.id for p in suggested_products]
+            ).values('id', 'producto_id')
+            wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
+
+        for prod in suggested_products:
+            prod.wishlist_item_id = wishlist_map.get(prod.id)
+            prod.in_wishlist = prod.id in wishlist_map
         
-        # Obtener información adicional del producto
+        # Obtener informaciÃ³n adicional del producto
         from apps.productos.models import ShippingInfo, ReturnPolicy, GlobalProductContent
         
         # Global product content (Features, Materials, Care instructions)
@@ -858,7 +927,7 @@ def product_detail(request, slug=None):
                     'talla': variante.talla.codigo if variante.talla else None
                 }
                 
-                # Debug: imprimir información de la variante
+                # Debug: imprimir informaciÃ³n de la variante
                 print(f"DEBUG Backend - Talla '{key}' - Stock: {variante.stock} - Precio: {variante.precio} - Imagen: {imagen_url}")
             else:
                 # Variante default (sin talla) para productos sin atributos
@@ -877,7 +946,7 @@ def product_detail(request, slug=None):
         print(f"DEBUG Backend - Variantes JSON completo: {variantes_json}")
         print(f"DEBUG Backend - Variantes MAP JSON: {variantes_map_json}")
         
-        # Verificar si el producto está en el wishlist del usuario
+        # Verificar si el producto estÃ¡ en el wishlist del usuario
         in_wishlist = False
         wishlist_item_id = None
         if request.user.is_authenticated:
@@ -1068,7 +1137,7 @@ def cart_save_note(request):
             'message': 'Nota guardada correctamente',
             'note': note
         })
-    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    return JsonResponse({'success': False, 'message': 'MÃ©todo no permitido'}, status=405)
 
 
 def cart_add_gift_wrap(request):
@@ -1085,7 +1154,7 @@ def cart_add_gift_wrap(request):
             'cart_total': str(cart.get_total_price()),
             'gift_wrap_cost': '5.00'
         })
-    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    return JsonResponse({'success': False, 'message': 'MÃ©todo no permitido'}, status=405)
 
 
 def cart_remove_gift_wrap(request):
@@ -1101,12 +1170,12 @@ def cart_remove_gift_wrap(request):
             'message': 'Gift wrap removido',
             'cart_total': str(cart.get_total_price())
         })
-    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    return JsonResponse({'success': False, 'message': 'MÃ©todo no permitido'}, status=405)
 
 
 def view_cart(request):
     """
-    Vista para mostrar la página completa del carrito (view-cart.html)
+    Vista para mostrar la pÃ¡gina completa del carrito (view-cart.html)
     """
     from apps.productos.models import Variante, Producto
     
@@ -1148,10 +1217,75 @@ def view_cart(request):
             'stock': stock,
         })
     
-    # Obtener productos recomendados (productos aleatorios activos)
-    productos_recomendados = Producto.objects.filter(
-        activo=True
-    ).prefetch_related('imagenes', 'variantes').order_by('?')[:8]
+    cart_product_ids = [item['producto_id'] for item in cart_items]
+
+    # Obtener productos recomendados excluyendo los que ya estÃ¡n en el carrito
+    productos_recomendados_qs = (
+        Producto.objects
+        .filter(activo=True)
+        .exclude(id__in=cart_product_ids)
+        .select_related('categoria', 'coleccion')
+        .prefetch_related(
+            'imagenes',
+            'variantes',
+            'variantes__talla',
+            'variantes__atributos__valor_atributo__atributo',
+        )
+        .annotate(precio_minimo=Min('variantes__precio'))
+        .order_by('?')[:8]
+    )
+    productos_recomendados = list(productos_recomendados_qs)
+
+    wishlist_map = {}
+    user_wishlist_ids = []
+    if request.user.is_authenticated and productos_recomendados:
+        from apps.usuarios.models import Wishlist
+
+        wishlist_items = Wishlist.objects.filter(
+            usuario=request.user,
+            producto_id__in=[p.id for p in productos_recomendados]
+        ).values('id', 'producto_id')
+        wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
+        user_wishlist_ids = list(wishlist_map.keys())
+
+    for producto in productos_recomendados:
+        producto.wishlist_item_id = wishlist_map.get(producto.id)
+        producto.in_wishlist = producto.id in wishlist_map
+
+        if getattr(producto, 'precio_minimo', None):
+            producto.display_price = f"{producto.precio_minimo:.2f}"
+        else:
+            producto.display_price = f"{producto.precio_base:.2f}"
+
+        imagenes = list(producto.imagenes.all().order_by('posicion', 'created_at'))
+        producto.main_image_src = imagenes[0].src if imagenes else ''
+        producto.hover_image_src = imagenes[1].src if len(imagenes) > 1 else producto.main_image_src
+
+        color_values = []
+        for variante in producto.variantes.all():
+            if variante.color and variante.color not in color_values:
+                color_values.append(variante.color)
+        producto.colors = [{'valor': c} for c in color_values]
+
+        size_values = []
+        for variante in producto.variantes.all():
+            if getattr(variante, 'talla', None) and getattr(variante.talla, 'codigo', None):
+                code = variante.talla.codigo
+                if code and code not in size_values:
+                    size_values.append(code)
+                continue
+
+            for va in getattr(variante, 'atributos', []).all() if hasattr(getattr(variante, 'atributos', None), 'all') else []:
+                val = getattr(va, 'valor_atributo', None)
+                if not val:
+                    continue
+                atributo = getattr(val, 'atributo', None)
+                nombre_at = (getattr(atributo, 'slug', '') or getattr(atributo, 'nombre', '')).lower()
+                if 'talla' in nombre_at or 'size' in nombre_at:
+                    valor = getattr(val, 'valor', None)
+                    if valor and valor not in size_values:
+                        size_values.append(valor)
+        producto.sizes = size_values
     
     context = {
         'cart_items': cart_items,
@@ -1159,6 +1293,8 @@ def view_cart(request):
         'note': cart.get_note(),
         'has_gift_wrap': cart.has_gift_wrap(),
         'productos_recomendados': productos_recomendados,
+        'user_wishlist_ids': user_wishlist_ids,
+        'testimonials': _get_testimonials_data(),
     }
     
     return render(request, 'view-cart.html', context)
@@ -1167,9 +1303,9 @@ def view_cart(request):
 def api_productos_nuevos(request):
     """Endpoint AJAX: devuelve el HTML de los siguientes productos nuevos.
 
-    Parámetros GET:
-    - offset: desde qué índice (int)
-    - limit: cuántos devolver (int)
+    ParÃ¡metros GET:
+    - offset: desde quÃ© Ã­ndice (int)
+    - limit: cuÃ¡ntos devolver (int)
     """
     from django.template.loader import render_to_string
     from django.db.models import Min
@@ -1184,7 +1320,7 @@ def api_productos_nuevos(request):
     except Exception:
         limit = 4
 
-    # Intentar restringir a categoría 'Ropa' y sus subcategorías, si existe
+    # Intentar restringir a categorÃ­a 'Ropa' y sus subcategorÃ­as, si existe
     from apps.productos.models import Categoria
     try:
         categoria_ropa_ajax = Categoria.objects.filter(nombre__icontains='ropa', padre__isnull=True, estado=True).first()
@@ -1214,8 +1350,20 @@ def api_productos_nuevos(request):
 
     productos_slice = list(qs[offset:offset + limit])
 
-    # Preparar campos auxiliares (misma lógica que en inicio)
+    wishlist_map = {}
+    if request.user.is_authenticated and productos_slice:
+        from apps.usuarios.models import Wishlist
+        wishlist_items = Wishlist.objects.filter(
+            usuario=request.user,
+            producto_id__in=[p.id for p in productos_slice]
+        ).values('id', 'producto_id')
+        wishlist_map = {item['producto_id']: item['id'] for item in wishlist_items}
+
+    # Preparar campos auxiliares (misma lÃ³gica que en inicio)
     for producto in productos_slice:
+        producto.wishlist_item_id = wishlist_map.get(producto.id)
+        producto.in_wishlist = producto.id in wishlist_map
+
         if getattr(producto, 'precio_minimo', None):
             producto.display_price = f"{producto.precio_minimo:.2f}"
         else:
@@ -1263,7 +1411,7 @@ def api_productos_nuevos(request):
 def cart_recommendations(request):
     """
     Vista para obtener productos recomendados basados en el carrito
-    Muestra productos de las mismas categorías que los productos en el carrito
+    Muestra productos de las mismas categorÃ­as que los productos en el carrito
     """
     cart = Cart(request)
     
@@ -1271,7 +1419,7 @@ def cart_recommendations(request):
     cart_product_ids = [int(item['producto_id']) for item in cart]
     
     if not cart_product_ids:
-        # Si el carrito está vacío, mostrar productos destacados o recientes
+        # Si el carrito estÃ¡ vacÃ­o, mostrar productos destacados o recientes
         productos_recomendados = Producto.objects.filter(
             activo=True
         ).select_related(
@@ -1282,12 +1430,12 @@ def cart_recommendations(request):
             precio_minimo=Min('variantes__precio')
         ).order_by('-created_at')[:6]
     else:
-        # Obtener categorías de productos en el carrito
+        # Obtener categorÃ­as de productos en el carrito
         from apps.productos.models import Categoria
         productos_en_carrito = Producto.objects.filter(id__in=cart_product_ids).select_related('categoria')
         categorias_ids = list(set([p.categoria_id for p in productos_en_carrito if p.categoria_id]))
         
-        # Buscar productos de las mismas categorías que no están en el carrito
+        # Buscar productos de las mismas categorÃ­as que no estÃ¡n en el carrito
         productos_recomendados = Producto.objects.filter(
             activo=True,
             categoria_id__in=categorias_ids
@@ -1327,7 +1475,7 @@ def cart_recommendations(request):
 
 def checkout(request):
     """
-    Vista para mostrar la página de checkout
+    Vista para mostrar la pÃ¡gina de checkout
     """
     from apps.productos.models import Variante, Producto
     from apps.usuarios.models import Ciudad, Provincia
@@ -1336,7 +1484,11 @@ def checkout(request):
     
     # Verificar si el carrito está vacío
     if len(cart) == 0:
-        messages.warning(request, 'Tu carrito está vacío. Agrega productos antes de continuar.')
+        messages.warning(
+            request,
+            'Tu carrito está vacío. Agrega productos antes de continuar.',
+            extra_tags='storefront cart',
+        )
         return redirect('core:view_cart')
     
     # Preparar items del carrito para el template
@@ -1382,7 +1534,7 @@ def checkout(request):
         if hasattr(request.user, 'telefono') and request.user.telefono:
             user_telefono = request.user.telefono
     
-    # Verificar si el usuario tiene cupón de carnaval disponible
+    # Verificar si el usuario tiene cupÃ³n de carnaval disponible
     carnival_discount = 0
     carnival_coupon_available = False
     from datetime import datetime
@@ -1420,13 +1572,13 @@ def checkout(request):
 
 def calculate_shipping(request):
     """
-    Vista AJAX para calcular el costo de envío según la ciudad seleccionada y el total del carrito.
+    Vista AJAX para calcular el costo de envÃ­o segÃºn la ciudad seleccionada y el total del carrito.
     
-    Lógica:
-    - Machala + total > $50 = Envío gratis
-    - Machala + total <= $50 = Envío $3
-    - Otra ciudad + total >= $90 = Envío gratis
-    - Otra ciudad + total < $90 = Envío $7
+    LÃ³gica:
+    - Machala + total > $50 = EnvÃ­o gratis
+    - Machala + total <= $50 = EnvÃ­o $3
+    - Otra ciudad + total >= $90 = EnvÃ­o gratis
+    - Otra ciudad + total < $90 = EnvÃ­o $7
     """
     from decimal import Decimal
     import logging
@@ -1434,14 +1586,14 @@ def calculate_shipping(request):
     logger = logging.getLogger(__name__)
     
     if request.method != 'POST':
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        return JsonResponse({'error': 'MÃ©todo no permitido'}, status=405)
     
     try:
         city = request.POST.get('city', '').strip()
         cart_total_str = request.POST.get('cart_total', '0')
         cart_total = Decimal(cart_total_str)
         
-        logger.info(f'📦 ENVÍO: city={city}, cart_total_str={cart_total_str}, cart_total={cart_total}')
+        logger.info(f'ðŸ“¦ ENVÃO: city={city}, cart_total_str={cart_total_str}, cart_total={cart_total}')
         
         if not city:
             return JsonResponse({'error': 'Ciudad no especificada'}, status=400)
@@ -1454,19 +1606,19 @@ def calculate_shipping(request):
             if cart_total > Decimal('50'):
                 shipping_cost = Decimal('0')
                 free_shipping = True
-                logger.info(f'✅ Machala: {cart_total} > $50 → Gratis')
+                logger.info(f'âœ… Machala: {cart_total} > $50 â†’ Gratis')
             else:
                 shipping_cost = Decimal('3')
-                logger.info(f'✅ Machala: {cart_total} <= $50 → $3')
+                logger.info(f'âœ… Machala: {cart_total} <= $50 â†’ $3')
         else:
             # Otras ciudades: gratis si >= $90, sino $7
             if cart_total >= Decimal('90'):
                 shipping_cost = Decimal('0')
                 free_shipping = True
-                logger.info(f'✅ {city}: {cart_total} >= $90 → Gratis')
+                logger.info(f'âœ… {city}: {cart_total} >= $90 â†’ Gratis')
             else:
                 shipping_cost = Decimal('7')
-                logger.info(f'✅ {city}: {cart_total} < $90 → $7')
+                logger.info(f'âœ… {city}: {cart_total} < $90 â†’ $7')
         
         total_with_shipping = cart_total + shipping_cost
         
@@ -1475,13 +1627,13 @@ def calculate_shipping(request):
             'shipping_cost': float(shipping_cost),
             'free_shipping': free_shipping,
             'total_with_shipping': float(total_with_shipping),
-            'message': 'Envío gratis' if free_shipping else f'Envío: ${shipping_cost}'
+            'message': 'EnvÃ­o gratis' if free_shipping else f'EnvÃ­o: ${shipping_cost}'
         })
     
     except Exception as e:
-        logger.error(f'❌ Error al calcular envío: {str(e)}', exc_info=True)
+        logger.error(f'âŒ Error al calcular envÃ­o: {str(e)}', exc_info=True)
         return JsonResponse({
-            'error': f'Error al calcular envío: {str(e)}'
+            'error': f'Error al calcular envÃ­o: {str(e)}'
         }, status=400)
 
 
@@ -1501,7 +1653,7 @@ def checkout_process(request):
     
     # Verificar si el carrito está vacío
     if len(cart) == 0:
-        messages.error(request, 'Tu carrito está vacío.')
+        messages.error(request, 'Tu carrito está vacío.', extra_tags='storefront cart')
         return redirect('core:view_cart')
     
     try:
@@ -1515,9 +1667,9 @@ def checkout_process(request):
         other_city = request.POST.get('other_city', '').strip()
         address = request.POST.get('address', '').strip()
         order_note = request.POST.get('order_note', '').strip()
-        payment_method = request.POST.get('payment_method', 'bank_transfer')
+        payment_method = 'bank_transfer'
         
-        # Si seleccionó "Otra ciudad", usar el campo other_city
+        # Si seleccionÃ³ "Otra ciudad", usar el campo other_city
         if city == 'Otra' and other_city:
             city = other_city
         
@@ -1531,14 +1683,14 @@ def checkout_process(request):
         gift_wrap = cart.has_gift_wrap()
         gift_wrap_cost = Decimal('5.00') if gift_wrap else Decimal('0.00')
         
-        # Obtener costo de envío (puede venir del formulario)
+        # Obtener costo de envÃ­o (puede venir del formulario)
         shipping_cost = Decimal(request.POST.get('shipping_cost', '0'))
         
-        # Aplicar código de descuento si existe
+        # Aplicar cÃ³digo de descuento si existe
         discount_code = request.POST.get('discount_code_applied', '').strip()
         discount_amount = Decimal(request.POST.get('discount_amount', '0'))
         
-        # 🎭 CUPÓN DE CARNAVAL AUTOMÁTICO - FEBRERO 2026
+        # ðŸŽ­ CUPÃ“N DE CARNAVAL AUTOMÃTICO - FEBRERO 2026
         carnival_discount_applied = False
         from datetime import datetime
         now = datetime.now()
@@ -1546,33 +1698,33 @@ def checkout_process(request):
         # TEMPORAL: Permitir en enero (mes 1) y febrero (mes 2) para pruebas
         if request.user.is_authenticated and now.year == 2026 and now.month in [1, 2]:
             if hasattr(request.user, 'has_carnival_coupon_available') and request.user.has_carnival_coupon_available():
-                # Aplicar 10% de descuento automáticamente
+                # Aplicar 10% de descuento automÃ¡ticamente
                 carnival_discount = subtotal * Decimal('0.10')
                 discount_amount += carnival_discount
                 discount_code = 'CARNAVAL2026' if not discount_code else f'{discount_code}+CARNAVAL2026'
                 carnival_discount_applied = True
-                print(f'🎭 Cupón de carnaval aplicado: ${carnival_discount}')
+                print(f'ðŸŽ­ CupÃ³n de carnaval aplicado: ${carnival_discount}')
         
-        # Validar código de descuento manual si se proporcionó (además del carnival)
+        # Validar cÃ³digo de descuento manual si se proporcionÃ³ (ademÃ¡s del carnival)
         if discount_code and 'CARNAVAL2026' not in discount_code:
             from .models import CodigoDescuento
             try:
                 codigo = CodigoDescuento.objects.get(codigo=discount_code)
                 es_valido, mensaje = codigo.es_valido(subtotal)
                 if not es_valido:
-                    messages.warning(request, f'El código de descuento ya no es válido: {mensaje}')
+                    messages.warning(request, f'El cÃ³digo de descuento ya no es vÃ¡lido: {mensaje}')
                     discount_amount = Decimal('0')
                     discount_code = ''
                 else:
-                    # Incrementar uso del código
+                    # Incrementar uso del cÃ³digo
                     codigo.usos_actuales += 1
                     codigo.save()
             except CodigoDescuento.DoesNotExist:
-                messages.warning(request, 'El código de descuento no es válido')
+                messages.warning(request, 'El cÃ³digo de descuento no es vÃ¡lido')
                 discount_amount = Decimal('0')
                 discount_code = ''
         
-        # Total = subtotal + envío + regalo - descuento
+        # Total = subtotal + envÃ­o + regalo - descuento
         total = subtotal + shipping_cost + gift_wrap_cost - discount_amount
         
         # Crear el pedido
@@ -1633,38 +1785,38 @@ def checkout_process(request):
         # Limpiar el carrito
         cart.clear()
         
-        # 🎭 Marcar cupón de carnaval como usado
+        # ðŸŽ­ Marcar cupÃ³n de carnaval como usado
         if carnival_discount_applied and request.user.is_authenticated:
             request.user.carnival_coupon_used_2026 = True
             request.user.carnival_coupon_used_date = now
             request.user.save()
-            print(f'✅ Cupón de carnaval marcado como usado para {request.user.email}')
+            print(f'âœ… CupÃ³n de carnaval marcado como usado para {request.user.email}')
         
-        # Asegurar que la sesión se guarde completamente
+        # Asegurar que la sesiÃ³n se guarde completamente
         request.session.modified = True
         request.session.save()
         
-        # 📱 Enviar notificación a WhatsApp del administrador
+        # ðŸ“± Enviar notificaciÃ³n a WhatsApp del administrador
         from .whatsapp_utils import enviar_notificacion_pedido
         resultado_whatsapp = enviar_notificacion_pedido(pedido)
         
         if resultado_whatsapp.get('success'):
             messages.success(
                 request,
-                f'✅ ¡Pedido realizado! #{pedido.numero_pedido} | Notificación enviada al admin'
+                f'âœ… Â¡Pedido realizado! #{pedido.numero_pedido} | NotificaciÃ³n enviada al admin'
             )
         else:
             messages.success(
                 request,
-                f'✅ ¡Pedido realizado! #{pedido.numero_pedido}'
+                f'âœ… Â¡Pedido realizado! #{pedido.numero_pedido}'
             )
         
-        # Redirigir a página de confirmación
+        # Redirigir a pÃ¡gina de confirmaciÃ³n
         return redirect('core:order_confirmation', numero_pedido=pedido.numero_pedido)
         
     except Exception as e:
         import traceback
-        print(f'❌ ERROR EN CHECKOUT_PROCESS: {str(e)}')
+        print(f'âŒ ERROR EN CHECKOUT_PROCESS: {str(e)}')
         print(f'Traceback: {traceback.format_exc()}')
         messages.error(request, f'Error al procesar el pedido: {str(e)}')
         return redirect('core:checkout')
@@ -1672,14 +1824,14 @@ def checkout_process(request):
 
 def order_confirmation(request, numero_pedido):
     """
-    Vista para mostrar la confirmación del pedido
+    Vista para mostrar la confirmaciÃ³n del pedido
     """
     from django.shortcuts import get_object_or_404
     from .models import Pedido
     
     pedido = get_object_or_404(Pedido, numero_pedido=numero_pedido)
     
-    # Verificar que el pedido pertenece al usuario (si está autenticado)
+    # Verificar que el pedido pertenece al usuario (si estÃ¡ autenticado)
     if request.user.is_authenticated and pedido.usuario and pedido.usuario != request.user:
         messages.error(request, 'No tienes permiso para ver este pedido.')
         return redirect('core:inicio')
@@ -1693,11 +1845,11 @@ def order_confirmation(request, numero_pedido):
 
 def get_order_status(request, numero_pedido):
     """
-    Endpoint AJAX para obtener el estado actual de un pedido sin recargar la página
+    Endpoint AJAX para obtener el estado actual de un pedido sin recargar la pÃ¡gina
     
     Retorna JSON con:
     - estado: estado actual del pedido
-    - pagado: boolean si está pagado
+    - pagado: boolean si estÃ¡ pagado
     - estado_display: nombre legible del estado
     - fecha_pago: fecha del pago si existe
     """
@@ -1734,7 +1886,7 @@ def get_order_status(request, numero_pedido):
 @require_POST
 def validate_discount_code(request):
     """
-    Vista AJAX para validar códigos de descuento
+    Vista AJAX para validar cÃ³digos de descuento
     """
     from .models import CodigoDescuento
     from decimal import Decimal
@@ -1744,7 +1896,7 @@ def validate_discount_code(request):
     if not discount_code:
         return JsonResponse({
             'valid': False,
-            'message': 'Por favor ingresa un código de descuento'
+            'message': 'Por favor ingresa un cÃ³digo de descuento'
         })
     
     try:
@@ -1754,7 +1906,7 @@ def validate_discount_code(request):
         cart = Cart(request)
         cart_total = cart.get_total_price()
         
-        # Validar el código
+        # Validar el cÃ³digo
         es_valido, mensaje = codigo.es_valido(cart_total)
         
         if not es_valido:
@@ -1771,13 +1923,13 @@ def validate_discount_code(request):
             'discount_amount': float(discount_amount),
             'discount_type': codigo.tipo,
             'discount_value': float(codigo.valor),
-            'message': 'Código válido'
+            'message': 'CÃ³digo vÃ¡lido'
         })
         
     except CodigoDescuento.DoesNotExist:
         return JsonResponse({
             'valid': False,
-            'message': 'El código de descuento no existe'
+            'message': 'El cÃ³digo de descuento no existe'
         })
 
 # ==================== ADMIN ORDER VIEWS ====================
@@ -1788,7 +1940,7 @@ from .models import Pedido
 @admin_required
 def admin_order_list(request):
     """
-    Vista para listar todos los pedidos en el panel de administración con filtros.
+    Vista para listar todos los pedidos en el panel de administraciÃ³n con filtros.
     """
     if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
         return redirect('core:inicio')
@@ -1832,13 +1984,13 @@ def admin_order_detail_select(request):
     if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
         return redirect('core:inicio')
     
-    # Si se envía un pedido_id por POST, redirigir al detalle
+    # Si se envÃ­a un pedido_id por POST, redirigir al detalle
     if request.method == 'POST':
         pedido_id = request.POST.get('pedido_id')
         if pedido_id:
             return redirect('core:admin_order_detail', pedido_id=pedido_id)
     
-    # Buscar pedidos si hay búsqueda
+    # Buscar pedidos si hay bÃºsqueda
     search_query = request.GET.get('q', '')
     pedidos = Pedido.objects.all().select_related('usuario').order_by('-created_at')
     
@@ -1858,7 +2010,7 @@ def admin_order_detail_select(request):
 @admin_required
 def admin_order_detail(request, pedido_id):
     """
-    Vista para ver los detalles de un pedido específico en el panel de administración.
+    Vista para ver los detalles de un pedido especÃ­fico en el panel de administraciÃ³n.
     """
     if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
         return redirect('core:inicio')
@@ -1874,13 +2026,13 @@ def admin_order_tracking_select(request):
     if not request.user.is_staff and not (hasattr(request.user, 'rol') and request.user.rol == 'admin_tienda'):
         return redirect('core:inicio')
     
-    # Si se envía un pedido_id por POST, redirigir al seguimiento
+    # Si se envÃ­a un pedido_id por POST, redirigir al seguimiento
     if request.method == 'POST':
         pedido_id = request.POST.get('pedido_id')
         if pedido_id:
             return redirect('core:admin_order_tracking', pedido_id=pedido_id)
     
-    # Buscar pedidos si hay búsqueda
+    # Buscar pedidos si hay bÃºsqueda
     search_query = request.GET.get('q', '')
     pedidos = Pedido.objects.all().select_related('usuario').order_by('-created_at')
     
@@ -1900,7 +2052,7 @@ def admin_order_tracking_select(request):
 @admin_required
 def admin_order_tracking(request, pedido_id):
     """
-    Vista para el seguimiento de un pedido específico.
+    Vista para el seguimiento de un pedido especÃ­fico.
     """
     pedido = get_object_or_404(Pedido.objects.select_related('usuario').prefetch_related('items'), id=pedido_id)
     return render(request, 'oder-tracking.html', {'pedido': pedido})
@@ -1919,11 +2071,11 @@ def admin_order_mark_paid(request, pedido_id):
     
     pedido = get_object_or_404(Pedido, id=pedido_id)
     
-    # Verificar si ya está pagado
+    # Verificar si ya estÃ¡ pagado
     if pedido.pagado:
         return JsonResponse({
             'success': False, 
-            'message': 'Este pedido ya está marcado como pagado'
+            'message': 'Este pedido ya estÃ¡ marcado como pagado'
         }, status=400)
     
     # Marcar como pagado
@@ -1959,12 +2111,12 @@ def admin_order_update_status(request, pedido_id):
         if nuevo_estado not in estados_validos:
             return JsonResponse({
                 'success': False,
-                'message': 'Estado inválido. Debe ser: procesando, enviado o entregado'
+                'message': 'Estado invÃ¡lido. Debe ser: procesando, enviado o entregado'
             }, status=400)
         
         pedido = get_object_or_404(Pedido, id=pedido_id)
         
-        # Validar transición de estados
+        # Validar transiciÃ³n de estados
         transiciones = {
             'pendiente': ['procesando', 'cancelado'],
             'procesando': ['enviado', 'cancelado'],
@@ -2006,18 +2158,18 @@ def admin_order_cancel(request, pedido_id):
     
     pedido = get_object_or_404(Pedido, id=pedido_id)
     
-    # Verificar si ya está cancelado
+    # Verificar si ya estÃ¡ cancelado
     if pedido.estado == 'cancelado':
         return JsonResponse({
             'success': False, 
-            'message': 'Este pedido ya está cancelado'
+            'message': 'Este pedido ya estÃ¡ cancelado'
         }, status=400)
     
-    # Verificar si ya está pagado
+    # Verificar si ya estÃ¡ pagado
     if pedido.pagado:
         return JsonResponse({
             'success': False, 
-            'message': 'No se puede cancelar un pedido que ya está pagado'
+            'message': 'No se puede cancelar un pedido que ya estÃ¡ pagado'
         }, status=400)
     
     stock_returned = []
@@ -2032,10 +2184,10 @@ def admin_order_cancel(request, pedido_id):
                     variante.stock += item.cantidad
                     variante.save()
                     
-                    stock_returned.append(f"• {item.nombre_producto} ({item.talla or 'Sin talla'}, {item.color or 'Sin color'}): +{item.cantidad} unidades")
+                    stock_returned.append(f"â€¢ {item.nombre_producto} ({item.talla or 'Sin talla'}, {item.color or 'Sin color'}): +{item.cantidad} unidades")
                 except Exception as e:
-                    # Si hay algún error, registrar pero continuar
-                    stock_returned.append(f"• {item.nombre_producto}: Error al devolver stock - {str(e)}")
+                    # Si hay algÃºn error, registrar pero continuar
+                    stock_returned.append(f"â€¢ {item.nombre_producto}: Error al devolver stock - {str(e)}")
             elif hasattr(item, 'variante_id') and item.variante_id:
                 # Fallback: usar variante_id si existe (compatibilidad con pedidos antiguos)
                 try:
@@ -2043,11 +2195,11 @@ def admin_order_cancel(request, pedido_id):
                     variante.stock += item.cantidad
                     variante.save()
                     
-                    stock_returned.append(f"• {item.nombre_producto} ({item.talla or 'Sin talla'}, {item.color or 'Sin color'}): +{item.cantidad} unidades")
+                    stock_returned.append(f"â€¢ {item.nombre_producto} ({item.talla or 'Sin talla'}, {item.color or 'Sin color'}): +{item.cantidad} unidades")
                 except Variante.DoesNotExist:
-                    stock_returned.append(f"• {item.nombre_producto}: Variante no encontrada (no se pudo devolver stock)")
+                    stock_returned.append(f"â€¢ {item.nombre_producto}: Variante no encontrada (no se pudo devolver stock)")
             else:
-                stock_returned.append(f"• {item.nombre_producto}: Sin variante asociada (no se pudo devolver stock)")
+                stock_returned.append(f"â€¢ {item.nombre_producto}: Sin variante asociada (no se pudo devolver stock)")
         
         # Marcar pedido como cancelado
         pedido.estado = 'cancelado'
@@ -2068,7 +2220,7 @@ def admin_order_cancel(request, pedido_id):
         }, status=500)
 
 
-# ==================== GESTIÓN DE USUARIOS ====================
+# ==================== GESTIÃ“N DE USUARIOS ====================
 
 @admin_required
 def admin_user_list(request):
@@ -2077,10 +2229,10 @@ def admin_user_list(request):
     
     # Verificar permisos de administrador
     if not request.user.is_staff:
-        messages.error(request, 'No tienes permisos para acceder a esta sección.')
+        messages.error(request, 'No tienes permisos para acceder a esta secciÃ³n.')
         return redirect('core:inicio')
     
-    # Obtener parámetros de búsqueda y filtros
+    # Obtener parÃ¡metros de bÃºsqueda y filtros
     search_query = request.GET.get('q', '')
     rol_filtro = request.GET.get('rol', '')
     estado_filtro = request.GET.get('estado', '')
@@ -2088,7 +2240,7 @@ def admin_user_list(request):
     # Construir queryset base
     usuarios = Usuario.objects.all().order_by('-fecha_registro')
     
-    # Aplicar filtros de búsqueda
+    # Aplicar filtros de bÃºsqueda
     if search_query:
         usuarios = usuarios.filter(
             Q(email__icontains=search_query) |
@@ -2108,8 +2260,8 @@ def admin_user_list(request):
     elif estado_filtro == 'inactivo':
         usuarios = usuarios.filter(is_active=False)
     
-    # Paginación
-    paginator = Paginator(usuarios, 20)  # 20 usuarios por página
+    # PaginaciÃ³n
+    paginator = Paginator(usuarios, 20)  # 20 usuarios por pÃ¡gina
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -2130,7 +2282,7 @@ def admin_user_list(request):
 
 @admin_required
 def admin_user_detail(request, user_id):
-    """Vista detallada de un usuario específico"""
+    """Vista detallada de un usuario especÃ­fico"""
     from apps.usuarios.models import Usuario
     from django.shortcuts import get_object_or_404
     
@@ -2140,7 +2292,7 @@ def admin_user_detail(request, user_id):
     pedidos_usuario = Pedido.objects.filter(
         Q(email=usuario.email) | 
         Q(first_name=usuario.nombre, last_name=usuario.apellido)
-    ).order_by('-fecha_pedido')[:10]  # Últimos 10 pedidos
+    ).order_by('-fecha_pedido')[:10]  # Ãšltimos 10 pedidos
     
     context = {
         'usuario': usuario,
@@ -2160,7 +2312,7 @@ def admin_user_edit(request, user_id):
     usuario = get_object_or_404(Usuario, id=user_id)
     
     if request.method == 'POST':
-        # Actualizar información personal
+        # Actualizar informaciÃ³n personal
         usuario.nombre = request.POST.get('nombre', usuario.nombre)
         usuario.apellido = request.POST.get('apellido', usuario.apellido)
         usuario.telefono = request.POST.get('telefono', usuario.telefono)
@@ -2184,7 +2336,7 @@ def admin_user_edit(request, user_id):
             except Ciudad.DoesNotExist:
                 pass
         
-        # Actualizar contraseña si se proporciona
+        # Actualizar contraseÃ±a si se proporciona
         nueva_password = request.POST.get('nueva_password')
         if nueva_password:
             usuario.set_password(nueva_password)
@@ -2251,13 +2403,13 @@ def admin_user_delete(request, user_id):
 
 def wishlist(request):
     """
-    Vista para mostrar la página del wishlist con los productos favoritos del usuario
+    Vista para mostrar la pÃ¡gina del wishlist con los productos favoritos del usuario
     """
     from apps.usuarios.models import Wishlist
     from django.db.models import Min
     
     if not request.user.is_authenticated:
-        # Si no está autenticado, mostrar template con modal
+        # Si no estÃ¡ autenticado, mostrar template con modal
         context = {
             'productos': [],
             'total_items': 0,
@@ -2280,7 +2432,7 @@ def wishlist(request):
         # Precio
         producto.display_price = producto.precio_base
         
-        # Imágenes
+        # ImÃ¡genes
         imagenes = list(producto.imagenes.filter(tipo_medio='imagen')[:2])
         if imagenes:
             producto.main_image_src = imagenes[0].src
@@ -2333,7 +2485,7 @@ def wishlist_add(request):
         return JsonResponse({
             'success': False,
             'require_login': True,
-            'message': 'Debes iniciar sesión para usar la lista de deseos'
+            'message': 'Debes iniciar sesión para usar la lista de favoritos'
         }, status=401)
     
     product_id = request.POST.get('product_id')
@@ -2363,7 +2515,7 @@ def wishlist_add(request):
         else:
             return JsonResponse({
                 'success': False,
-                'message': 'El producto ya está en favoritos',
+                'message': 'El producto ya estÃ¡ en favoritos',
                 'wishlist_id': wishlist_item.id,
                 'in_wishlist': True
             })
@@ -2391,22 +2543,29 @@ def wishlist_remove(request):
     if not request.user.is_authenticated:
         return JsonResponse({
             'success': False,
-            'message': 'Debes iniciar sesión para usar el wishlist'
+            'message': 'Debes iniciar sesión para usar la lista de favoritos'
         }, status=401)
     
     wishlist_id = request.POST.get('wishlist_id')
-    
-    if not wishlist_id:
+    product_id = request.POST.get('product_id')
+
+    if not wishlist_id and not product_id:
         return JsonResponse({
             'success': False,
-            'message': 'ID de wishlist no especificado'
+            'message': 'ID de producto o wishlist no especificado'
         }, status=400)
-    
+
     try:
         from apps.usuarios.models import Wishlist
-        wishlist_item = Wishlist.objects.get(id=wishlist_id, usuario=request.user)
+        if wishlist_id:
+            wishlist_item = Wishlist.objects.get(id=wishlist_id, usuario=request.user)
+        else:
+            wishlist_item = Wishlist.objects.filter(producto_id=product_id, usuario=request.user).first()
+            if not wishlist_item:
+                raise Wishlist.DoesNotExist
+            
         wishlist_item.delete()
-        
+
         return JsonResponse({
             'success': True,
             'message': 'Producto removido de favoritos',
@@ -2443,26 +2602,26 @@ def wishlist_count(request):
     })
 
 
-# Vistas para páginas estáticas
+# Vistas para pÃ¡ginas estÃ¡ticas
 def terms_conditions(request):
-    """Renderiza la página de términos y condiciones desde el admin Django"""
+    """Renderiza la pÃ¡gina de tÃ©rminos y condiciones desde el admin Django"""
     from apps.ayudas.models import PaginaAyuda
     pagina = None
     try:
         pagina = PaginaAyuda.objects.get(tipo='terminos', activo=True)
     except PaginaAyuda.DoesNotExist:
-        # Si no existe, mostrar una página por defecto
+        # Si no existe, mostrar una pÃ¡gina por defecto
         pass
     
     if pagina:
         return render(request, 'terms-conditions.html', {'pagina': pagina})
     else:
-        # Renderizar template vacío si no hay contenido
+        # Renderizar template vacÃ­o si no hay contenido
         return render(request, 'terms-conditions.html', {'pagina': None})
 
 
 def privacy_policy(request):
-    """Renderiza la página de política de privacidad desde el admin Django"""
+    """Renderiza la pÃ¡gina de polÃ­tica de privacidad desde el admin Django"""
     from apps.ayudas.models import PaginaAyuda
     pagina = None
     try:
@@ -2477,7 +2636,7 @@ def privacy_policy(request):
 
 
 def delivery_return(request):
-    """Renderiza la página de devoluciones y cambios desde el admin Django"""
+    """Renderiza la pÃ¡gina de devoluciones y cambios desde el admin Django"""
     from apps.ayudas.models import PaginaAyuda
     pagina = None
     try:
@@ -2492,7 +2651,7 @@ def delivery_return(request):
 
 
 def shipping_delivery(request):
-    """Renderiza la página de envíos desde el admin Django"""
+    """Renderiza la pÃ¡gina de envÃ­os desde el admin Django"""
     from apps.ayudas.models import PaginaAyuda
     pagina = None
     try:
@@ -2507,11 +2666,11 @@ def shipping_delivery(request):
 
 
 def faq(request):
-    """Renderiza la página de FAQ (redirige a la vista dinámicamente cargada desde ayudas)"""
+    """Renderiza la pÃ¡gina de FAQ (redirige a la vista dinÃ¡micamente cargada desde ayudas)"""
     from apps.ayudas.views import faq_list
     return faq_list(request)
 
 
 def compare(request):
-    """Renderiza la página de comparación"""
+    """Renderiza la pÃ¡gina de comparaciÃ³n"""
     return render(request, 'compare.html')

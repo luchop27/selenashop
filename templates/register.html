@@ -6,7 +6,7 @@
         <!-- page-title -->
         <div class="tf-page-title style-2">
             <div class="container-full">
-                <div class="heading text-center">Register</div>
+                <div class="heading text-center">Crear cuenta</div>
             </div>
         </div>
         <!-- /page-title -->
@@ -15,16 +15,19 @@
             <div class="container">
                 <div class="form-register-wrap">
                     <div class="flat-title align-items-start gap-0 mb_30 px-0">
-                        <h5 class="mb_18">Register</h5>
-                        <p class="text_black-2">Sign up for early Sale access plus tailored new arrivals, trends and
-                            promotions. To opt out, click unsubscribe in our emails</p>
+                        <h5 class="mb_18">Regístrate</h5>
+                        <p class="text_black-2">Completa tu registro para guardar favoritos, agilizar tus compras y recibir novedades exclusivas.</p>
                     </div>
                     
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} mb_20">
-                                {{ message }}
-                            </div>
+                            {% with message_text=message|stringformat:"s"|lower %}
+                                {% if 'admin' not in message.tags|lower and 'eliminado exitosamente' not in message_text and 'eliminada exitosamente' not in message_text and 'actualizado exitosamente' not in message_text and 'actualizada exitosamente' not in message_text and 'agregado exitosamente' not in message_text and 'agregada exitosamente' not in message_text and 'panel de administración' not in message_text and 'panel de administracion' not in message_text %}
+                                    <div class="alert alert-{{ message.tags }} mb_20">
+                                        {{ message }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
                         {% endfor %}
                     {% endif %}
                     
@@ -35,41 +38,41 @@
                             <div class="tf-field style-1 mb_15">
                                 <input class="tf-field-input tf-input" placeholder=" " type="text" id="nombre"
                                     name="nombre" value="{{ nombre|default:'' }}">
-                                <label class="tf-field-label fw-4 text_black-2" for="nombre">First name</label>
+                                <label class="tf-field-label fw-4 text_black-2" for="nombre">Nombre</label>
                             </div>
                             <div class="tf-field style-1 mb_15">
                                 <input class="tf-field-input tf-input" placeholder=" " type="text" id="apellido"
                                     name="apellido" value="{{ apellido|default:'' }}">
-                                <label class="tf-field-label fw-4 text_black-2" for="apellido">Last name</label>
+                                <label class="tf-field-label fw-4 text_black-2" for="apellido">Apellido</label>
                             </div>
                             <div class="tf-field style-1 mb_15">
                                 <input class="tf-field-input tf-input" placeholder=" " type="email" id="email"
                                     name="email" value="{{ email|default:'' }}" required>
-                                <label class="tf-field-label fw-4 text_black-2" for="email">Email *</label>
+                                <label class="tf-field-label fw-4 text_black-2" for="email">Correo electrónico *</label>
                             </div>
                             <div class="tf-field style-1 mb_15">
                                 <input class="tf-field-input tf-input" placeholder=" " type="tel" id="telefono"
                                     name="telefono" value="{{ telefono|default:'' }}">
-                                <label class="tf-field-label fw-4 text_black-2" for="telefono">Phone</label>
+                                <label class="tf-field-label fw-4 text_black-2" for="telefono">Teléfono</label>
                             </div>
                             
-                            <!-- Combobox Provincia -->
+                            <!-- Selector de provincia -->
                             <div class="tf-field style-1 mb_15">
-                                <select class="tf-field-input tf-input" id="provincia" name="provincia" onchange="cargarCiudades()">
-                                    <option value="">-- Select Province --</option>
+                                <select class="tf-field-input tf-input" id="provincia" name="provincia" onchange="cargarCiudades()" required>
+                                    <option value="">Selecciona una provincia</option>
                                     {% for provincia in provincias %}
                                         <option value="{{ provincia.id }}" {% if provincia.id|stringformat:"s" == provincia_id|stringformat:"s" %}selected{% endif %}>
                                             {{ provincia.nombre }}
                                         </option>
                                     {% endfor %}
                                 </select>
-                                <label class="tf-field-label fw-4 text_black-2" for="provincia">Province</label>
+                                <label class="tf-field-label fw-4 text_black-2" for="provincia">Provincia *</label>
                             </div>
                             
-                            <!-- Combobox Ciudad (se llena dinámicamente) -->
+                            <!-- Selector de ciudad/cantón (dependiente de provincia) -->
                             <div class="tf-field style-1 mb_15">
-                                <select class="tf-field-input tf-input" id="ciudad" name="ciudad">
-                                    <option value="">-- Select City --</option>
+                                <select class="tf-field-input tf-input" id="ciudad" name="ciudad" required>
+                                    <option value="">Selecciona una ciudad/cantón</option>
                                     {% if ciudades %}
                                         {% for ciudad in ciudades %}
                                             <option value="{{ ciudad.id }}" {% if ciudad.id|stringformat:"s" == ciudad_id|stringformat:"s" %}selected{% endif %}>
@@ -78,64 +81,91 @@
                                         {% endfor %}
                                     {% endif %}
                                 </select>
-                                <label class="tf-field-label fw-4 text_black-2" for="ciudad">City</label>
+                                <label class="tf-field-label fw-4 text_black-2" for="ciudad">Ciudad/Cantón *</label>
                             </div>
                             
                             <div class="tf-field style-1 mb_15">
                                 <input class="tf-field-input tf-input" placeholder=" " type="password" id="password"
                                     name="password" required>
-                                <label class="tf-field-label fw-4 text_black-2" for="password">Password *</label>
+                                <label class="tf-field-label fw-4 text_black-2" for="password">Contraseña *</label>
                             </div>
                             <div class="tf-field style-1 mb_30">
                                 <input class="tf-field-input tf-input" placeholder=" " type="password" id="password_confirm"
                                     name="password_confirm" required>
-                                <label class="tf-field-label fw-4 text_black-2" for="password_confirm">Confirm Password *</label>
+                                <label class="tf-field-label fw-4 text_black-2" for="password_confirm">Confirmar contraseña *</label>
                             </div>
                             <div class="mb_20">
                                 <button type="submit"
-                                    class="tf-btn w-100 radius-3 btn-fill animate-hover-btn justify-content-center">Register</button>
+                                    class="tf-btn w-100 radius-3 btn-fill animate-hover-btn justify-content-center">Crear cuenta</button>
                             </div>
                             <div class="text-center">
-                                <a href="{% url 'usuarios:login' %}" class="tf-btn btn-line">Already have an account? Log in here<i
+                                <a href="{% url 'usuarios:login' %}" class="tf-btn btn-line">¿Ya tienes una cuenta? Inicia sesión aquí<i
                                         class="icon icon-arrow1-top-left"></i></a>
                             </div>
                         </form>
                     </div>
                     
-                    <!-- JavaScript para cargar ciudades dinámicamente -->
+                    <!-- JavaScript para cargar ciudades/cantones dinámicamente -->
                     <script>
-                    function cargarCiudades() {
+                    function cargarCiudades(ciudadSeleccionada = '') {
                         const provinciaSelect = document.getElementById('provincia');
                         const ciudadSelect = document.getElementById('ciudad');
-                        const provinciaId = provinciaSelect.value;
+                        const provinciaId = provinciaSelect ? provinciaSelect.value : '';
                         
-                        // Limpiar el select de ciudades
-                        ciudadSelect.innerHTML = '<option value="">-- Select City --</option>';
+                        if (!ciudadSelect) {
+                            return;
+                        }
                         
-                        if (provinciaId) {
-                            // Hacer petición AJAX
-                            fetch(`/api/ciudades-por-provincia/${provinciaId}/`)
+                        // Limpiar selector de ciudades y bloquearlo si aún no hay provincia
+                        ciudadSelect.innerHTML = '<option value="">Selecciona una ciudad/cantón</option>';
+                        ciudadSelect.disabled = !provinciaId;
+                        
+                        if (!provinciaId) {
+                            return;
+                        }
+
+                        const apiBase = "{% url 'usuarios:api_ciudades_por_provincia' 0 %}";
+                        const apiUrl = apiBase.replace('/0/', `/${provinciaId}/`);
+
+                        fetch(apiUrl, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
                                 .then(response => response.json())
                                 .then(data => {
                                     if (data.success) {
-                                        // Llenar el select con las ciudades
+                                        // Llenar el selector con ciudades/cantones de la provincia seleccionada
                                         data.ciudades.forEach(ciudad => {
                                             const option = document.createElement('option');
                                             option.value = ciudad.id;
                                             option.textContent = ciudad.nombre;
+
+                                            if (String(ciudad.id) === String(ciudadSeleccionada)) {
+                                                option.selected = true;
+                                            }
+
                                             ciudadSelect.appendChild(option);
                                         });
                                     }
                                 })
-                                .catch(error => console.error('Error:', error));
-                        }
+                                .catch(error => console.error('Error al cargar ciudades:', error));
                     }
                     
                     // Cargar ciudades al cargar la página si hay provincia seleccionada
                     document.addEventListener('DOMContentLoaded', function() {
                         const provinciaSelect = document.getElementById('provincia');
+                        const ciudadSelect = document.getElementById('ciudad');
+                        const ciudadPreseleccionada = '{{ ciudad_id|default:"" }}';
+
+                        if (!provinciaSelect || !ciudadSelect) {
+                            return;
+                        }
+
                         if (provinciaSelect.value) {
-                            cargarCiudades();
+                            cargarCiudades(ciudadPreseleccionada);
+                        } else {
+                            ciudadSelect.disabled = true;
                         }
                     });
                     </script>

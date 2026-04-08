@@ -21,7 +21,7 @@ img, .img-product, .img-hover, .lazyload {
     gap: 10px !important;
     max-width: 100%;
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 .swiper, .tf-sw-recent, .tf-sw-product-sell, .swiper-wrapper {
@@ -46,7 +46,7 @@ img, .img-product, .img-hover, .lazyload {
 .offcanvas, .canvas-wrapper, .canvas-body, .canvas-header {
     max-width: 100%;
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 .d-flex, .row, .container, .tf-sw-recent, .tf-sw-product-sell {
@@ -62,7 +62,7 @@ img, .img-product, .img-hover, .lazyload {
 
 html, body {
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 </style>
 
@@ -359,9 +359,9 @@ html, body {
                                 <div class="tf-sticky-atc-btns">
                                     <div class="tf-product-info-quantity">
                                         <div class="wg-quantity sticky-quantity">
-                                            <span class="btn-quantity minus-btn">-</span>
-                                            <input type="text" name="number" value="1" class="sticky-qty-input">
-                                            <span class="btn-quantity plus-btn">+</span>
+                                            <span class="btn-quantity sticky-minus-btn">-</span>
+                                            <input type="number" name="number" value="1" class="sticky-qty-input" min="1">
+                                            <span class="btn-quantity sticky-plus-btn">+</span>
                                         </div>
                                     </div>
                                     <a href="#"
@@ -383,9 +383,6 @@ html, body {
                             <ul class="widget-menu-tab">
                                 <li class="item-title active">
                                     <span class="inner">Descripción</span>
-                                </li>
-                                <li class="item-title">
-                                    <span class="inner">Información Adicional</span>
                                 </li>
                                 <li class="item-title">
                                     <span class="inner">Reseñas</span>
@@ -422,78 +419,10 @@ html, body {
                                                     {{ global_content.features_content|safe }}
                                                 </ul>
                                                 {% endif %}
-                                                
-                                                {% if global_content.materials_content %}
-                                                <h3 class="fs-16 fw-5">Cuidado de Materiales</h3>
-                                                <ul class="mb-0">
-                                                    {{ global_content.materials_content|safe }}
-                                                </ul>
-                                                {% endif %}
-                                            </div>
-                                            <div class="left">
-                                                <h3 class="fs-16 fw-5">Cuidado de Materiales</h3>
-                                                {% if global_content.care_text_1 %}
-                                                <div class="d-flex gap-10 mb_15 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_1 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_1 }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% if global_content.care_text_2 %}
-                                                <div class="d-flex gap-10 mb_15 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_2 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_2 }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% if global_content.care_text_3 %}
-                                                <div class="d-flex gap-10 mb_15 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_3 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_3 }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% if global_content.care_text_4 %}
-                                                <div class="d-flex gap-10 mb_15 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_4 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_4 }}</span>
-                                                </div>
-                                                {% endif %}
-                                                {% if global_content.care_text_5 %}
-                                                <div class="d-flex gap-10 align-items-center">
-                                                    <div class="icon">
-                                                        <i class="{{ global_content.care_icon_5 }}"></i>
-                                                    </div>
-                                                    <span>{{ global_content.care_text_5 }}</span>
-                                                </div>
-                                                {% endif %}
                                             </div>
                                         </div>
                                         {% endif %}
                                     </div>
-                                </div>
-                                <div class="widget-content-inner">
-                                    <table class="tf-pr-attrs">
-                                        <tbody>
-                                            <tr class="tf-attr-pa-color">
-                                                <th class="tf-attr-label">Color</th>
-                                                <td class="tf-attr-value">
-                                                    <p>White, Pink, Black</p>
-                                                </td>
-                                            </tr>
-                                            <tr class="tf-attr-pa-size">
-                                                <th class="tf-attr-label">Size</th>
-                                                <td class="tf-attr-value">
-                                                    <p>S, M, L, XL</p>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
                                 </div>
                                 <div class="widget-content-inner">
                                     <div class="tab-reviews write-cancel-review-wrap">
@@ -508,7 +437,7 @@ html, body {
                                                         <i class="icon icon-star" style="color: #ddd;"></i>
                                                         <i class="icon icon-star" style="color: #ddd;"></i>
                                                     </div>
-                                                    <p id="totalRatingsText">(0 Ratings)</p>
+                                                    <p id="totalRatingsText">(0 valoraciones)</p>
                                                 </div>
                                                 <div class="rating-score">
                                                     <div class="item" data-rating="5">
@@ -585,11 +514,11 @@ html, body {
                                             <div class="heading">
                                                 <h5>Escribe una reseña:</h5>
                                                 <div class="list-rating-check">
-                                                    <span class="rating-star" data-rating="5">?</span>
-                                                    <span class="rating-star" data-rating="4">?</span>
-                                                    <span class="rating-star" data-rating="3">?</span>
-                                                    <span class="rating-star" data-rating="2">?</span>
-                                                    <span class="rating-star" data-rating="1">?</span>
+                                                    <span class="rating-star" data-rating="1" role="button" tabindex="0" aria-label="1 estrella">&#9734;</span>
+                                                    <span class="rating-star" data-rating="2" role="button" tabindex="0" aria-label="2 estrellas">&#9734;</span>
+                                                    <span class="rating-star" data-rating="3" role="button" tabindex="0" aria-label="3 estrellas">&#9734;</span>
+                                                    <span class="rating-star" data-rating="4" role="button" tabindex="0" aria-label="4 estrellas">&#9734;</span>
+                                                    <span class="rating-star" data-rating="5" role="button" tabindex="0" aria-label="5 estrellas">&#9734;</span>
                                                 </div>
                                                 <input type="hidden" id="reviewRating" name="rating" value="0" required>
                                             </div>
@@ -726,11 +655,11 @@ html, body {
     <section class="flat-spacing-6 pt_0">
         <div class="container">
             <div class="flat-title wow fadeInUp" data-wow-delay="0s">
-                <span class="title">People Also Bought</span>
+                <span class="title">Personas también compraron</span>
                 <div class="d-flex gap-16 align-items-center box-pagi-arr">
                     <div class="nav-sw-arrow nav-next-slider nav-next-product"><span
                             class="icon icon-arrow1-left"></span></div>
-                    <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-line fs-12 fw-6">VIEW ALL</a>
+                    <a href="{% url 'productos:producto_list' %}" class="tf-btn btn-line fs-12 fw-6">VER TODO</a>
                     <div class="nav-sw-arrow nav-prev-slider nav-prev-product"><span
                             class="icon icon-arrow1-right"></span></div>
                 </div>
@@ -767,37 +696,20 @@ html, body {
                                             </a>
                                             
                                             <div class="list-product-btn gap-0">
-                                                <!-- Quick Add -->
-                                                <a href="#quick_add" data-bs-toggle="modal"
-                                                    class="box-icon bg_white quick-add tf-btn-loading shadow-none">
-                                                    <span class="icon icon-bag"></span>
-                                                    <span class="tooltip">Quick Add</span>
-                                                </a>
-                                                
-                                                <!-- Wishlist -->
                                                 <button type="button" 
-                                                    class="box-icon bg_white wishlist btn-icon-action shadow-none" 
+                                                    class="box-icon bg_white wishlist btn-icon-action shadow-none{% if producto.in_wishlist %} active{% endif %}" 
                                                     data-product-id="{{ producto.id }}"
-                                                    {% if producto.in_wishlist %}data-wishlist-id="{{ producto.wishlist_item_id }}"{% endif %}>
+                                                    data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
                                                     <span class="icon icon-heart"></span>
-                                                    <span class="tooltip">{% if producto.in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}</span>
+                                                    <span class="tooltip">{% if producto.in_wishlist %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                                     <span class="icon icon-delete"></span>
                                                 </button>
-                                                
-                                                <!-- Compare -->
-                                                <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                                    class="box-icon bg_white compare btn-icon-action shadow-none">
-                                                    <span class="icon icon-compare"></span>
-                                                    <span class="tooltip">Add to Compare</span>
-                                                    <span class="icon icon-check"></span>
-                                                </a>
-                                                
-                                                <!-- Quick View -->
+
                                                 <a href="#quick_view" data-bs-toggle="modal"
                                                     class="box-icon bg_white quickview btn-open-quickview tf-btn-loading shadow-none"
                                                     data-producto-id="{{ producto.id }}">
                                                     <span class="icon icon-view"></span>
-                                                    <span class="tooltip">Quick View</span>
+                                                    <span class="tooltip">Vista rápida</span>
                                                 </a>
                                             </div>
                                             
@@ -859,7 +771,7 @@ html, body {
         <section class="flat-spacing-4 pt_0">
             <div class="container">
                 <div class="flat-title">
-                    <span class="title">Recently Viewed</span>
+                    <span class="title">Vistos recientemente</span>
                 </div>
                 <div class="hover-sw-nav hover-sw-2">
                     <div dir="ltr" class="swiper tf-sw-recent wrap-sw-over" data-preview="4" data-tablet="3"
@@ -888,22 +800,13 @@ html, body {
                                                 {% endif %}
                                             </a>
                                             <div class="list-product-btn">
-                                                <a href="#quick_add" data-bs-toggle="modal"
-                                                    class="box-icon bg_white quick-add tf-btn-loading">
-                                                    <span class="icon icon-bag"></span>
-                                                    <span class="tooltip">Quick Add</span>
-                                                </a>
                                                 <a href="javascript:void(0);"
-                                                    class="box-icon bg_white wishlist btn-icon-action">
+                                                    class="box-icon bg_white wishlist btn-icon-action{% if producto.in_wishlist %} active{% endif %}"
+                                                    data-product-id="{{ producto.id }}"
+                                                    data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
                                                     <span class="icon icon-heart"></span>
-                                                    <span class="tooltip">Add to Wishlist</span>
+                                                    <span class="tooltip">{% if producto.in_wishlist %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                                     <span class="icon icon-delete"></span>
-                                                </a>
-                                                <a href="#compare" data-bs-toggle="offcanvas" aria-controls="offcanvasLeft"
-                                                    class="box-icon bg_white compare btn-icon-action">
-                                                    <span class="icon icon-compare"></span>
-                                                    <span class="tooltip">Add to Compare</span>
-                                                    <span class="icon icon-check"></span>
                                                 </a>
                                                 <a href="#quick_view" data-bs-toggle="modal"
                                                     class="box-icon bg_white quickview tf-btn-loading"
@@ -917,7 +820,7 @@ html, body {
                                                     data-product-colors="{% for c in producto.colors %}{{ c.valor }}{% if not forloop.last %},{% endif %}{% endfor %}"
                                                     data-product-sizes="{{ producto.sizes|join:',' }}">
                                                     <span class="icon icon-view"></span>
-                                                    <span class="tooltip">Quick View</span>
+                                                    <span class="tooltip">Vista rápida</span>
                                                 </a>
                                             </div>
                                             {% if producto.sizes %}
@@ -1103,9 +1006,10 @@ html, body {
             const sizeInputs = document.querySelectorAll('input[name="size1"]');
             const quantityInput = document.querySelector('.quantity-product');
             const totalPriceElements = document.querySelectorAll('.total-price');
-            const btnIncrease = document.querySelector('.btn-increase');
-            const btnDecrease = document.querySelector('.btn-decrease');
-            const sizeLabel = document.querySelector('.value-currentSize');
+                          const btnIncreases = document.querySelectorAll('.btn-increase, .sticky-plus-btn');
+              const btnDecreases = document.querySelectorAll('.btn-decrease, .sticky-minus-btn');
+              const quantityInputs = document.querySelectorAll('.quantity-product, .sticky-qty-input');
+              const sizeLabel = document.querySelector('.value-currentSize');
 
             if (sizeInputs.length > 0) {
                 sizeInputs.forEach(input => {
@@ -1142,95 +1046,95 @@ html, body {
             }
 
             function actualizarStock(stock) {
-                window.currentMaxStock = stock;
+                  window.currentMaxStock = stock;
+                  
+                  quantityInputs.forEach(inpt => {
+                      inpt.setAttribute('max', stock);
+                      inpt.value = 1;
+                  });
 
-                if (quantityInput) {
-                    quantityInput.setAttribute('max', stock);
-                    quantityInput.value = 1;
-                }
+                  actualizarBotones();
 
-                actualizarBotones();
+                  const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                  actualizarPrecio(precio);
+              }
 
-                const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
-                actualizarPrecio(precio);
-            }
+              function actualizarPrecio(precio) {
+                  if (quantityInputs.length === 0) return;
 
-            function actualizarPrecio(precio) {
-                if (!quantityInput) return;
+                  const qty = parseInt(quantityInputs[0].value) || 1;
+                  const total = (parseFloat(precio) * qty).toFixed(2);
 
-                const qty = parseInt(quantityInput.value) || 1;
-                const total = (parseFloat(precio) * qty).toFixed(2);
+                  totalPriceElements.forEach(el => {
+                      el.textContent = '$' + total;
+                  });
+              }
 
-                totalPriceElements.forEach(el => {
-                    el.textContent = '$' + total;
-                });
-            }
+              function actualizarBotones() {
+                  if (quantityInputs.length === 0) return;
 
-            function actualizarBotones() {
-                if (!quantityInput) return;
+                  const qty = parseInt(quantityInputs[0].value) || 1;
 
-                const qty = parseInt(quantityInput.value) || 1;
+                  btnIncreases.forEach(btn => {
+                      btn.disabled = (qty >= window.currentMaxStock || window.currentMaxStock === 0);
+                      btn.style.opacity = btn.disabled ? '0.5' : '1';
+                      btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
+                  });
 
-                if (btnIncrease) {
-                    btnIncrease.disabled = (qty >= window.currentMaxStock || window.currentMaxStock === 0);
-                    btnIncrease.style.opacity = btnIncrease.disabled ? '0.5' : '1';
-                    btnIncrease.style.pointerEvents = btnIncrease.disabled ? 'none' : 'auto';
-                }
+                  btnDecreases.forEach(btn => {
+                      btn.disabled = qty <= 1;
+                      btn.style.opacity = btn.disabled ? '0.5' : '1';
+                      btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
+                  });
+              }
 
-                if (btnDecrease) {
-                    btnDecrease.disabled = qty <= 1;
-                    btnDecrease.style.opacity = btnDecrease.disabled ? '0.5' : '1';
-                    btnDecrease.style.pointerEvents = btnDecrease.disabled ? 'none' : 'auto';
-                }
-            }
+              btnIncreases.forEach(btn => {
+                  btn.addEventListener('click', function(e) {
+                      e.preventDefault();
 
-            if (btnIncrease) {
-                btnIncrease.addEventListener('click', function(e) {
-                    e.preventDefault();
+                      const qty = parseInt(quantityInputs[0].value) || 1;
+                      const maxStock = window.currentMaxStock !== undefined ? window.currentMaxStock : 999;
 
-                    const qty = parseInt(quantityInput.value) || 1;
-                    const maxStock = parseInt(quantityInput.getAttribute('max')) || window.currentMaxStock || 999;
+                      if (qty < maxStock && maxStock > 0) {
+                          quantityInputs.forEach(inpt => inpt.value = qty + 1);
+                          actualizarBotones();
 
-                    if (qty < maxStock) {
-                        quantityInput.value = qty + 1;
-                        actualizarBotones();
+                          const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                          actualizarPrecio(precio);
+                      }
+                  }, true);
+              });
 
-                        const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
-                        actualizarPrecio(precio);
-                    }
-                }, true);
-            }
+              btnDecreases.forEach(btn => {
+                  btn.addEventListener('click', function(e) {
+                      e.preventDefault();
 
-            if (btnDecrease) {
-                btnDecrease.addEventListener('click', function(e) {
-                    e.preventDefault();
+                      const qty = parseInt(quantityInputs[0].value) || 1;
+                      if (qty > 1) {
+                          quantityInputs.forEach(inpt => inpt.value = qty - 1);
+                          actualizarBotones();
 
-                    const qty = parseInt(quantityInput.value) || 1;
-                    if (qty > 1) {
-                        quantityInput.value = qty - 1;
-                        actualizarBotones();
+                          const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                          actualizarPrecio(precio);
+                      }
+                  }, true);
+              });
 
-                        const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
-                        actualizarPrecio(precio);
-                    }
-                }, true);
-            }
+              quantityInputs.forEach(inpt => {
+                  inpt.addEventListener('input', function() {
+                      let val = parseInt(this.value) || 1;
+                      const maxStock = window.currentMaxStock !== undefined ? window.currentMaxStock : 999;
 
-            if (quantityInput) {
-                quantityInput.addEventListener('input', function() {
-                    let val = parseInt(this.value) || 1;
-                    const maxStock = parseInt(this.getAttribute('max')) || window.currentMaxStock || 999;
+                      if (val > maxStock && maxStock > 0) val = maxStock;
+                      if (val < 1) val = 1;
 
-                    if (val > maxStock) val = maxStock;
-                    if (val < 1) val = 1;
+                      quantityInputs.forEach(i => i.value = val);
+                      actualizarBotones();
 
-                    this.value = val;
-                    actualizarBotones();
-
-                    const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
-                    actualizarPrecio(precio);
-                });
-            }
+                      const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                      actualizarPrecio(precio);
+                  });
+              });
 
             if (tallaSeleccionada) actualizarVariante();
 
@@ -1239,126 +1143,7 @@ html, body {
     </script>
 
 
-    <!-- JavaScript para Modal Sticky -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const stickySelect = document.getElementById('stickyVariantSelect');
-            const stickyQtyInput = document.querySelector('.sticky-qty-input');
-            const stickyMinusBtn = document.querySelector('.sticky-quantity .minus-btn');
-            const stickyPlusBtn = document.querySelector('.sticky-quantity .plus-btn');
-            const stickyAddCartBtn = document.querySelector('.sticky-add-cart');
-            
-            let currentStickyStock = 0;
-            
-            if (stickySelect) {
-                stickySelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    currentStickyStock = parseInt(selectedOption.getAttribute('data-stock')) || 0;
-                    if (stickyQtyInput) stickyQtyInput.value = 1;
-                    updateStickyButtons();
-                });
-                
-                const firstOption = stickySelect.options[stickySelect.selectedIndex];
-                if (firstOption) currentStickyStock = parseInt(firstOption.getAttribute('data-stock')) || 0;
-            }
-            
-            if (stickyMinusBtn && stickyQtyInput) {
-                stickyMinusBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    let qty = parseInt(stickyQtyInput.value) || 1;
-                    if (qty > 1) {
-                        stickyQtyInput.value = qty - 1;
-                        updateStickyButtons();
-                    }
-                });
-            }
-            
-            if (stickyPlusBtn && stickyQtyInput) {
-                stickyPlusBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    let qty = parseInt(stickyQtyInput.value) || 1;
-                    if (qty < currentStickyStock) {
-                        stickyQtyInput.value = qty + 1;
-                        updateStickyButtons();
-                    }
-                });
-            }
-            
-            if (stickyQtyInput) {
-                stickyQtyInput.addEventListener('input', function() {
-                    let val = parseInt(this.value) || 1;
-                    if (val > currentStickyStock) val = currentStickyStock;
-                    if (val < 1) val = 1;
-                    this.value = val;
-                    updateStickyButtons();
-                });
-            }
-            
-            function updateStickyButtons() {
-                const qty = parseInt(stickyQtyInput?.value) || 1;
-                if (stickyPlusBtn) {
-                    if (qty >= currentStickyStock || currentStickyStock === 0) {
-                        stickyPlusBtn.style.opacity = '0.5';
-                        stickyPlusBtn.style.pointerEvents = 'none';
-                    } else {
-                        stickyPlusBtn.style.opacity = '1';
-                        stickyPlusBtn.style.pointerEvents = 'auto';
-                    }
-                }
-                if (stickyMinusBtn) {
-                    if (qty <= 1) {
-                        stickyMinusBtn.style.opacity = '0.5';
-                        stickyMinusBtn.style.pointerEvents = 'none';
-                    } else {
-                        stickyMinusBtn.style.opacity = '1';
-                        stickyMinusBtn.style.pointerEvents = 'auto';
-                    }
-                }
-            }
-            
-            if (stickyAddCartBtn) {
-                stickyAddCartBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (!stickySelect || !stickyQtyInput) return;
-                    
-                    const selectedOption = stickySelect.options[stickySelect.selectedIndex];
-                    const varianteId = selectedOption.value;
-                    const cantidad = parseInt(stickyQtyInput.value) || 1;
-                    
-                    fetch('/api/cart/add/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: `variante_id=${varianteId}&cantidad=${cantidad}`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) window.location.href = '/cart/';
-                    })
-                    .catch(error => console.error('Error:', error));
-                });
-            }
-            
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-            
-            updateStickyButtons();
-        });
-    </script>
+    
     
     <!-- Reviews JavaScript -->
     <script src="{% static 'js/reviews.js' %}"></script>

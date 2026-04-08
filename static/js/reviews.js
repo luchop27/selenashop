@@ -5,6 +5,8 @@
     const productoSection = document.querySelector('[data-producto-id]');
     const productoId = productoSection ? productoSection.dataset.productoId : null;
     let currentSort = 'recent';
+    let selectedReviewRating = 0;
+    let ratingStarElements = [];
     
     // Agregar estilos CSS dinámicamente
     const style = document.createElement('style');
@@ -12,14 +14,20 @@
         .rating-star {
             font-size: 30px;
             cursor: pointer;
-            color: #ddd;
+            color: #b8b8b8;
             transition: color 0.2s;
             display: inline-block;
             margin: 0 2px;
+            line-height: 1;
         }
-        .rating-star:hover,
-        .rating-star.active {
+        .rating-star.active,
+        .rating-star.hover {
             color: #FFD700;
+        }
+        .list-rating-check {
+            display: flex;
+            align-items: center;
+            gap: 2px;
         }
         .rating-stars {
             font-size: 14px;
@@ -70,9 +78,42 @@
             setupEventListeners();
         }
     });
+
+    function paintRatingStars(rating) {
+        ratingStarElements.forEach(star => {
+            const starRating = parseInt(star.dataset.rating, 10);
+            const shouldFill = starRating <= rating;
+            star.classList.toggle('active', shouldFill);
+            star.classList.remove('hover');
+            star.textContent = shouldFill ? '★' : '☆';
+        });
+    }
+
+    function previewRatingStars(rating) {
+        ratingStarElements.forEach(star => {
+            const starRating = parseInt(star.dataset.rating, 10);
+            const shouldFill = starRating <= rating;
+            star.classList.toggle('hover', shouldFill);
+            star.classList.remove('active');
+            star.textContent = shouldFill ? '★' : '☆';
+        });
+    }
+
+    function setSelectedRating(rating) {
+        selectedReviewRating = rating;
+        const ratingInput = document.getElementById('reviewRating');
+        if (ratingInput) {
+            ratingInput.value = String(rating);
+        }
+        paintRatingStars(selectedReviewRating);
+    }
+
+    function resetSelectedRating() {
+        setSelectedRating(0);
+    }
     
     function setupEventListeners() {
-        // Botón Write a review
+        // Botón de escribir reseña
         const btnWriteReview = document.querySelector('.btn-write-review');
         const btnCancelReview = document.querySelector('.btn-cancel-review');
         const writeReviewWrap = document.querySelector('.write-review-wrap');
@@ -91,30 +132,43 @@
                 btnWriteReview.style.display = 'inline-block';
                 btnCancelReview.style.display = 'none';
                 document.getElementById('reviewForm').reset();
-                document.getElementById('reviewRating').value = '0';
-                document.querySelectorAll('.rating-star').forEach(star => {
-                    star.classList.remove('active');
-                });
+                resetSelectedRating();
             });
         }
         
         // Sistema de estrellas para rating
-        const ratingStars = document.querySelectorAll('.rating-star');
-        ratingStars.forEach(star => {
+        ratingStarElements = Array.from(document.querySelectorAll('.rating-star'));
+        const ratingInput = document.getElementById('reviewRating');
+        selectedReviewRating = parseInt(ratingInput ? ratingInput.value : '0', 10) || 0;
+        paintRatingStars(selectedReviewRating);
+
+        ratingStarElements.forEach(star => {
             star.addEventListener('click', function() {
-                const rating = this.dataset.rating;
-                document.getElementById('reviewRating').value = rating;
-                
-                // Actualizar visualización de estrellas
-                ratingStars.forEach(s => {
-                    if (parseInt(s.dataset.rating) >= parseInt(rating)) {
-                        s.classList.add('active');
-                    } else {
-                        s.classList.remove('active');
-                    }
-                });
+                const rating = parseInt(this.dataset.rating, 10) || 0;
+                setSelectedRating(rating);
+            });
+
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.dataset.rating, 10) || 0;
+                previewRatingStars(rating);
+            });
+
+            star.addEventListener('keydown', function(e) {
+                if (e.key !== 'Enter' && e.key !== ' ') {
+                    return;
+                }
+                e.preventDefault();
+                const rating = parseInt(this.dataset.rating, 10) || 0;
+                setSelectedRating(rating);
             });
         });
+
+        const ratingContainer = document.querySelector('.list-rating-check');
+        if (ratingContainer) {
+            ratingContainer.addEventListener('mouseleave', function() {
+                paintRatingStars(selectedReviewRating);
+            });
+        }
         
         // Submit del formulario de reseña
         const reviewForm = document.getElementById('reviewForm');
@@ -163,7 +217,7 @@
         // Actualizar total de ratings
         const totalText = document.getElementById('totalRatingsText');
         if (totalText) {
-            totalText.textContent = `(${stats.total} Rating${stats.total !== 1 ? 's' : ''})`;
+            totalText.textContent = `(${stats.total} valoraci${stats.total !== 1 ? 'ones' : 'on'})`;
         }
         
         document.getElementById('totalReviewsCount').textContent = stats.total;
@@ -189,7 +243,7 @@
         if (user_has_reviewed && userStatusDiv && reviewForm) {
             userStatusDiv.classList.remove('d-none');
             userStatusDiv.classList.add('alert-info');
-            userStatusDiv.innerHTML = '<p class="mb-0">You have already reviewed this product. You can see your review below.</p>';
+            userStatusDiv.innerHTML = '<p class="mb-0">Ya reseñaste este producto. Puedes ver tu reseña aquí abajo.</p>';
             reviewForm.style.display = 'none';
             
             // Ocultar botones de write review
@@ -204,7 +258,7 @@
         // Actualizar lista de reseñas
         const container = document.getElementById('reviewsContainer');
         if (reviews.length === 0) {
-            container.innerHTML = '<p class="text-center text_black-2 py-5">No reviews yet. Be the first to review this product!</p>';
+            container.innerHTML = '<p class="text-center text_black-2 py-5">Aún no hay reseñas. ¡Sé la primera persona en reseñar este producto!</p>';
         } else {
             container.innerHTML = reviews.map(review => createReviewHTML(review)).join('');
         }
@@ -239,7 +293,7 @@
                         ${review.title ? `<h6><span class="link">${review.title}</span></h6>` : ''}
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <span class="rating-stars text-warning">${stars}</span>
-                            ${review.verified ? '<span class="badge bg-success text-white" style="font-size: 10px;">Verified Purchase</span>' : ''}
+                            ${review.verified ? '<span class="badge bg-success text-white" style="font-size: 10px;">Compra verificada</span>' : ''}
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <span class="fw-6">${review.user_name}</span>
@@ -262,7 +316,7 @@
                             </div>
                             <div>
                                 <h6>
-                                    <span class="link">Reply from ${reply.user_name}</span>
+                                    <span class="link">Respuesta de ${reply.user_name}</span>
                                 </h6>
                                 <div class="day text_black-2">${reply.created_at}</div>
                             </div>
@@ -282,12 +336,12 @@
         const comment = document.getElementById('reviewComment').value;
         
         if (!rating || rating === '0') {
-            alert('Please select a rating');
+            alert('Selecciona una calificación antes de enviar tu reseña.');
             return;
         }
         
         if (!comment.trim()) {
-            alert('Please write a comment');
+            alert('Escribe un comentario para continuar.');
             return;
         }
         
@@ -307,13 +361,10 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Review submitted successfully!');
+                alert('Reseña enviada correctamente.');
                 // Resetear formulario
                 document.getElementById('reviewForm').reset();
-                document.getElementById('reviewRating').value = '0';
-                document.querySelectorAll('.rating-star').forEach(star => {
-                    star.classList.remove('active');
-                });
+                resetSelectedRating();
                 
                 // Ocultar formulario
                 document.querySelector('.write-review-wrap').style.display = 'none';
@@ -323,12 +374,12 @@
                 // Recargar reseñas
                 loadReviews();
             } else {
-                alert(data.message || 'Error submitting review');
+                alert(data.message || 'No se pudo enviar la reseña.');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error submitting review');
+            alert('Ocurrió un error al enviar la reseña.');
         });
     }
     

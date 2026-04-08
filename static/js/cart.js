@@ -363,13 +363,29 @@
         // Aquí podrías usar una librería de toast/notifications
     }
 
+    function syncCartModalLayerState(isOpen) {
+        document.body.classList.toggle('cart-modal-open', !!isOpen);
+    }
+
     // Función global para limpiar backdrops residuales
     function cleanupModalBackdrops() {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
+        const hasVisibleModal = document.querySelector('.modal.show') !== null;
+        const backdrops = Array.from(document.querySelectorAll('.modal-backdrop'));
+
+        if (hasVisibleModal) {
+            // Mantener solo el backdrop del modal activo y limpiar residuos.
+            backdrops.slice(0, -1).forEach(function(backdrop) {
+                backdrop.remove();
+            });
+            document.body.classList.add('modal-open');
+            return;
+        }
+
         backdrops.forEach(function(backdrop) {
             backdrop.remove();
         });
         document.body.classList.remove('modal-open');
+        syncCartModalLayerState(false);
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
     }
@@ -437,106 +453,16 @@
         const cartModal = document.getElementById('shoppingCart');
         if (cartModal) {
             cartModal.addEventListener('show.bs.modal', function() {
+                syncCartModalLayerState(true);
                 loadCartItems();
             });
             
             // Limpiar backdrop cuando se cierra el modal
             cartModal.addEventListener('hidden.bs.modal', function() {
+                syncCartModalLayerState(false);
                 cleanupModalBackdrops();
             });
         }
-
-        // Manejar el botón de agregar nota
-        const btnAddNote = document.querySelector('.btn-add-note');
-        if (btnAddNote) {
-            btnAddNote.addEventListener('click', function() {
-                document.querySelector('.add-note').classList.add('open');
-            });
-        }
-
-        // Manejar el cierre del panel de nota
-        document.querySelectorAll('.add-note .tf-mini-cart-tool-close').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const notePanel = document.querySelector('.add-note');
-                notePanel.classList.remove('open');
-                
-                // Guardar la nota
-                const noteText = document.getElementById('Cart-note').value;
-                if (noteText.trim()) {
-                    saveCartNote(noteText);
-                }
-            });
-        });
-
-        // Manejar el botón de agregar gift wrap
-        const btnAddGift = document.querySelector('.btn-add-gift');
-        if (btnAddGift) {
-            btnAddGift.addEventListener('click', function() {
-                document.querySelector('.add-gift').classList.add('open');
-            });
-        }
-
-        // Manejar el cierre del panel de gift wrap
-        document.querySelectorAll('.add-gift .tf-mini-cart-tool-close').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelector('.add-gift').classList.remove('open');
-            });
-        });
-
-        // Manejar el formulario de gift wrap
-        const giftForm = document.querySelector('.tf-product-form-addgift');
-        if (giftForm) {
-            giftForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                addGiftWrap();
-            });
-        }
     });
-
-    // Función para guardar la nota del carrito
-    function saveCartNote(note) {
-        const formData = new FormData();
-        formData.append('note', note);
-
-        fetch('/cart/save-note/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Nota guardada correctamente', 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Error saving note:', error);
-        });
-    }
-
-    // Función para agregar gift wrap
-    function addGiftWrap() {
-        fetch('/cart/add-gift-wrap/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateCartTotal(data.cart_total);
-                document.querySelector('.add-gift').classList.remove('open');
-                showNotification('Gift wrap agregado (+$5.00)', 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Error adding gift wrap:', error);
-        });
-    }
 
 })();

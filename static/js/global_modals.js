@@ -5,6 +5,7 @@
         
         // Variable global para prevenir múltiples ejecuciones
         let isProcessingQuickView = false;
+        window.__quickViewGlobalEnabled = true;
 
         // Obtener CSRF token
         function getCookie(name) {
@@ -26,23 +27,25 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Quick View: Script cargado');
             
-            // Manejar click en botón Quick View
-            document.querySelectorAll('.quickview').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    console.log('Quick View: Botón clickeado');
-                    
-                    const productoId = this.getAttribute('data-producto-id');
-                    console.log('Quick View: Producto ID =', productoId);
-                    
-                    if (!productoId) {
-                        console.error('Quick View: No se pudo obtener el ID del producto');
-                        alert('Error: No se pudo identificar el producto');
-                        return;
-                    }
-                    
-                    loadProductQuickView(productoId);
-                });
+            // Manejar click en botón Quick View (delegación para soportar contenido dinámico)
+            document.addEventListener('click', function(e) {
+                const trigger = e.target.closest('.quickview');
+                if (!trigger) return;
+
+                e.preventDefault();
+                console.log('Quick View: Botón clickeado');
+
+                const productoId = trigger.getAttribute('data-producto-id') || trigger.getAttribute('data-product-id');
+                console.log('Quick View: Producto ID =', productoId);
+
+                if (!productoId) {
+                    console.error('Quick View: No se pudo obtener el ID del producto');
+                    console.error('Producto sin ID');
+                    document.getElementById('quickview-title').textContent = 'Producto no encontrado';
+                    return;
+                }
+
+                loadProductQuickView(productoId);
             });
 
             // Manejar botones de cantidad en el modal
@@ -201,11 +204,71 @@
             document.getElementById('quickview-description').textContent = 'Cargando descripción...';
             document.getElementById('quickview-stock').textContent = '0';
             document.getElementById('quickview-variants').innerHTML = '';
+            document.getElementById('quickview-link').href = '#';
+            setQuickViewWishlistState('', false, '');
         }
 
         function showQuickViewError() {
             document.getElementById('quickview-title').textContent = 'Error al cargar el producto';
             document.getElementById('quickview-description').textContent = 'Por favor, intenta de nuevo más tarde.';
+        }
+
+        function setQuickViewWishlistState(productId, inWishlist, wishlistId) {
+            const button = document.querySelector('#quick_view .wishlist.btn-icon-action');
+            if (!button) return;
+
+            const normalizedProductId = productId ? String(productId) : '';
+            const normalizedWishlistId = wishlistId ? String(wishlistId) : '';
+
+            button.setAttribute('data-product-id', normalizedProductId);
+            button.setAttribute('data-wishlist-id', normalizedWishlistId);
+            button.classList.toggle('active', !!inWishlist);
+
+            const tooltip = button.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.textContent = inWishlist ? 'Eliminar de Favoritos' : 'Agregar a Favoritos';
+            }
+        }
+
+        function syncQuickViewWishlistState(data) {
+            const productId = data && data.id ? String(data.id) : '';
+            if (!productId) {
+                setQuickViewWishlistState('', false, '');
+                return;
+            }
+
+            if (typeof data.in_wishlist !== 'undefined') {
+                setQuickViewWishlistState(productId, !!data.in_wishlist, data.wishlist_item_id || '');
+                return;
+            }
+
+            const productButtons = Array.from(document.querySelectorAll(`.wishlist.btn-icon-action[data-product-id="${productId}"]`))
+                .filter(btn => !btn.closest('#quick_view'));
+
+            if (productButtons.length) {
+                const sourceButton = productButtons[0];
+                setQuickViewWishlistState(
+                    productId,
+                    sourceButton.classList.contains('active'),
+                    sourceButton.getAttribute('data-wishlist-id') || ''
+                );
+                return;
+            }
+
+            fetch(`/usuarios/wishlist/check/${productId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.ok ? response.json() : null)
+                .then(result => {
+                    const inWishlist = !!(result && result.success && result.in_wishlist);
+                    setQuickViewWishlistState(productId, inWishlist, '');
+                })
+                .catch(() => {
+                    setQuickViewWishlistState(productId, false, '');
+                });
         }
 
         function populateQuickView(data) {
@@ -287,11 +350,7 @@
                     console.log('  - Precio:', variantesStock['default'].precio);
                 }
                 updateQuickViewPrice();
-                return; // No renderizar atributos
-            }
-            // ========================================================================
-            
-            if (data.atributos && data.atributos.length > 0) {
+            } else if (data.atributos && data.atributos.length > 0) {
                 data.atributos.forEach((atributo, index) => {
                     const atributoDiv = document.createElement('div');
                     atributoDiv.className = 'variant-picker-item';
@@ -354,11 +413,48 @@
             }
             
             // Link a detalles completos
-            document.getElementById('quickview-link').href = `/product/${data.id}/`;
+            document.getElementById('quickview-link').href = data.url || `/producto/${data.id}/`;
+
+            // Sincronizar estado del botón wishlist dentro del modal
+            syncQuickViewWishlistState(data);
             
             // Reiniciar cantidad a 1
             modal.querySelector('input[name="number"]').value = 1;
+            updateQuickViewButtons();
             updateQuickViewPrice();
+        }
+
+        function closeQuickViewModal() {
+            const modalElement = document.getElementById('quick_view');
+            const quickViewModal = bootstrap.Modal.getInstance(modalElement);
+            if (quickViewModal) {
+                quickViewModal.hide();
+            }
+        }
+
+        function pulseQuickViewCartButton(isSuccess) {
+            const button = document.querySelector('#quick_view .btn-add-to-cart-quickview');
+            if (!button) return;
+
+            const label = button.querySelector('span');
+            if (!label) return;
+
+            const defaultLabel = button.dataset.defaultLabel || label.textContent;
+            button.dataset.defaultLabel = defaultLabel;
+
+            button.classList.remove('quickview-cart-ok', 'quickview-cart-error');
+
+            if (isSuccess) {
+                label.textContent = 'Agregado - ';
+                button.classList.add('quickview-cart-ok');
+            } else {
+                button.classList.add('quickview-cart-error');
+            }
+
+            setTimeout(() => {
+                label.textContent = defaultLabel;
+                button.classList.remove('quickview-cart-ok', 'quickview-cart-error');
+            }, 1100);
         }
 
         function updateVariantByAttributes() {
@@ -478,29 +574,37 @@
 
         function addToCartFromQuickView() {
             const modal = document.getElementById('quick_view');
-            const productoId = modal.dataset.productoId;
+            const productoId = modal.dataset.productoId || modal.dataset.productId;
             const variantId = modal.dataset.selectedVariantId;
-            const quantity = parseInt(modal.querySelector('input[name="number"]').value);
+            const quantity = parseInt(modal.querySelector('input[name="number"]').value, 10) || 1;
             const maxStock = parseInt(modal.dataset.maxStock) || 0;
             
             if (!productoId) {
-                alert('Error: No se pudo identificar el producto');
+                console.error('Producto sin ID');
+                pulseQuickViewCartButton(false);
                 return;
             }
 
             if (!variantId) {
-                alert('Por favor, selecciona todas las opciones del producto');
+                pulseQuickViewCartButton(false);
                 return;
             }
             
             // Validar stock
             if (maxStock === 0) {
-                alert('Producto sin stock disponible');
+                pulseQuickViewCartButton(false);
                 return;
             }
             
             if (quantity > maxStock) {
-                alert(`Stock insuficiente. Solo hay ${maxStock} unidades disponibles.`);
+                pulseQuickViewCartButton(false);
+                return;
+            }
+
+            if (typeof window.addToCart === 'function') {
+                window.addToCart(productoId, variantId, quantity);
+                pulseQuickViewCartButton(true);
+                closeQuickViewModal();
                 return;
             }
 
@@ -520,21 +624,30 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const modalElement = document.getElementById('quick_view');
-                    const modal = bootstrap.Modal.getInstance(modalElement);
-                    if (modal) {
-                        modal.hide();
+                    // Actualizar contador sin recargar la página.
+                    document.querySelectorAll('.tf-cart-count, .toolbar-count').forEach(el => {
+                        el.textContent = data.cart_count || el.textContent;
+                    });
+
+                    pulseQuickViewCartButton(true);
+                    closeQuickViewModal();
+
+                    const cartModalElement = document.getElementById('shoppingCart');
+                    if (cartModalElement) {
+                        let cartModal = bootstrap.Modal.getInstance(cartModalElement);
+                        if (!cartModal) {
+                            cartModal = new bootstrap.Modal(cartModalElement);
+                        }
+                        cartModal.show();
                     }
-                    
-                    alert('Producto agregado al carrito');
-                    location.reload();
-                } else {
-                    alert(data.message || 'Error al agregar al carrito');
+                    return;
                 }
+
+                pulseQuickViewCartButton(false);
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al agregar al carrito');
+                pulseQuickViewCartButton(false);
             });
         }
 

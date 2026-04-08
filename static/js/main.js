@@ -315,6 +315,10 @@
   var btnWishlist = function () {
     if ($(".btn-icon-action").length) {
       $(".btn-icon-action").on("click", function (e) {
+        // La logica de favoritos se controla via static/js/wishlist.js.
+        if ($(this).hasClass("wishlist")) {
+          return;
+        }
         $(this).toggleClass("active");
       });
     }
@@ -482,12 +486,6 @@
     //   $("#shoppingCart").modal("show");
     // });
 
-    $(".btn-add-note").click(function () {
-      $(".add-note").addClass("open");
-    });
-    $(".btn-add-gift").click(function () {
-      $(".add-gift").addClass("open");
-    });
     $(".btn-estimate-shipping").click(function () {
       $(".estimate-shipping").addClass("open");
     });

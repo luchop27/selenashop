@@ -45,6 +45,8 @@ class UsuarioManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('El usuario debe tener un correo electrónico')
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_subscribed', False)
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -89,8 +91,12 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     fecha_edicion = models.DateTimeField(auto_now=True)
 
     # Campos de control de Django
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    is_subscribed = models.BooleanField(
+        default=False,
+        help_text="Indica si el usuario acepta recibir comunicaciones publicitarias."
+    )
     
     # Campo para trackear cupón de carnaval
     carnival_coupon_used_2026 = models.BooleanField(default=False, help_text="Si el usuario ya usó el cupón del 10% de carnaval febrero 2026")

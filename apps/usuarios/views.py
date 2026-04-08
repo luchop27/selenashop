@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.messages import get_messages
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -13,6 +14,12 @@ from django.http import JsonResponse
 from .models import Usuario, EmailVerificationToken
 import base64
 import os
+
+
+def limpiar_mensajes_pendientes(request):
+    """Consume mensajes pendientes para evitar arrastre entre panel admin y frontend."""
+    storage = get_messages(request)
+    storage.used = True
 
 
 def obtener_logo_base64():
@@ -373,6 +380,8 @@ def enviar_email_verificacion(request, usuario):
 
 def login_usuario(request):
     """Vista de login para usuarios"""
+    limpiar_mensajes_pendientes(request)
+
     # Si el usuario ya está autenticado, redirigir según su rol
     if request.user.is_authenticated:
         if request.user.rol == 'admin_tienda' or request.user.is_staff:
@@ -404,11 +413,17 @@ def login_usuario(request):
             return redirect('usuarios:my_account')
         else:
             messages.error(request, 'Email o contraseña incorrectos.')
-            return render(request, 'login.html', {'next': next_url})
+            return render(request, 'login.html', {
+                'next': next_url,
+                'disable_cart_nav': True,
+            })
     
     # GET request
     next_url = request.GET.get('next')
-    return render(request, 'login.html', {'next': next_url})
+    return render(request, 'login.html', {
+        'next': next_url,
+        'disable_cart_nav': True,
+    })
 
 
 def registrar_usuario(request):
@@ -416,6 +431,17 @@ def registrar_usuario(request):
     # Si el usuario ya está autenticado, redirigir
     if request.user.is_authenticated:
         return redirect('usuarios:my_account')
+
+    def construir_contexto_registro(**kwargs):
+        """Construye el contexto base del registro y preserva datos del formulario."""
+        provincia_id_ctx = kwargs.get('provincia_id')
+        contexto = {
+            'disable_cart_nav': True,
+            'provincias': obtener_provincias(),
+            'ciudades': obtener_ciudades_por_provincia(provincia_id_ctx) if provincia_id_ctx else []
+        }
+        contexto.update(kwargs)
+        return contexto
     
     if request.method == 'POST':
         nombre = request.POST.get('nombre', '').strip()
@@ -426,56 +452,63 @@ def registrar_usuario(request):
         ciudad_id = request.POST.get('ciudad')
         password = request.POST.get('password', '').strip()
         password_confirm = request.POST.get('password_confirm', '').strip()
+
+        if not provincia_id or not ciudad_id:
+            messages.error(request, 'Debes seleccionar una provincia y una ciudad/cantón.')
+            return render(request, 'register.html', construir_contexto_registro(
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                telefono=telefono,
+                provincia_id=provincia_id,
+                ciudad_id=ciudad_id,
+            ))
         
         # Validaciones
         if not email or not password:
             messages.error(request, 'El email y la contraseña son obligatorios.')
-            return render(request, 'register.html', {
-                'nombre': nombre,
-                'apellido': apellido,
-                'email': email,
-                'telefono': telefono,
-                'provincia_id': provincia_id,
-                'ciudad_id': ciudad_id,
-                'provincias': obtener_provincias(),
-                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
-            })
+            return render(request, 'register.html', construir_contexto_registro(
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                telefono=telefono,
+                provincia_id=provincia_id,
+                ciudad_id=ciudad_id,
+            ))
         
         if password != password_confirm:
             messages.error(request, 'Las contraseñas no coinciden.')
-            return render(request, 'register.html', {
-                'nombre': nombre,
-                'apellido': apellido,
-                'email': email,
-                'telefono': telefono,
-                'provincia_id': provincia_id,
-                'ciudad_id': ciudad_id,
-                'provincias': obtener_provincias(),
-                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
-            })
+            return render(request, 'register.html', construir_contexto_registro(
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                telefono=telefono,
+                provincia_id=provincia_id,
+                ciudad_id=ciudad_id,
+            ))
         
         if len(password) < 6:
             messages.error(request, 'La contraseña debe tener al menos 6 caracteres.')
-            return render(request, 'register.html', {
-                'nombre': nombre,
-                'apellido': apellido,
-                'email': email,
-                'telefono': telefono,
-                'provincia_id': provincia_id,
-                'ciudad_id': ciudad_id,
-                'provincias': obtener_provincias(),
-                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
-            })
+            return render(request, 'register.html', construir_contexto_registro(
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                telefono=telefono,
+                provincia_id=provincia_id,
+                ciudad_id=ciudad_id,
+            ))
         
         # Verificar si el email ya existe
         if Usuario.objects.filter(email=email).exists():
             messages.error(request, 'Este email ya está registrado.')
-            return render(request, 'register.html', {
-                'nombre': nombre,
-                'apellido': apellido,
-                'provincias': obtener_provincias(),
-                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
-            })
+            return render(request, 'register.html', construir_contexto_registro(
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                telefono=telefono,
+                provincia_id=provincia_id,
+                ciudad_id=ciudad_id,
+            ))
         
         try:
             # Obtener provincia y ciudad si fueron seleccionadas
@@ -485,15 +518,37 @@ def registrar_usuario(request):
             
             if provincia_id:
                 try:
-                    provincia = Provincia.objects.get(id=provincia_id)
+                    provincia = Provincia.objects.get(id=provincia_id, activa=True)
                 except Provincia.DoesNotExist:
                     provincia = None
+
+            if not provincia:
+                messages.error(request, 'La provincia seleccionada no es válida.')
+                return render(request, 'register.html', construir_contexto_registro(
+                    nombre=nombre,
+                    apellido=apellido,
+                    email=email,
+                    telefono=telefono,
+                    provincia_id=provincia_id,
+                    ciudad_id=ciudad_id,
+                ))
             
             if ciudad_id:
                 try:
-                    ciudad = Ciudad.objects.get(id=ciudad_id)
+                    ciudad = Ciudad.objects.get(id=ciudad_id, provincia=provincia, activa=True)
                 except Ciudad.DoesNotExist:
                     ciudad = None
+
+            if not ciudad:
+                messages.error(request, 'La ciudad/cantón seleccionada no pertenece a la provincia elegida.')
+                return render(request, 'register.html', construir_contexto_registro(
+                    nombre=nombre,
+                    apellido=apellido,
+                    email=email,
+                    telefono=telefono,
+                    provincia_id=provincia_id,
+                    ciudad_id=ciudad_id,
+                ))
             
             # Crear el usuario con rol de cliente
             user = Usuario.objects.create_user(
@@ -505,36 +560,28 @@ def registrar_usuario(request):
                 provincia=provincia,
                 ciudad=ciudad,
                 rol='cliente',  # Por defecto todos los registros desde la web son clientes
+                is_active=True,
             )
-            
-            # Enviar email de verificación silenciosamente
-            enviar_email_verificacion(request, user)
-            # Mensaje de registro eliminado - mejor UX con modal de bienvenida
-            
-            # Autenticar y hacer login automáticamente (aunque el email no esté verificado)
-            user = authenticate(request, username=email, password=password)
-            if user:
-                login(request, user)
-                return redirect('usuarios:my_account')
+
+            messages.success(
+                request,
+                '¡Registro exitoso! Por favor, inicia sesión con tus credenciales'
+            )
+            return redirect('usuarios:login')
             
         except Exception as e:
             messages.error(request, f'Error al crear la cuenta: {str(e)}')
-            return render(request, 'register.html', {
-                'nombre': nombre,
-                'apellido': apellido,
-                'email': email,
-                'telefono': telefono,
-                'provincia_id': provincia_id,
-                'ciudad_id': ciudad_id,
-                'provincias': obtener_provincias(),
-                'ciudades': obtener_ciudades_por_provincia(provincia_id) if provincia_id else []
-            })
+            return render(request, 'register.html', construir_contexto_registro(
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                telefono=telefono,
+                provincia_id=provincia_id,
+                ciudad_id=ciudad_id,
+            ))
     
     # GET request
-    return render(request, 'register.html', {
-        'provincias': obtener_provincias(),
-        'ciudades': []
-    })
+    return render(request, 'register.html', construir_contexto_registro())
 
 
 def obtener_provincias():
@@ -556,7 +603,9 @@ def obtener_ciudades_por_provincia(provincia_id):
 
 def logout_usuario(request):
     """Vista de logout para usuarios"""
+    limpiar_mensajes_pendientes(request)
     logout(request)
+    limpiar_mensajes_pendientes(request)
     # Mensaje de logout eliminado para mejor UX
     return redirect('usuarios:login')
 
@@ -622,16 +671,6 @@ def my_account_edit(request):
     return render(request, 'my-account-edit.html', {
         'user': request.user
     })
-
-
-@login_required(login_url='/')
-def my_account_wishlist(request):
-    """Lista de deseos del usuario"""
-    # TODO: Obtener productos favoritos del usuario
-    return render(request, 'my-account-wishlist.html', {
-        'user': request.user
-    })
-
 
 def password_reset_request(request):
     """Vista para solicitar restablecimiento de contraseña"""
@@ -1260,19 +1299,8 @@ def reenviar_verificacion(request):
 # ==================== WISHLIST ====================
 @login_required(login_url='usuarios:login')
 def my_account_wishlist(request):
-    """
-    Vista para mostrar la lista de deseos del usuario
-    """
-    from .models import Wishlist
-    
-    wishlist_items = Wishlist.objects.filter(usuario=request.user).select_related('producto')
-    
-    context = {
-        'wishlist_items': wishlist_items,
-        'wishlist_count': wishlist_items.count()
-    }
-    
-    return render(request, 'wishlist.html', context)
+    """Redirige al listado principal de favoritos."""
+    return redirect('core:wishlist')
 
 
 @login_required(login_url='usuarios:login')

@@ -225,6 +225,28 @@ class Producto(models.Model):
             return "sin_stock"
 
 
+class MarketingCampaignState(models.Model):
+    """Estado persistente para campañas de productos nuevos."""
+
+    key = models.CharField(max_length=50, unique=True, default='default')
+    pending_new_products = models.PositiveIntegerField(default=0)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Estado de campaña de marketing"
+        verbose_name_plural = "Estado de campañas de marketing"
+
+    def __str__(self):
+        return f"Campana {self.key} - Pendientes: {self.pending_new_products}"
+
+    @classmethod
+    def get_default(cls):
+        state, _ = cls.objects.get_or_create(key='default')
+        return state
+
+
 # ------------------------------
 # TALLA
 # ------------------------------

@@ -20,7 +20,7 @@
 <!-- /page-title -->
 
 <!-- Section Product -->
-<section class="flat-spacing-2">
+<section class="flat-spacing-2 wishlist-page">
     <div class="container">
         <div class="tf-shop-control grid-3 align-items-center">
             <div class="tf-control-filter">
@@ -30,7 +30,7 @@
                 </a>
             </div>
             <div class="text-center">
-                <p class="text-center text_black-2">
+                <p id="wishlist-results-count" class="text-center text_black-2" data-count="{{ total_items }}">
                     Mostrando {{ total_items }} resultado{{ total_items|pluralize }}
                 </p>
             </div>
@@ -38,9 +38,9 @@
 
         <!-- Products Grid -->
         {% if productos %}
-        <div class="tf-list-layout wrapper-shop">
+        <div class="tf-grid-layout wrapper-shop tf-col-4">
             {% for producto in productos %}
-                <div class="card-product list-layout" data-availability="{{ producto.availability }}">
+            <div class="card-product style-4 grid" data-availability="{{ producto.availability }}">
                     <div class="card-product-wrapper">
                         <a href="{{ producto.get_absolute_url }}" class="product-img">
                             {% if producto.main_image_src %}
@@ -55,7 +55,32 @@
                                     src="{{ producto.hover_image_src }}" alt="image-product">
                             {% endif %}
                         </a>
+
+                        <div class="list-product-btn column-right">
+                            <button type="button" class="box-icon wishlist bg_white round btn-icon-action{% if producto.in_wishlist %} active{% endif %}"
+                                data-product-id="{{ producto.id }}"
+                                data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
+                                <span class="icon icon-heart"></span>
+                                <span class="tooltip">{% if producto.in_wishlist %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
+                                <span class="icon icon-delete"></span>
+                            </button>
+                            <a href="#quick_view" data-bs-toggle="modal" class="box-icon quickview bg_white round tf-btn-loading btn-open-quickview d-md-none"
+                                data-producto-id="{{ producto.id }}"
+                                data-product-sizes="{{ producto.sizes|join:',' }}">
+                                <span class="icon icon-view"></span>
+                                <span class="tooltip">Visualizar</span>
+                            </a>
+                        </div>
+
+                        {% if producto.sizes %}
+                            <div class="size-list">
+                                {% for s in producto.sizes %}
+                                    <span class="size-item">{{ s }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
+
                     <div class="card-product-info">
                         <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
                         <span class="price current-price">${{ producto.display_price }}</span>
@@ -72,28 +97,6 @@
                                     </li>
                                 {% endfor %}
                             </ul>
-                        {% endif %}
-                        <div class="list-product-btn">
-                            <button type="button" class="box-icon bg_white wishlist btn-icon-action" 
-                                data-product-id="{{ producto.id }}"
-                                {% if producto.in_wishlist %}data-wishlist-id="{{ producto.wishlist_item_id }}"{% endif %}>
-                                <span class="icon icon-heart"></span>
-                                <span class="tooltip">Remove from Wishlist</span>
-                                <span class="icon icon-delete"></span>
-                            </button>
-                            <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
-                                data-producto-id="{{ producto.id }}"
-                                data-product-sizes="{{ producto.sizes|join:',' }}">
-                                <span class="icon icon-view"></span>
-                                <span class="tooltip">Quick View</span>
-                            </a>
-                        </div>
-                        {% if producto.sizes %}
-                            <div class="size-list">
-                                {% for s in producto.sizes %}
-                                    <span class="size-item">{{ s }}</span>
-                                {% endfor %}
-                            </div>
                         {% endif %}
                     </div>
                 </div>

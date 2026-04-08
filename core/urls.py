@@ -38,10 +38,14 @@ urlpatterns = [
     path('cart/recommendations/', views.cart_recommendations, name='cart_recommendations'),
     
     # Wishlist URLs
-    path('wishlist/', views.wishlist, name='wishlist'),
-    path('api/wishlist/add/', views.wishlist_add, name='wishlist_add'),
-    path('api/wishlist/remove/', views.wishlist_remove, name='wishlist_remove'),
-    path('api/wishlist/count/', views.wishlist_count, name='wishlist_count'),
+    path('favoritos/', views.wishlist, name='wishlist'),
+    path('wishlist/', views.wishlist),
+    path('api/favoritos/agregar/', views.wishlist_add, name='wishlist_add'),
+    path('api/favoritos/eliminar/', views.wishlist_remove, name='wishlist_remove'),
+    path('api/favoritos/contador/', views.wishlist_count, name='wishlist_count'),
+    path('api/wishlist/add/', views.wishlist_add),
+    path('api/wishlist/remove/', views.wishlist_remove),
+    path('api/wishlist/count/', views.wishlist_count),
     
     # Checkout URLs
     path('checkout/', views.checkout, name='checkout'),

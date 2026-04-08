@@ -17,9 +17,13 @@
                 <div class="tf-login-form text-center">
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} mb_30" style="padding: 20px; border-radius: 8px;">
-                                {{ message }}
-                            </div>
+                            {% with message_text=message|stringformat:"s"|lower %}
+                                {% if 'admin' not in message.tags|lower and 'eliminado exitosamente' not in message_text and 'eliminada exitosamente' not in message_text and 'actualizado exitosamente' not in message_text and 'actualizada exitosamente' not in message_text and 'agregado exitosamente' not in message_text and 'agregada exitosamente' not in message_text and 'panel de administración' not in message_text and 'panel de administracion' not in message_text %}
+                                    <div class="alert alert-{{ message.tags }} mb_30" style="padding: 20px; border-radius: 8px;">
+                                        {{ message }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
                         {% endfor %}
                     {% endif %}
                     

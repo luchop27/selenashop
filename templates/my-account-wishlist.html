@@ -4,7 +4,7 @@
         <!-- page-title -->
         <div class="tf-page-title">
             <div class="container-full">
-                <div class="heading text-center">Lista de Deseos</div>
+                <div class="heading text-center">Lista de Favoritos</div>
             </div>
         </div>
         <!-- /page-title -->
@@ -15,13 +15,7 @@
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="wrap-sidebar-account">
-                            <ul class="my-account-nav">
-                                <li><a href="{% url 'usuarios:my_account' %}" class="my-account-nav-item">Panel</a></li>
-                                <li><a href="{% url 'usuarios:my_account_orders' %}" class="my-account-nav-item">Pedidos</a></li>
-                                <li><a href="{% url 'usuarios:my_account_edit' %}" class="my-account-nav-item">Detalles de Cuenta</a></li>
-                                <li><a href="{% url 'usuarios:my_account_wishlist' %}" class="my-account-nav-item active">Lista de Deseos</a></li>
-                                <li><a href="{% url 'usuarios:logout' %}" class="my-account-nav-item">Cerrar Sesión</a></li>
-                            </ul>
+                            {% include "includes/my-account-sidebar.html" with active_tab='favoritos' %}
                         </div>
                     </div>
                     <div class="col-lg-9">

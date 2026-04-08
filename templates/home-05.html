@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 {% block content %}
 <style>
@@ -94,6 +94,59 @@
     .tf-sw-testimonial .swiper-slide {
         height: auto;
     }
+  .opt-a { display: grid; grid-template-columns: 1.4fr 1fr; border: 0.5px solid #eaeaea; border-radius: 12px; overflow: hidden; margin: 60px auto 0 auto; max-width: 950px; background: #fff; box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
+  .img-hero { position: relative; overflow: hidden; background: #000; aspect-ratio: 2 / 3; height: auto; }
+  .slide { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .slide img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .img-facade { z-index: 1; animation: revealFacade 10s ease-in-out infinite; }
+  .img-interior { z-index: 2; animation: revealInterior 10s ease-in-out infinite; }
+
+  @keyframes revealFacade {
+    0%        { clip-path: inset(0 0 0 0);    transform: scale(1); }
+    40%       { clip-path: inset(0 0 0 0);    transform: scale(1.02); }
+    55%       { clip-path: inset(0 100% 0 0); transform: scale(1.03); }
+    95%, 100% { clip-path: inset(0 100% 0 0); transform: scale(1); }
+  }
+
+  @keyframes revealInterior {
+    0%, 45%   { clip-path: inset(0 0 0 100%); transform: scale(1.01); }
+    60%       { clip-path: inset(0 0 0 0);    transform: scale(1.02); }
+    95%       { clip-path: inset(0 0 0 0);    transform: scale(1.01); }
+    100%      { clip-path: inset(0 0 0 100%); transform: scale(1); }
+  }
+
+  .line-wipe { position: absolute; top: 0; bottom: 0; width: 3px; background: white; z-index: 5; opacity: 0; animation: lineWipe 10s ease-in-out infinite; }
+  @keyframes lineWipe { 0% { left: 0%; opacity: 0; } 38% { left: 0%; opacity: 0; } 42% { left: 0%; opacity: 1; } 53% { left: 100%; opacity: 1; } 54%, 100% { left: 100%; opacity: 0; } }
+
+  .counter { position: absolute; bottom: 16px; z-index: 10; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.06em; }
+  .counter span { color: white; font-weight: 500; }
+  .c-facade { right: 20px; animation: cFA 10s ease-in-out infinite; }
+  .c-int { right: 20px; animation: cIA 10s ease-in-out infinite; }
+
+  @keyframes cFA { 0%, 40% { opacity: 1; } 52%, 100% { opacity: 0; } }
+  @keyframes cIA { 0%, 50% { opacity: 0; } 60%, 92% { opacity: 1; } 100% { opacity: 0; } }
+
+  .progress-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: #8B7D5C; z-index: 10; animation: progressAnim 10s linear infinite; }
+  @keyframes progressAnim { 0% { width: 0%; } 100% { width: 100%; } }
+
+  .tag-foto { position: absolute; top: 16px; left: 16px; z-index: 10; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: white; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; }
+  .tag-fachada { animation: tagA 10s ease-in-out infinite; }
+  .tag-int { animation: tagB 10s ease-in-out infinite; }
+
+  @keyframes tagA { 0%, 40% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  @keyframes tagB { 0%, 50% { opacity: 0; } 62%, 92% { opacity: 1; } 100% { opacity: 0; } }
+
+  .info-row { display: flex; flex-direction: column; justify-content: center; padding: 4rem; gap: 2rem; background: linear-gradient(135deg, #fffaf5 0%, #f4eee6 100%); }
+  .info-block { display: flex; flex-direction: column; gap: 6px; padding-left: 1.2rem; border-left: 3px solid #8B7D5C; }
+  .info-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8B7D5C; font-weight: 700; opacity: 0.9; }
+  .info-value { font-size: 14px; color: #333; line-height: 1.6; }
+  .info-value.gold { color: #8B7D5C; font-weight: 600; font-size: 15px; }
+
+  @media (max-width: 768px) { 
+    .opt-a { grid-template-columns: 1fr; max-width: 100%; } 
+    .info-row { padding: 2.5rem 1.5rem; gap: 1.5rem; border-bottom: 1px solid #eee; background: #fff;} 
+    .img-hero { aspect-ratio: 1 / 1; min-height: unset; } 
+  }
 </style>
 
 
@@ -360,55 +413,43 @@
         </section>
         <!-- /Testimonial -->
         <!-- Store -->
-        <section class="flat-spacing-6  ">
+        <section class="flat-spacing-6 pt_0">
             <div class="container">
                 <div class="flat-title wow fadeInUp" data-wow-delay="0s">
                     <span class="title">Visita nuestra tienda</span>
                 </div>
-                <div class="flat-tab-store flat-animate-tab">
-                    <ul class="widget-tab-2" role="tablist">
-                        <li class="nav-tab-item" role="presentation">
-                            <a href="#hongkong" class="active" data-bs-toggle="tab">Machala</a>
-                        </li>
-                        <li class="nav-tab-item" role="presentation">
-                            <a href="#london" data-bs-toggle="tab">Bodega</a>
-                        </li>
-                        
-                    </ul>
-                    <div class="tab-content">
-                        <div class="tab-pane active show" id="hongkong" role="tabpanel">
-                            <div class="widget-card-store align-items-center tf-grid-layout md-col-2">
-                                <div class="store-item-info">
-                                    <h5 class="store-heading">Tienda Machala</h5>
-                                    <div class="description">
-                                        <p>301 Front St WToronto,<br>Ecomus@support.com <br>(08) 8942 1299</p>
-                                        <p>Lunes - Viernes, 8:30am - 10:30pm<br>Sábado, 8:30am - 10:30pm <br>Domingo Cerrado
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="store-img">
-                                    <img class="lazyload" data-src="{% static 'images/shop/store/tienda.png' %}" src="{% static 'images/shop/store/tienda.png' %}" alt="store-img">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane" id="london" role="tabpanel">
-                            <div class="widget-card-store align-items-center tf-grid-layout md-col-2">
-                                <div class="store-item-info">
-                                    <h5 class="store-heading">Bodega Machala</h5>
-                                    <div class="description">
-                                        <p>301 Front St WToronto,<br>Ecomus@support.com <br>(08) 8942 1299</p>
-                                        <p>Lunes - Viernes, 8:30am - 10:30pm<br>Sábado, 8:30am - 10:30pm <br>Domingo Cerrado
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="store-img">
-                                    <img class="lazyload" data-src="{% static 'images/shop/store/bodega.jpeg' %}" src="{% static 'images/shop/store/bodega.jpeg' %}" alt="store-img">
-                                </div>
-                            </div>
-                        </div>
-                        
-                    </div>
-                </div>
+                <section class="opt-a">
+  <div class="info-row">
+    <div class="info-block">
+      <span class="info-label">ubicación</span>
+      <span class="info-value">Machala, Ecuador</span>
+    </div>
+    <div class="info-block">
+      <span class="info-label">horario</span>
+      <span class="info-value">Lunes a Sábado · 9:00am a 6:00pm<br>Envíos a todo el Ecuador</span>
+    </div>
+    <div class="info-block">
+      <span class="info-label">contacto</span>
+      <span class="info-value gold">0989184413</span>
+    </div>
+  </div>
+  
+  <div class="img-hero">
+    <div class="slide img-facade">
+      <img src="{% static 'images/fachada_interior/fachada.png' %}" alt="Fachada Machala" />
+    </div>
+    <div class="slide img-interior">
+      <img src="{% static 'images/fachada_interior/interior.jpeg' %}" alt="Interior Machala" />
+    </div>
+    <div class="line-wipe"></div>
+    <span class="tag-foto tag-fachada">fachada</span>
+    <span class="tag-foto tag-int">interior</span>
+    <div class="counter c-facade"><span>01</span> / 02</div>
+    <div class="counter c-int"><span>02</span> / 02</div>
+    <div class="progress-bar"></div>
+  </div>
+  
+</section>
             </div>
         </section>
         <!-- /Store -->
@@ -419,436 +460,8 @@
     <script>
     (function() {
         'use strict';
-        
-        let isProcessingQuickView = false;
-        let currentProductData = null;
-
-        // Obtener CSRF token
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        const csrftoken = getCookie('csrftoken');
-        
-        // Escuchar clicks en botones de quick view
-        document.addEventListener('click', function(e) {
-            var btn = e.target.closest('.btn-open-quickview');
-            if (!btn) return;
-            
-            e.preventDefault();
-            
-            var productId = btn.getAttribute('data-product-id');
-            if (productId) {
-                // Cargar desde API (con stock real)
-                loadProductQuickView(productId);
-            } else {
-                // Fallback: cargar datos estáticos
-                loadStaticQuickView(btn);
-            }
-        }, false);
-
-        // Cargar producto desde API con stock real
-        function loadProductQuickView(productId) {
-            console.log('Quick View: Cargando producto ID =', productId);
-            const modal = document.getElementById('quick_view');
-            
-            fetch(`/productos/api/${productId}/quick-view/`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Error al cargar el producto');
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Quick View: Datos recibidos =', data);
-                    currentProductData = data;
-                    populateQuickViewWithStock(data);
-                })
-                .catch(error => {
-                    console.error('Quick View: Error =', error);
-                });
-        }
-
-        // Poblar quick view con datos del API (con control de stock)
-        function populateQuickViewWithStock(data) {
-            const modal = document.getElementById('quick_view');
-            
-            // Guardar datos en el modal
-            modal.dataset.productoId = data.id;
-            modal.dataset.basePrice = data.precio;
-            modal.dataset.maxStock = data.stock || 0;
-            modal.dataset.variantes = JSON.stringify(data.variantes || []);
-            modal.dataset.atributos = JSON.stringify(data.atributos || []);
-            
-            // Actualizar título
-            var titleLink = modal.querySelector('.tf-product-info-title .link');
-            if (titleLink) {
-                titleLink.textContent = data.nombre;
-                titleLink.href = `/product/${data.id}/`;
-            }
-            
-            // Actualizar precio
-            var priceEl = modal.querySelector('.tf-product-info-price .price');
-            if (priceEl) {
-                priceEl.textContent = '$' + data.precio;
-            }
-            
-            // Actualizar descripción
-            var descEl = modal.querySelector('.tf-product-description p');
-            if (descEl) {
-                descEl.textContent = data.descripcion_corta || data.descripcion_larga || 'Sin descripción disponible';
-            }
-            
-            // Actualizar imágenes
-            var swiperWrapper = modal.querySelector('.swiper-wrapper');
-            if (swiperWrapper && data.imagenes && data.imagenes.length > 0) {
-                swiperWrapper.innerHTML = '';
-                data.imagenes.forEach(imagen => {
-                    var slide = document.createElement('div');
-                    slide.className = 'swiper-slide';
-                    slide.innerHTML = '<div class="item"><img src="' + imagen.src + '" alt="' + data.nombre + '"></div>';
-                    swiperWrapper.appendChild(slide);
-                });
-            }
-            
-            // Renderizar atributos con stock
-            if (data.atributos && data.atributos.length > 0) {
-                renderAttributes(data.atributos, modal);
-                updateVariantByAttributes();
-            }
-            
-            // Resetear cantidad a 1
-            var quantityInput = modal.querySelector('input[name="number"]');
-            if (quantityInput) {
-                quantityInput.value = 1;
-            }
-            
-            // Actualizar botones de cantidad
-            updateQuickViewButtons();
-            
-            // Actualizar precio total
-            var addBtnPrice = modal.querySelector('.tf-qty-price');
-            if (addBtnPrice) {
-                addBtnPrice.textContent = '$' + data.precio;
-            }
-            
-            // Actualizar link "View full details"
-            var viewDetailsLink = modal.querySelector('.tf-btn.btn-line');
-            if (viewDetailsLink) {
-                viewDetailsLink.href = `/product/${data.id}/`;
-            }
-        }
-
-        // Renderizar atributos (colores y tallas)
-        function renderAttributes(atributos, modal) {
-            const variantPicker = modal.querySelector('.tf-product-info-variant-picker');
-            if (!variantPicker) return;
-            
-            variantPicker.innerHTML = '';
-            
-            atributos.forEach((atributo, index) => {
-                const valoresArray = Object.values(atributo.valores);
-                const atributoDiv = document.createElement('div');
-                atributoDiv.className = 'variant-picker-item';
-                
-                if (atributo.tipo === 'color') {
-                    // Renderizar colores
-                    atributoDiv.innerHTML = `
-                        <div class="variant-picker-label">
-                            ${atributo.nombre}: <span class="fw-6 variant-picker-label-value">${valoresArray[0]?.valor || ''}</span>
-                        </div>
-                        <div class="variant-picker-values">
-                            ${valoresArray.map((valor, vIndex) => `
-                                <input type="radio" name="atributo_${atributo.id}" id="qv-attr-${atributo.id}-${valor.id}" 
-                                       value="${valor.id}" data-atributo-slug="${atributo.slug}" ${vIndex === 0 ? 'checked' : ''}>
-                                <label class="hover-tooltip radius-60" for="qv-attr-${atributo.id}-${valor.id}" data-value="${valor.valor}">
-                                    <span class="btn-checkbox ${valor.codigo_color ? '' : 'bg-color-' + valor.valor.toLowerCase()}" 
-                                          ${valor.codigo_color ? `style="background-color: ${valor.codigo_color};"` : ''}></span>
-                                    <span class="tooltip">${valor.valor}</span>
-                                </label>
-                            `).join('')}
-                        </div>
-                    `;
-                } else {
-                    // Renderizar tallas u otros atributos
-                    atributoDiv.innerHTML = `
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="variant-picker-label">
-                                ${atributo.nombre}: <span class="fw-6 variant-picker-label-value">${valoresArray[0]?.valor || ''}</span>
-                            </div>
-                        </div>
-                        <div class="variant-picker-values">
-                            ${valoresArray.map((valor, vIndex) => `
-                                <input type="radio" name="atributo_${atributo.id}" id="qv-attr-${atributo.id}-${valor.id}" 
-                                       value="${valor.id}" data-atributo-slug="${atributo.slug}" ${vIndex === 0 ? 'checked' : ''}>
-                                <label class="style-text" for="qv-attr-${atributo.id}-${valor.id}" data-value="${valor.valor}">
-                                    <p>${valor.valor}</p>
-                                </label>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-                
-                variantPicker.appendChild(atributoDiv);
-            });
-            
-            // Agregar event listeners para cambios de atributos
-            variantPicker.querySelectorAll('input[type="radio"]').forEach(input => {
-                input.addEventListener('change', function() {
-                    updateVariantByAttributes();
-                });
-            });
-        }
-
-        // Actualizar variante según atributos seleccionados
-        function updateVariantByAttributes() {
-            const modal = document.getElementById('quick_view');
-            const variantes = JSON.parse(modal.dataset.variantes || '[]');
-            const atributos = JSON.parse(modal.dataset.atributos || '[]');
-            
-            // Obtener atributos seleccionados
-            const selectedAttrs = {};
-            atributos.forEach(atributo => {
-                const selectedInput = modal.querySelector(`input[name="atributo_${atributo.id}"]:checked`);
-                if (selectedInput) {
-                    const valorId = parseInt(selectedInput.value);
-                    selectedAttrs[atributo.slug] = valorId;
-                    
-                    // Actualizar label
-                    const label = selectedInput.closest('.variant-picker-item').querySelector('.variant-picker-label-value');
-                    if (label) {
-                        label.textContent = selectedInput.getAttribute('data-value') || selectedInput.nextElementSibling.dataset.value;
-                    }
-                }
-            });
-            
-            // Buscar variante que coincida
-            const matchingVariant = variantes.find(variante => {
-                return Object.keys(selectedAttrs).every(slug => {
-                    const varianteAttr = variante.atributos[slug];
-                    return varianteAttr && varianteAttr.valor_id === selectedAttrs[slug];
-                });
-            });
-            
-            if (matchingVariant) {
-                modal.dataset.selectedVariantId = matchingVariant.id;
-                modal.dataset.basePrice = matchingVariant.precio;
-                modal.dataset.maxStock = matchingVariant.stock;
-                
-                const priceEl = modal.querySelector('.tf-product-info-price .price');
-                if (priceEl) {
-                    priceEl.textContent = `$${matchingVariant.precio}`;
-                }
-                
-                console.log('🔄 Variante actualizada:', {
-                    id: matchingVariant.id,
-                    stock: matchingVariant.stock,
-                    precio: matchingVariant.precio
-                });
-                
-                // Ajustar cantidad si excede el nuevo stock
-                const quantityInput = modal.querySelector('input[name="number"]');
-                const currentQty = parseInt(quantityInput.value) || 1;
-                if (currentQty > matchingVariant.stock) {
-                    quantityInput.value = matchingVariant.stock > 0 ? matchingVariant.stock : 1;
-                }
-            } else {
-                modal.dataset.selectedVariantId = '';
-                modal.dataset.maxStock = 0;
-            }
-            
-            updateQuickViewButtons();
-            updateQuickViewPrice();
-        }
-
-        // Actualizar botones de cantidad
-        function updateQuickViewButtons() {
-            const modal = document.getElementById('quick_view');
-            const quantityInput = modal.querySelector('input[name="number"]');
-            const btnIncrease = modal.querySelector('.plus-btn');
-            const btnDecrease = modal.querySelector('.minus-btn');
-            
-            if (!quantityInput || !btnIncrease || !btnDecrease) return;
-            
-            const currentQty = parseInt(quantityInput.value) || 1;
-            const maxStock = parseInt(modal.dataset.maxStock) || 0;
-            
-            console.log('QuickView - Actualizando botones:', {currentQty, maxStock});
-            
-            // Deshabilitar botón de incremento si llegamos al stock máximo o no hay stock
-            if (currentQty >= maxStock || maxStock === 0) {
-                btnIncrease.classList.add('disabled');
-                btnIncrease.style.opacity = '0.5';
-                btnIncrease.style.cursor = 'not-allowed';
-                btnIncrease.style.pointerEvents = 'none';
-            } else {
-                btnIncrease.classList.remove('disabled');
-                btnIncrease.style.opacity = '1';
-                btnIncrease.style.cursor = 'pointer';
-                btnIncrease.style.pointerEvents = 'auto';
-            }
-            
-            // Deshabilitar botón de decremento si estamos en 1
-            if (currentQty <= 1) {
-                btnDecrease.classList.add('disabled');
-                btnDecrease.style.opacity = '0.5';
-                btnDecrease.style.cursor = 'not-allowed';
-                btnDecrease.style.pointerEvents = 'none';
-            } else {
-                btnDecrease.classList.remove('disabled');
-                btnDecrease.style.opacity = '1';
-                btnDecrease.style.cursor = 'pointer';
-                btnDecrease.style.pointerEvents = 'auto';
-            }
-        }
-
-        // Actualizar precio total
-        function updateQuickViewPrice() {
-            const modal = document.getElementById('quick_view');
-            const quantity = parseInt(modal.querySelector('input[name="number"]').value) || 1;
-            const basePrice = parseFloat(modal.dataset.basePrice) || 0;
-            const totalPrice = (basePrice * quantity).toFixed(2);
-            
-            const addBtnPrice = modal.querySelector('.tf-qty-price');
-            if (addBtnPrice) {
-                addBtnPrice.textContent = '$' + totalPrice;
-            }
-        }
-
-        // Manejar botones de cantidad
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('quick_view');
-            if (!modal) return;
-            
-            const plusBtn = modal.querySelector('.plus-btn');
-            const minusBtn = modal.querySelector('.minus-btn');
-            const quantityInput = modal.querySelector('input[name="number"]');
-            
-            if (plusBtn && quantityInput) {
-                plusBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    
-                    if (isProcessingQuickView) {
-                        console.log('QuickView - Ya procesando, ignorando click');
-                        return false;
-                    }
-                    
-                    if (this.classList.contains('disabled') || this.style.pointerEvents === 'none') {
-                        console.log('QuickView - Botón + está deshabilitado');
-                        return false;
-                    }
-                    
-                    isProcessingQuickView = true;
-                    
-                    const currentQty = parseInt(quantityInput.value) || 1;
-                    const maxStock = parseInt(modal.dataset.maxStock) || 0;
-                    
-                    console.log('=== QuickView INCREMENTO ===');
-                    console.log('Cantidad actual:', currentQty);
-                    console.log('Stock máximo:', maxStock);
-                    
-                    // Validación estricta: solo incrementar si hay stock disponible
-                    if (currentQty < maxStock && maxStock > 0) {
-                        const newQty = currentQty + 1;
-                        console.log('Intentando incrementar a:', newQty);
-                        
-                        // Triple verificación antes de asignar
-                        if (newQty <= maxStock) {
-                            quantityInput.value = newQty;
-                            console.log('✅ Cantidad actualizada a:', newQty);
-                            updateQuickViewButtons();
-                            updateQuickViewPrice();
-                        } else {
-                            console.log('❌ Bloqueado: excedería stock máximo');
-                        }
-                    } else {
-                        console.log('❌ Bloqueado: ya en stock máximo');
-                    }
-                    
-                    setTimeout(() => { isProcessingQuickView = false; }, 100);
-                    return false;
-                }, { capture: true });
-            }
-            
-            if (minusBtn && quantityInput) {
-                minusBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    
-                    if (isProcessingQuickView) {
-                        console.log('QuickView - Ya procesando, ignorando click');
-                        return false;
-                    }
-                    
-                    if (this.classList.contains('disabled') || this.style.pointerEvents === 'none') {
-                        console.log('QuickView - Botón - está deshabilitado');
-                        return false;
-                    }
-                    
-                    isProcessingQuickView = true;
-                    
-                    const currentQty = parseInt(quantityInput.value) || 1;
-                    
-                    console.log('=== QuickView DECREMENTO ===');
-                    console.log('Cantidad actual:', currentQty);
-                    
-                    if (currentQty > 1) {
-                        quantityInput.value = currentQty - 1;
-                        console.log('✅ Cantidad decrementada a:', currentQty - 1);
-                        updateQuickViewButtons();
-                        updateQuickViewPrice();
-                    }
-                    
-                    setTimeout(() => { isProcessingQuickView = false; }, 100);
-                    return false;
-                }, { capture: true });
-            }
-        });
-
-        // Fallback: cargar datos estáticos (sin stock real)
-        function loadStaticQuickView(btn) {
-            var modal = document.getElementById('quick_view');
-            if (!modal) return;
-            
-            var productName = btn.getAttribute('data-product-name') || '';
-            var productPrice = btn.getAttribute('data-product-price') || '';
-            var productMainImage = btn.getAttribute('data-product-main-image') || '';
-            var productHoverImage = btn.getAttribute('data-product-hover-image') || '';
-            var productUrl = btn.getAttribute('data-product-url') || '#';
-            var productDesc = btn.getAttribute('data-product-desc') || '';
-            
-            var titleLink = modal.querySelector('.tf-product-info-title .link');
-            if (titleLink) {
-                titleLink.textContent = productName;
-                titleLink.href = productUrl;
-            }
-            
-            var priceEl = modal.querySelector('.tf-product-info-price .price');
-            if (priceEl) {
-                priceEl.textContent = '$' + productPrice;
-            }
-            
-            var descEl = modal.querySelector('.tf-product-description p');
-            if (descEl) {
-                descEl.textContent = productDesc || 'Producto de alta calidad.';
-            }
-            
-            var addBtnPrice = modal.querySelector('.tf-qty-price');
-            if (addBtnPrice) {
-                addBtnPrice.textContent = '$' + productPrice;
-            }
-        }
+        // El quick view ya se gestiona de forma global en static/js/global_modals.js.
+        // Este bloque se deja intencionalmente vacío para evitar doble binding en Home.
     })();
     </script>
     <script>
