@@ -3,7 +3,12 @@ Script para inicializar contenido en las Páginas de Ayuda
 Ejecutar: python manage.py shell < scripts/init_paginas_ayuda.py
 """
 
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 from apps.ayudas.models import PaginaAyuda
+...
 
 # Limpiar registros anteriores
 PaginaAyuda.objects.all().delete()
