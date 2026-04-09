@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,6 +48,7 @@ INSTALLED_APPS = [
     'apps.resenas',
     'apps.ayudas',
     'core',
+    'storages',
 ]
 AUTH_USER_MODEL = 'usuarios.Usuario'
 MIDDLEWARE = [
@@ -57,6 +62,17 @@ MIDDLEWARE = [
     'core.middleware.CartPersistenceMiddleware',  # Sincronizar carrito a BD
     'core.admin_middleware.AdminAccessMiddleware',  # Proteger rutas de administración
 ]
+
+# AWS CONFIG
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', 'selenastore-bucket')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-2')  # Ohio
+
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 
 ROOT_URLCONF = 'selenashop.urls'
 
@@ -91,8 +107,12 @@ WSGI_APPLICATION = 'selenashop.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'selenashopdb',
+        'USER': 'postgres',
+        'PASSWORD': 'admin123',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -141,8 +161,10 @@ STATICFILES_DIRS = [
 ]
 
 # Media (user-uploaded) files served at /media/ during development
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# MEDIA FILES
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+# MEDIA_ROOT = BASE_DIR / 'media'  # Commented out since using S3
 
 # Configuración para archivos multimedia
 # No limitar el tamaño de archivos subidos (por defecto Django no tiene límite)
