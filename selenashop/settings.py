@@ -108,9 +108,9 @@ WSGI_APPLICATION = 'selenashop.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'selenashopdb',
-        'USER': 'postgres',
-        'PASSWORD': 'admin123',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '5432',
     }
