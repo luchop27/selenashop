@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from .forms import ProductoForm, VarianteFormSet, ImagenFormSet
+from django.views.decorators.http import require_POST
 
 # Importar decoradores de seguridad
 from core.decorators import admin_required, superuser_required
@@ -556,43 +557,45 @@ def panel_categoria_edit(request, pk):
 	})
 
 
-@admin_required
+@login_required(login_url='/admin/login/')
+@require_POST
 def panel_categoria_delete(request, pk):
 	"""
 	Eliminar una categoría
 	"""
+	if request.user.rol != 'admin_tienda' and not request.user.is_staff:
+		messages.error(request, 'No tienes permiso para eliminar categorías.')
+		return redirect('core:inicio')
+
 	try:
 		categoria = Categoria.objects.get(pk=pk)
 	except Categoria.DoesNotExist:
-		messages.error(request, 'La categoría no existe.')
+		messages.error(request, 'La categoría no existe o ya fue eliminada.')
 		return redirect('productos:panel_categorias')
-	
-	if request.method == 'POST':
-		nombre_categoria = categoria.nombre
-		# Verificar si tiene subcategorías
-		if categoria.subcategorias.exists():
-			messages.warning(
-				request, 
-				f'La categoría "{nombre_categoria}" tiene {categoria.subcategorias.count()} subcategorías. '
-				'Las subcategorías quedarán sin categoría padre.'
-			)
-		
-		# Obtener el ID del padre antes de eliminar (si es subcategoría)
-		padre_id = categoria.padre.id if categoria.padre else None
-		
-		# Eliminar la categoría
+
+	nombre_categoria = categoria.nombre
+	padre_id = categoria.padre_id
+
+	if categoria.subcategorias.exists():
+		messages.warning(
+			request,
+			f'La categoría "{nombre_categoria}" tiene {categoria.subcategorias.count()} subcategorías. '
+			'Las subcategorías quedarán sin categoría padre.'
+		)
+
+	try:
 		categoria.delete()
-		messages.success(request, f'Categoría "{nombre_categoria}" eliminada exitosamente.')
-		
-		# Redirigir a la lista correcta
+	except Exception as e:
+		messages.error(request, f'No se pudo eliminar la categoría: {str(e)}')
 		if padre_id:
 			return redirect(f'/admin-panel/categorias/?padre={padre_id}')
-		else:
-			return redirect('productos:panel_categorias')
-	
-	# Si no es POST, redirigir a la lista
-	messages.error(request, 'Método no permitido.')
+		return redirect('productos:panel_categorias')
+
+	messages.success(request, f'Categoría "{nombre_categoria}" eliminada exitosamente.')
+	if padre_id:
+		return redirect(f'/admin-panel/categorias/?padre={padre_id}')
 	return redirect('productos:panel_categorias')
+
 
 
 # =========================
