@@ -480,9 +480,6 @@ def panel_categoria_crear(request):
 		if form.is_valid():
 			try:
 				categoria = form.save(commit=False)
-				# Asegurar que posicion tenga un valor por defecto
-				if not hasattr(categoria, 'posicion') or categoria.posicion is None:
-					categoria.posicion = 0
 				categoria.save()
 				messages.success(request, f'Categoría "{categoria.nombre}" creada correctamente.')
 				return redirect('productos:panel_categorias')
