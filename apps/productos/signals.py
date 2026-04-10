@@ -11,13 +11,72 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.html import escape
+from django.db.models.signals import post_delete, pre_save
+from django.dispatch import receiver
 
-from .models import MarketingCampaignState, Producto, Variante
+from .models import MarketingCampaignState, Producto, Variante, Imagen, Coleccion, Categoria
 
 logger = logging.getLogger(__name__)
 
+
+def _delete_file_field(file_field):
+    if not file_field:
+        return
+    try:
+        # Borra el archivo del storage (S3) sin volver a guardar el modelo.
+        file_field.delete(save=False)
+    except Exception:
+        logger.exception('❌ Error al eliminar archivo de storage: %s', getattr(file_field, 'name', file_field))
+
+
+def _delete_old_file_if_changed(instance, field_name, current_file):
+    if not instance.pk:
+        return
+    try:
+        existing = instance.__class__.objects.get(pk=instance.pk)
+    except instance.__class__.DoesNotExist:
+        return
+    old_file = getattr(existing, field_name)
+    if old_file and old_file != current_file:
+        _delete_file_field(old_file)
+
+
 CAMPAIGN_BATCH_SIZE = 30
 CAMPAIGN_SUBJECT = '¡Algo nuevo ha llegado para ti! ✨'
+
+
+@receiver(post_delete, sender=Imagen)
+def eliminar_archivos_imagen(sender, instance, **kwargs):
+    """Eliminar archivos en storage cuando se borra una Imagen."""
+    _delete_file_field(instance.imagen)
+    _delete_file_field(instance.video)
+
+
+@receiver(pre_save, sender=Imagen)
+def eliminar_archivos_imagen_antiguos(sender, instance, **kwargs):
+    """Eliminar archivos antiguos de storage cuando se actualiza una Imagen."""
+    _delete_old_file_if_changed(instance, 'imagen', instance.imagen)
+    _delete_old_file_if_changed(instance, 'video', instance.video)
+
+
+@receiver(post_delete, sender=Coleccion)
+def eliminar_imagen_coleccion(sender, instance, **kwargs):
+    _delete_file_field(instance.imagen)
+
+
+@receiver(pre_save, sender=Coleccion)
+def eliminar_imagen_coleccion_antigua(sender, instance, **kwargs):
+    _delete_old_file_if_changed(instance, 'imagen', instance.imagen)
+
+
+@receiver(post_delete, sender=Categoria)
+def eliminar_imagen_categoria(sender, instance, **kwargs):
+    _delete_file_field(instance.imagen)
+
+
+@receiver(pre_save, sender=Categoria)
+def eliminar_imagen_categoria_antigua(sender, instance, **kwargs):
+    _delete_old_file_if_changed(instance, 'imagen', instance.imagen)
 
 
 @receiver(post_save, sender=Variante)
