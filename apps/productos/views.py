@@ -479,8 +479,11 @@ def panel_categoria_crear(request):
 		
 		if form.is_valid():
 			try:
+				print(f"DEBUG FILES: {request.FILES}")
 				categoria = form.save(commit=False)
+				print(f"DEBUG imagen antes de save: {categoria.imagen}")
 				categoria.save()
+				print(f"DEBUG imagen despues de save: {categoria.imagen}")
 				messages.success(request, f'Categoría "{categoria.nombre}" creada correctamente.')
 				return redirect('productos:panel_categorias')
 			except Exception as e:
