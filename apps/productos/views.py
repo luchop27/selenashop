@@ -1170,17 +1170,49 @@ def admin_atributos_list(request):
 	})
 
 
+def _parse_valores_atributo(raw_valores):
+	"""Normaliza valores de atributo separados por coma sin duplicados."""
+	valores_limpios = []
+	for valor in (raw_valores or '').split(','):
+		valor = valor.strip()
+		if valor and valor not in valores_limpios:
+			valores_limpios.append(valor)
+	return valores_limpios
+
+
 @admin_required
 def admin_atributo_add(request):
 	"""Agregar nuevo atributo"""
 	if request.method == 'POST':
 		# Procesar formulario
-		nombre = request.POST.get('nombre')
-		tipo = request.POST.get('tipo', 'texto')
-		descripcion = request.POST.get('descripcion', '')
+		nombre = (request.POST.get('nombre') or '').strip()
+		tipo = (request.POST.get('tipo') or 'texto').strip()
+		descripcion = (request.POST.get('descripcion') or '').strip()
+		valores_raw = request.POST.get('valores', '')
+
+		if not nombre:
+			messages.error(request, 'El nombre del atributo es obligatorio.')
+			return render(request, 'add-attributes.html', {
+				'valores_str': valores_raw,
+			})
+
+		tipos_validos = {choice[0] for choice in Atributo.TIPO_CHOICES}
+		if tipo not in tipos_validos:
+			tipo = 'texto'
 		
 		from django.utils.text import slugify
-		slug = slugify(nombre)
+		slug_base = slugify(nombre) or 'atributo'
+		slug = slug_base
+		slug_suffix = 2
+		while Atributo.objects.filter(slug=slug).exists():
+			slug = f'{slug_base}-{slug_suffix}'
+			slug_suffix += 1
+
+		if Atributo.objects.filter(nombre__iexact=nombre).exists():
+			messages.error(request, f'Ya existe un atributo con el nombre "{nombre}".')
+			return render(request, 'add-attributes.html', {
+				'valores_str': valores_raw,
+			})
 		
 		# Crear atributo
 		atributo = Atributo.objects.create(
@@ -1192,10 +1224,7 @@ def admin_atributo_add(request):
 		)
 		
 		# Procesar valores
-		valores = request.POST.get('valores', '').split(',')
-		for i, valor in enumerate(valores, 1):
-			valor = valor.strip()
-			if valor:
+		for i, valor in enumerate(_parse_valores_atributo(valores_raw), 1):
 				ValorAtributo.objects.create(
 					atributo=atributo,
 					valor=valor,
@@ -1215,20 +1244,46 @@ def admin_atributo_edit(request, pk):
 	atributo = get_object_or_404(Atributo, pk=pk)
 	
 	if request.method == 'POST':
-		atributo.nombre = request.POST.get('nombre')
-		atributo.tipo = request.POST.get('tipo', 'texto')
-		atributo.descripcion = request.POST.get('descripcion', '')
+		nombre = (request.POST.get('nombre') or '').strip()
+		tipo = (request.POST.get('tipo') or 'texto').strip()
+		descripcion = (request.POST.get('descripcion') or '').strip()
+		valores_raw = request.POST.get('valores', '')
+
+		if not nombre:
+			messages.error(request, 'El nombre del atributo es obligatorio.')
+			return render(request, 'add-attributes.html', {
+				'atributo': atributo,
+				'valores_str': valores_raw,
+			})
+
+		tipos_validos = {choice[0] for choice in Atributo.TIPO_CHOICES}
+		if tipo not in tipos_validos:
+			tipo = 'texto'
+
+		if Atributo.objects.filter(nombre__iexact=nombre).exclude(pk=atributo.pk).exists():
+			messages.error(request, f'Ya existe un atributo con el nombre "{nombre}".')
+			return render(request, 'add-attributes.html', {
+				'atributo': atributo,
+				'valores_str': valores_raw,
+			})
+
+		atributo.nombre = nombre
+		atributo.tipo = tipo
+		atributo.descripcion = descripcion
 		
 		from django.utils.text import slugify
-		atributo.slug = slugify(atributo.nombre)
+		slug_base = slugify(atributo.nombre) or 'atributo'
+		slug = slug_base
+		slug_suffix = 2
+		while Atributo.objects.filter(slug=slug).exclude(pk=atributo.pk).exists():
+			slug = f'{slug_base}-{slug_suffix}'
+			slug_suffix += 1
+		atributo.slug = slug
 		atributo.save()
 		
 		# Actualizar valores
 		atributo.valores.all().delete()
-		valores = request.POST.get('valores', '').split(',')
-		for i, valor in enumerate(valores, 1):
-			valor = valor.strip()
-			if valor:
+		for i, valor in enumerate(_parse_valores_atributo(valores_raw), 1):
 				ValorAtributo.objects.create(
 					atributo=atributo,
 					valor=valor,
