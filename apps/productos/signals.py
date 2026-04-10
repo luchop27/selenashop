@@ -87,7 +87,12 @@ def verificar_stock_producto(sender, instance, **kwargs):
     Si el producto NO está marcado como 'bajo_pedido' y su stock total es 0,
     lo elimina automáticamente del sistema.
     """
-    producto = instance.producto
+    try:
+        # El producto puede ya no existir si fue eliminado en cascada.
+        producto = Producto.objects.get(pk=instance.producto_id)
+    except Producto.DoesNotExist:
+        # El producto ya fue eliminado, no hay nada que verificar.
+        return
     
     # Calcular stock total de todas las variantes del producto
     stock_total = sum(v.stock for v in producto.variantes.all())
