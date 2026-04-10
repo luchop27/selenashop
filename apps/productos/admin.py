@@ -24,7 +24,7 @@ class CategoriaInline(admin.TabularInline):
 	"""Inline para ver/agregar categorías dentro de una colección"""
 	model = Categoria
 	extra = 0
-	fields = ('nombre', 'slug', 'padre', 'tipo', 'estado', 'posicion')
+	fields = ('nombre', 'slug', 'padre', 'tipo', 'estado')
 	prepopulated_fields = {'slug': ('nombre',)}
 	show_change_link = True
 
@@ -57,7 +57,7 @@ class ColeccionAdmin(admin.ModelAdmin):
 			'fields': ('imagen',)
 		}),
 		('Configuración', {
-			'fields': ('activo', 'destacada', 'posicion')
+			'fields': ('activo', 'destacada')
 		}),
 	)
 	
@@ -76,7 +76,7 @@ class SubcategoriaInline(admin.TabularInline):
 	model = Categoria
 	fk_name = 'padre'
 	extra = 0
-	fields = ('nombre', 'slug', 'estado', 'posicion')
+	fields = ('nombre', 'slug', 'estado')
 	prepopulated_fields = {'slug': ('nombre',)}
 	show_change_link = True
 	verbose_name = "Subcategoría"
