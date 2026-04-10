@@ -229,6 +229,11 @@ uploadAreaCategoria.addEventListener('drop', function(e) {
 function handleCategoriaImage(file) {
     categoriaImageFile = file;
     
+    // Asignar el archivo al input real para que se envíe con el form
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    categoriaImageInput.files = dataTransfer.files;
+    
     const reader = new FileReader();
     reader.onload = function(e) {
         // Ocultar área de upload
