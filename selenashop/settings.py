@@ -162,9 +162,9 @@ STATICFILES_DIRS = [
 
 # Media (user-uploaded) files served at /media/ during development
 # MEDIA FILES
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
-# MEDIA_ROOT = BASE_DIR / 'media'  # Commented out since using S3
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'  # Deshabilitado para desarrollo local
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Configuración para archivos multimedia
 # No limitar el tamaño de archivos subidos (por defecto Django no tiene límite)
