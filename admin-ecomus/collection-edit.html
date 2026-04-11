@@ -173,20 +173,6 @@ document.getElementById('id_nombre').addEventListener('input', function() {
     document.getElementById('id_slug').value = slug;
 });
 
-// Image preview
-document.getElementById('myFile').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const imgPreview = document.getElementById('imgpreview');
-            imgPreview.querySelector('img').src = event.target.result;
-            imgPreview.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-    }
-});
-
 // ========================================
 // MANEJO DE IMAGEN DE COLECCIÓN (EDITAR)
 // ========================================
@@ -238,6 +224,11 @@ if (uploadAreaColeccion) {
         
         const files = e.dataTransfer.files;
         if (files && files[0] && files[0].type.startsWith('image/')) {
+            if (coleccionImageInput && typeof DataTransfer !== 'undefined') {
+                const dt = new DataTransfer();
+                dt.items.add(files[0]);
+                coleccionImageInput.files = dt.files;
+            }
             handleColeccionImage(files[0]);
         }
     });

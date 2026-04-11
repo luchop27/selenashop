@@ -117,11 +117,14 @@
 
                         <fieldset class="name mb-20" id="subcategoria-field" style="display: none;">
                             <div class="body-title mb-10">Subcategoría <span class="tf-color-1">*</span></div>
-                            <select name="categoria" id="id_categoria" class="tf-input" required>
+                            <select name="categoria" id="id_categoria" class="tf-input">
                                 <option value="">-- Seleccionar Subcategoría --</option>
                             </select>
                             <div class="text-tiny text-surface-2 mt-5">Ejemplo: Vestidos, Pantalones, Blusas, etc.</div>
                         </fieldset>
+
+                        <!-- Campo oculto para enviar categoría principal cuando no hay subcategorías -->
+                        <input type="hidden" name="categoria_hidden" id="id_categoria_hidden">
 
                         <fieldset class="name" id="coleccion-field" style="display: none;">
                             <div class="body-title mb-10">Colección (Opcional)</div>
@@ -214,7 +217,7 @@
                 <!-- Submit buttons -->
                 <!-- Botones de acción -->
                 <div class="cols gap10" id="submit-buttons" style="display: none;">
-                    <button class="tf-button w380" type="submit"><i class="icon-plus"></i> Agregar Producto</button>
+                    <button class="tf-button w380" type="submit"><i class="icon-save"></i> Guardar Cambios</button>
                     <a href="{% url 'productos:admin_productos_list' %}" class="tf-button style-3 w380"><i class="icon-x"></i> Cancelar</a>
                 </div>
             </form>
@@ -239,6 +242,38 @@ let atributosDisponibles = [];
 let atributosSeleccionados = [];
 let categoriaActualGlobal = null;
 let categoriaPrincipalActual = null;
+
+function configurarCategoriaSinSubcategoria(categoriaId) {
+    const selectSubcategoria = document.getElementById('id_categoria');
+    const hiddenCategoriaInput = document.getElementById('id_categoria_hidden');
+    if (!selectSubcategoria || !hiddenCategoriaInput) {
+        return;
+    }
+
+    selectSubcategoria.removeAttribute('name');
+    selectSubcategoria.required = false;
+    selectSubcategoria.value = '';
+
+    hiddenCategoriaInput.value = categoriaId ? String(categoriaId) : '';
+    if (categoriaId) {
+        hiddenCategoriaInput.setAttribute('name', 'categoria');
+    } else {
+        hiddenCategoriaInput.removeAttribute('name');
+    }
+}
+
+function configurarCategoriaConSubcategoria() {
+    const selectSubcategoria = document.getElementById('id_categoria');
+    const hiddenCategoriaInput = document.getElementById('id_categoria_hidden');
+    if (!selectSubcategoria || !hiddenCategoriaInput) {
+        return;
+    }
+
+    selectSubcategoria.setAttribute('name', 'categoria');
+    selectSubcategoria.required = true;
+    hiddenCategoriaInput.removeAttribute('name');
+    hiddenCategoriaInput.value = '';
+}
 
 // Cargar datos iniciales
 async function cargarDatosIniciales() {
@@ -308,6 +343,7 @@ async function cargarDatosIniciales() {
                 
                 // Mostrar y poblar subcategorías
                 document.getElementById('subcategoria-field').style.display = 'block';
+                configurarCategoriaConSubcategoria();
                 const subcategorias = categoriasData.filter(c => c.padre === categoriaPadre.id);
                 const selectSubcategoria = document.getElementById('id_categoria');
                 selectSubcategoria.innerHTML = '<option value="">-- Seleccionar Subcategoría --</option>';
@@ -328,9 +364,9 @@ async function cargarDatosIniciales() {
                 selectCategoriaPrincipal.value = categoriaActualId;
                 categoriaPrincipalActual = categoriaActual;
                 categoriaActualGlobal = categoriaActual;
-                
-                // Asignar el valor al select de subcategoría oculto
-                document.getElementById('id_categoria').value = categoriaActualId;
+
+                // Enviar la categoría principal directamente
+                configurarCategoriaSinSubcategoria(categoriaActualId);
             }
             
             // Pre-seleccionar colección si existe
@@ -363,6 +399,7 @@ document.getElementById('id_categoria_principal').addEventListener('change', fun
         if (subcategorias.length > 0) {
             // Tiene subcategorías - mostrar el select de subcategorías
             document.getElementById('subcategoria-field').style.display = 'block';
+            configurarCategoriaConSubcategoria();
             selectSubcategoria.innerHTML = '<option value="">-- Seleccionar Subcategoría --</option>';
             
             subcategorias.forEach(sub => {
@@ -380,9 +417,9 @@ document.getElementById('id_categoria_principal').addEventListener('change', fun
         } else {
             // NO tiene subcategorías - usar la categoría principal directamente
             document.getElementById('subcategoria-field').style.display = 'none';
-            
-            // Asignar la categoría principal al campo oculto
-            selectSubcategoria.value = categoriaId;
+
+            // Enviar la categoría principal en campo oculto
+            configurarCategoriaSinSubcategoria(categoriaId);
             categoriaActualGlobal = categoriaPrincipalActual;
             
             // Mostrar los demás campos directamente
@@ -405,6 +442,7 @@ document.getElementById('id_categoria').addEventListener('change', function() {
     categoriaActualGlobal = categoriasData.find(c => c.id === subcategoriaId);
     
     if (subcategoriaId) {
+        configurarCategoriaConSubcategoria();
         document.getElementById('coleccion-field').style.display = 'block';
         document.getElementById('product-fields').style.display = 'block';
         document.getElementById('attributes-section').style.display = 'block';
@@ -840,22 +878,40 @@ document.querySelector('.form-add-product').addEventListener('submit', function(
     console.log('📤 Formulario enviado - modo NORMAL (no AJAX)');
     console.log('  Imágenes a eliminar:', imagenesEliminar.length);
     console.log('  Nuevas imágenes a agregar:', imageFiles.length);
+
+    // Evita bloqueo de submit cuando la subcategoría está oculta.
+    const subcategoriaField = document.getElementById('subcategoria-field');
+    const categoriaPrincipal = document.getElementById('id_categoria_principal');
+    if (subcategoriaField) {
+        const subcategoriaVisible = window.getComputedStyle(subcategoriaField).display !== 'none';
+        if (!subcategoriaVisible) {
+            const categoriaPrincipalId = categoriaPrincipal && categoriaPrincipal.value ? parseInt(categoriaPrincipal.value) : null;
+            configurarCategoriaSinSubcategoria(categoriaPrincipalId);
+        } else {
+            configurarCategoriaConSubcategoria();
+        }
+    }
     
     // Agregar IDs de imágenes a eliminar al campo hidden
     document.getElementById('imagenes_eliminar').value = imagenesEliminar.join(',');
-    
-    // Crear un nuevo DataTransfer para agregar las nuevas imágenes al input file
-    const dt = new DataTransfer();
-    imageFiles.forEach(file => {
-        dt.items.add(file);
-        console.log('  → Agregando nueva imagen:', file.name);
-    });
-    
-    // Actualizar el input con las nuevas imágenes
-    const imageInput = document.querySelector('input[name="imagenes"]');
-    if (imageInput) {
-        imageInput.files = dt.files;
-        console.log('  Total nuevas imágenes en input:', imageInput.files.length);
+
+    // Actualizar input de imágenes sin bloquear el submit si el navegador restringe files.
+    try {
+        if (imageFiles.length > 0 && typeof DataTransfer !== 'undefined') {
+            const dt = new DataTransfer();
+            imageFiles.forEach(file => {
+                dt.items.add(file);
+                console.log('  → Agregando nueva imagen:', file.name);
+            });
+
+            const imageInput = document.querySelector('input[name="imagenes"]');
+            if (imageInput) {
+                imageInput.files = dt.files;
+                console.log('  Total nuevas imágenes en input:', imageInput.files.length);
+            }
+        }
+    } catch (err) {
+        console.warn('No se pudieron reasignar archivos al input, se continúa con submit normal:', err);
     }
     
     // Envío normal del formulario - Django maneja todo

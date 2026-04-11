@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction, IntegrityError
 from .forms import ProductoForm, VarianteFormSet, ImagenFormSet
 from django.views.decorators.http import require_POST
 
@@ -887,132 +888,150 @@ def admin_producto_edit(request, pk):
 		form = ProductoForm(request.POST, request.FILES, instance=producto)
 		
 		if form.is_valid():
-			producto = form.save(commit=False)
-			
-			# Procesar campo bajo_pedido desde el checkbox
-			producto.bajo_pedido = request.POST.get('bajo_pedido') == 'on'
-			
-			producto.save()
-			print(f"Producto guardado: {producto.nombre}")
-			
-			# Procesar eliminación de imágenes
-			imagenes_eliminar = request.POST.get('imagenes_eliminar', '')
-			if imagenes_eliminar:
-				ids_eliminar = [int(id) for id in imagenes_eliminar.split(',') if id.strip()]
-				Imagen.objects.filter(id__in=ids_eliminar, producto=producto).delete()
-			
-			# Procesar nuevas imágenes (guardarlas temporalmente)
-			imagenes_nuevas = request.FILES.getlist('imagenes')
-			print(f"\n{'='*50}")
-			print(f"DEBUG EDIT - Total imágenes nuevas recibidas: {len(imagenes_nuevas)}")
-			print(f"DEBUG EDIT - request.FILES keys: {list(request.FILES.keys())}")
-			for idx, img in enumerate(imagenes_nuevas):
-				print(f"  Imagen {idx}: {img.name} ({img.size} bytes)")
-			print(f"{'='*50}\n")
-			
-			# Obtener imágenes existentes del producto
-			imagenes_existentes = list(producto.imagenes.filter(variante__isnull=True))
-			print(f"DEBUG - Imágenes existentes: {len(imagenes_existentes)}")
-			
-			# Combinar imágenes existentes + nuevas para el selector
-			todas_imagenes = imagenes_existentes + imagenes_nuevas
-			
-			# Eliminar variantes antiguas
-			producto.variantes.all().delete()
-			print("DEBUG - Variantes antiguas eliminadas")
-			
-			# Eliminar imágenes asociadas a variantes (se recrearán)
-			producto.imagenes.filter(variante__isnull=False).delete()
-			
-			# Procesar nuevas variantes dinámicas desde el formulario
-			variante_index = 0
-			
-			while True:
-				sku_key = f'variante_{variante_index}_sku'
-				if sku_key not in request.POST:
-					print(f"DEBUG - No se encontró {sku_key}, finalizando bucle")
-					break
-				
-				sku = request.POST.get(sku_key, '').strip()
-				stock = request.POST.get(f'variante_{variante_index}_stock', '0')
-				atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
-				
-				print(f"\n=== DEBUG EDIT VARIANTE {variante_index} ===")
-				print(f"SKU recibido: '{sku}'")
-				print(f"Stock recibido: '{stock}' (tipo: {type(stock)})")
-				print(f"Atributos JSON: {atributos_json[:100]}")
-				
-				print(f"\nDEBUG - Procesando variante {variante_index}:")
-				print(f"  SKU: {sku}")
-				print(f"  Stock: {stock}")
-				print(f"  Atributos: {atributos_json[:100]}...")
-				
-				# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
-				talla_obj = None
-				
-				try:
-					atributos_data = json.loads(atributos_json)
-					for attr in atributos_data:
-						atributo_nombre = attr.get('atributoNombre', '').lower()
-						valor_nombre = attr.get('valorNombre', '')
+			try:
+				with transaction.atomic():
+					producto = form.save(commit=False)
+					bajo_pedido_solicitado = request.POST.get('bajo_pedido') == 'on'
+					
+					# Protección temporal: evita que signals eliminen el producto
+					# mientras el reemplazo de variantes deja stock en 0 momentáneamente.
+					producto.bajo_pedido = True
+					
+					# Guardar producto padre y verificar consistencia de PK
+					producto.save()
+					print(f"Producto guardado: {producto.nombre}")
+					print(f"DEBUG - Producto ID: {producto.pk}")
+					
+					# Procesar eliminación de imágenes
+					imagenes_eliminar = request.POST.get('imagenes_eliminar', '')
+					if imagenes_eliminar:
+						ids_eliminar = [int(id) for id in imagenes_eliminar.split(',') if id.strip()]
+						Imagen.objects.filter(id__in=ids_eliminar, producto=producto).delete()
+					
+					# Procesar nuevas imágenes (guardarlas temporalmente)
+					imagenes_nuevas = request.FILES.getlist('imagenes')
+					print(f"\n{'='*50}")
+					print(f"DEBUG EDIT - Total imágenes nuevas recibidas: {len(imagenes_nuevas)}")
+					print(f"DEBUG EDIT - request.FILES keys: {list(request.FILES.keys())}")
+					for idx, img in enumerate(imagenes_nuevas):
+						print(f"  Imagen {idx}: {img.name} ({img.size} bytes)")
+					print(f"{'='*50}\n")
+					
+					# Obtener imágenes existentes del producto
+					imagenes_existentes = list(producto.imagenes.filter(variante__isnull=True))
+					print(f"DEBUG - Imágenes existentes: {len(imagenes_existentes)}")
+					
+					# Combinar imágenes existentes + nuevas para el selector
+					todas_imagenes = imagenes_existentes + imagenes_nuevas
+					
+					# Eliminar variantes antiguas (dentro de transacción)
+					producto.variantes.all().delete()
+					print("DEBUG - Variantes antiguas eliminadas")
+					
+					# Eliminar imágenes asociadas a variantes (se recrearán)
+					producto.imagenes.filter(variante__isnull=False).delete()
+					
+					# Procesar nuevas variantes dinámicas desde el formulario
+					variante_index = 0
+					
+					while True:
+						sku_key = f'variante_{variante_index}_sku'
+						if sku_key not in request.POST:
+							print(f"DEBUG - No se encontró {sku_key}, finalizando bucle")
+							break
 						
-						# Si es una talla, buscar o crear el objeto Talla
-						if 'talla' in atributo_nombre and valor_nombre:
-							talla_obj, created = Talla.objects.get_or_create(
-								codigo=valor_nombre.upper(),
-								defaults={'nombre': valor_nombre}
-							)
-							print(f"  Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
-				except Exception as e:
-					print(f"  ❌ Error extrayendo talla de atributos: {e}")
+						sku = request.POST.get(sku_key, '').strip()
+						stock = request.POST.get(f'variante_{variante_index}_stock', '0')
+						atributos_json = request.POST.get(f'variante_{variante_index}_atributos', '[]')
+						
+						print(f"\n=== DEBUG EDIT VARIANTE {variante_index} ===")
+						print(f"SKU recibido: '{sku}'")
+						print(f"Stock recibido: '{stock}' (tipo: {type(stock)})")
+						print(f"Atributos JSON: {atributos_json[:100]}")
+						
+						print(f"\nDEBUG - Procesando variante {variante_index}:")
+						print(f"  SKU: {sku}")
+						print(f"  Stock: {stock}")
+						print(f"  Atributos: {atributos_json[:100]}...")
+						
+						# Primero, verificar si hay un atributo de talla para asignarlo al campo talla
+						talla_obj = None
+						
+						try:
+							atributos_data = json.loads(atributos_json)
+							for attr in atributos_data:
+								atributo_nombre = attr.get('atributoNombre', '').lower()
+								valor_nombre = attr.get('valorNombre', '')
+								
+								# Si es una talla, buscar o crear el objeto Talla
+								if 'talla' in atributo_nombre and valor_nombre:
+									talla_obj, created = Talla.objects.get_or_create(
+										codigo=valor_nombre.upper(),
+										defaults={'nombre': valor_nombre}
+									)
+									print(f"  Talla {'creada' if created else 'encontrada'}: {talla_obj.codigo}")
+						except Exception as e:
+							print(f"  ❌ Error extrayendo talla de atributos: {e}")
+						
+						# Generar SKU automático: slug-TALLA
+						if not sku:
+							if talla_obj:
+								sku = f"{producto.slug}-{talla_obj.codigo}"
+						
+						# Crear la variante con la talla asignada
+						variante = Variante.objects.create(
+							producto=producto,
+							talla=talla_obj,
+							sku=sku,
+							precio=producto.precio_base,
+							stock=int(stock) if stock else 0
+						)
+						print(f"  ✅ Variante creada: ID={variante.id}, SKU={variante.sku}, Talla={variante.talla}, Stock={variante.stock}")
+						
+						# Procesar atributos adicionales de la variante
+						try:
+							atributos_data = json.loads(atributos_json)
+							for attr in atributos_data:
+								valor_id = attr.get('valorId')
+								if valor_id:
+									valor_atributo = ValorAtributo.objects.get(id=valor_id)
+									VarianteAtributo.objects.create(
+										variante=variante,
+										valor_atributo=valor_atributo
+									)
+						except Exception as e:
+							print(f"  ❌ Error procesando atributos de variante: {e}")
+						
+						variante_index += 1
+					
+					print(f"\nDEBUG - Total variantes procesadas: {variante_index}")
+					
+					# GUARDAR TODAS LAS IMÁGENES NUEVAS DEL PRODUCTO
+					imagenes_guardadas = 0
+					for imagen_file in imagenes_nuevas:
+						Imagen.objects.create(
+							producto=producto,
+							imagen=imagen_file,
+							variante=None  # Todas las imágenes son del producto
+						)
+						imagenes_guardadas += 1
+						print(f"DEBUG - Imagen guardada: {imagen_file.name}")
+
+					# Restaurar valor real solicitado por el formulario.
+					if producto.bajo_pedido != bajo_pedido_solicitado:
+						producto.bajo_pedido = bajo_pedido_solicitado
+						producto.save(update_fields=['bajo_pedido'])
 				
-				# Generar SKU automático: slug-TALLA
-				if not sku:
-					if talla_obj:
-						sku = f"{producto.slug}-{talla_obj.codigo}"
-				
-				# Crear la variante con la talla asignada
-				variante = Variante.objects.create(
-					producto=producto,
-					talla=talla_obj,
-					sku=sku,
-					precio=producto.precio_base,
-					stock=int(stock) if stock else 0
-				)
-				print(f"  ✅ Variante creada: ID={variante.id}, SKU={variante.sku}, Talla={variante.talla}, Stock={variante.stock}")
-				
-				# Procesar atributos adicionales de la variante
-				try:
-					atributos_data = json.loads(atributos_json)
-					for attr in atributos_data:
-						valor_id = attr.get('valorId')
-						if valor_id:
-							valor_atributo = ValorAtributo.objects.get(id=valor_id)
-							VarianteAtributo.objects.create(
-								variante=variante,
-								valor_atributo=valor_atributo
-							)
-				except Exception as e:
-					print(f"  ❌ Error procesando atributos de variante: {e}")
-				
-				variante_index += 1
-			
-			print(f"\nDEBUG - Total variantes procesadas: {variante_index}")
-			
-			# GUARDAR TODAS LAS IMÁGENES NUEVAS DEL PRODUCTO
-			imagenes_guardadas = 0
-			for imagen_file in imagenes_nuevas:
-				Imagen.objects.create(
-					producto=producto,
-					imagen=imagen_file,
-					variante=None  # Todas las imágenes son del producto
-				)
-				imagenes_guardadas += 1
-				print(f"DEBUG - Imagen guardada: {imagen_file.name}")
-			
-			total_imagenes = len(imagenes_nuevas) if imagenes_nuevas else 0
-			messages.success(request, f'Producto "{producto.nombre}" actualizado exitosamente con {variante_index} variante(s) y {imagenes_guardadas} imagen(es) nueva(s).')
-			return redirect('productos:admin_productos_list')
+				messages.success(request, f'Producto "{producto.nombre}" actualizado exitosamente con {variante_index} variante(s) y {imagenes_guardadas} imagen(es) nueva(s).')
+				return redirect('productos:admin_productos_list')
+			except IntegrityError as e:
+				print(f"ERROR INTEGRITY - admin_producto_edit: {e}")
+				messages.error(request, 'Error de integridad al guardar el producto. No se aplicaron cambios parciales.')
+				return redirect('productos:admin_productos_list')
+			except Exception as e:
+				print(f"ERROR GENERAL - admin_producto_edit: {e}")
+				messages.error(request, f'Error al actualizar el producto: {str(e)}')
+				return redirect('productos:admin_productos_list')
 	else:
 		form = ProductoForm(instance=producto)
 		
@@ -1437,22 +1456,52 @@ def admin_coleccion_add(request):
 def admin_coleccion_edit(request, pk):
 	"""Editar colección existente"""
 	coleccion = get_object_or_404(Coleccion, pk=pk)
+	imagen_anterior_nombre = coleccion.imagen.name if coleccion.imagen else None
+	imagen_anterior_storage = coleccion.imagen.storage if coleccion.imagen else None
 	
 	if request.method == 'POST':
 		from .forms import ColeccionForm
 		form = ColeccionForm(request.POST, request.FILES, instance=coleccion)
-		
-		# Verificar si se solicitó eliminar la imagen actual
-		if request.POST.get('remove_imagen') == 'true':
-			if coleccion.imagen:
-				coleccion.imagen.delete(save=False)
-		
+		remove_imagen = request.POST.get('remove_imagen') == 'true'
+		nueva_imagen = request.FILES.get('imagen')
+
 		if form.is_valid():
-			form.save()
-			messages.success(request, f'Colección "{coleccion.nombre}" actualizada.')
+			coleccion_actualizada = form.save(commit=False)
+			imagen_actualizada = False
+			imagen_eliminada = False
+
+			# Evitar borrar usando el field de la misma instancia antes del save,
+			# porque puede cerrar el archivo recién subido (InMemoryUploadedFile).
+			if nueva_imagen:
+				# ModelForm ya asigna el nuevo archivo en commit=False.
+				imagen_actualizada = True
+			elif remove_imagen:
+				coleccion_actualizada.imagen = None
+				imagen_eliminada = bool(imagen_anterior_nombre)
+
+			coleccion_actualizada.save()
+
+			# Limpiar archivo anterior solo después de guardar exitosamente.
+			imagen_nueva_nombre = coleccion_actualizada.imagen.name if coleccion_actualizada.imagen else None
+			if imagen_actualizada and imagen_anterior_nombre and imagen_anterior_storage:
+				if imagen_anterior_nombre != imagen_nueva_nombre:
+					imagen_anterior_storage.delete(imagen_anterior_nombre)
+			elif imagen_eliminada and imagen_anterior_nombre and imagen_anterior_storage:
+				imagen_anterior_storage.delete(imagen_anterior_nombre)
+
+			if imagen_actualizada:
+				messages.success(request, f'Colección "{coleccion_actualizada.nombre}" actualizada con nueva imagen.')
+			elif imagen_eliminada:
+				messages.success(request, f'Colección "{coleccion_actualizada.nombre}" actualizada y la imagen fue eliminada.')
+			else:
+				messages.success(request, f'Colección "{coleccion_actualizada.nombre}" actualizada.')
+
 			return redirect('productos:admin_colecciones_list')
 		else:
-			messages.error(request, 'Por favor corrige los errores en el formulario.')
+			if 'imagen' in form.errors:
+				messages.error(request, f'La imagen fue rechazada: {form.errors["imagen"][0]}')
+			else:
+				messages.error(request, 'Por favor corrige los errores en el formulario.')
 	else:
 		from .forms import ColeccionForm
 		form = ColeccionForm(instance=coleccion)
