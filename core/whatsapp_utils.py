@@ -1,13 +1,23 @@
 """
-Utilidades para enviar mensajes a través de WhatsApp Business API de Meta
+Utilidades para enviar mensajes a traves de WhatsApp Business API de Meta.
 """
 
-import requests
 import logging
-from decimal import Decimal
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _credencial_configurada(valor):
+    """Valida que una credencial no sea vacia ni placeholder."""
+    if not valor:
+        return False
+
+    valor_normalizado = str(valor).strip()
+    if not valor_normalizado:
+        return False
+
+    return not valor_normalizado.upper().startswith('YOUR_')
 
 
 def enviar_notificacion_pedido(pedido):
@@ -23,11 +33,11 @@ def enviar_notificacion_pedido(pedido):
     
     # Verificar que tenemos los datos necesarios
     if not all([
-        settings.WHATSAPP_PHONE_NUMBER_ID,
-        settings.WHATSAPP_ACCESS_TOKEN,
-        settings.WHATSAPP_ADMIN_NUMBER
+        _credencial_configurada(settings.WHATSAPP_PHONE_NUMBER_ID),
+        _credencial_configurada(settings.WHATSAPP_ACCESS_TOKEN),
+        _credencial_configurada(settings.WHATSAPP_ADMIN_NUMBER),
     ]):
-        logger.warning('❌ WhatsApp: Credenciales no configuradas completamente')
+        logger.warning('WhatsApp: Credenciales no configuradas completamente')
         return {
             'success': False,
             'message': 'Credenciales de WhatsApp no configuradas'
@@ -135,6 +145,15 @@ def enviar_mensaje_whatsapp(numero_destino, mensaje):
     """
     
     try:
+        import requests
+    except ImportError:
+        logger.warning('WhatsApp: paquete requests no instalado. Se omite envio.')
+        return {
+            'success': False,
+            'message': 'Notificacion de WhatsApp deshabilitada temporalmente'
+        }
+
+    try:
         # URL del endpoint de la API
         url = f"{settings.WHATSAPP_API_URL}/{settings.WHATSAPP_PHONE_NUMBER_ID}/messages"
         
@@ -164,7 +183,7 @@ def enviar_mensaje_whatsapp(numero_destino, mensaje):
             data = response.json()
             message_id = data.get('messages', [{}])[0].get('id', 'unknown')
             
-            logger.info(f'✅ WhatsApp: Mensaje enviado exitosamente. ID: {message_id}')
+            logger.info('WhatsApp: Mensaje enviado exitosamente. ID: %s', message_id)
             
             return {
                 'success': True,
@@ -173,33 +192,33 @@ def enviar_mensaje_whatsapp(numero_destino, mensaje):
             }
         else:
             error_msg = response.text
-            logger.error(f'❌ WhatsApp: Error {response.status_code}. {error_msg}')
+            logger.error('WhatsApp: Error %s. %s', response.status_code, error_msg)
             
             return {
                 'success': False,
-                'message': f'Error al enviar mensaje: {response.status_code}',
+                'message': 'No se pudo enviar la notificacion de WhatsApp',
                 'error_detail': error_msg
             }
     
     except requests.exceptions.Timeout:
-        logger.error('❌ WhatsApp: Timeout al enviar el mensaje')
+        logger.error('WhatsApp: Timeout al enviar el mensaje')
         return {
             'success': False,
             'message': 'Timeout al conectar con WhatsApp API'
         }
     
-    except requests.exceptions.ConnectionError as e:
-        logger.error(f'❌ WhatsApp: Error de conexión. {str(e)}')
+    except requests.exceptions.RequestException as exc:
+        logger.error('WhatsApp: Error de conexion o solicitud. %s', str(exc))
         return {
             'success': False,
             'message': 'Error de conexión con WhatsApp API'
         }
     
-    except Exception as e:
-        logger.error(f'❌ WhatsApp: Error inesperado. {str(e)}')
+    except Exception:
+        logger.exception('WhatsApp: Error inesperado al enviar mensaje')
         return {
             'success': False,
-            'message': f'Error inesperado: {str(e)}'
+            'message': 'Error inesperado al enviar la notificacion'
         }
 
 

@@ -2,16 +2,21 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db import transaction
 from django.db.models import Min, Sum, Q
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
+import logging
 
 # Import Producto model to build the shop listing
 from apps.productos.models import Producto
 
 # Importar decoradores de seguridad
 from .decorators import admin_required, superuser_required
+
+
+logger = logging.getLogger(__name__)
 
 
 def _get_testimonials_data():
@@ -1015,10 +1020,15 @@ def cart_add(request):
             'success': False,
             'message': 'Producto no encontrado'
         }, status=404)
-    except Exception as e:
+    except Exception:
+        logger.exception(
+            'Error al agregar producto al carrito. producto_id=%s variante_id=%s',
+            producto_id,
+            variante_id,
+        )
         return JsonResponse({
             'success': False,
-            'message': str(e)
+            'message': 'No se pudo agregar el producto al carrito. Intenta nuevamente.'
         }, status=400)
 
 
@@ -1581,9 +1591,6 @@ def calculate_shipping(request):
     - Otra ciudad + total < $90 = EnvÃ­o $7
     """
     from decimal import Decimal
-    import logging
-    
-    logger = logging.getLogger(__name__)
     
     if request.method != 'POST':
         return JsonResponse({'error': 'MÃ©todo no permitido'}, status=405)
@@ -1630,10 +1637,10 @@ def calculate_shipping(request):
             'message': 'EnvÃ­o gratis' if free_shipping else f'EnvÃ­o: ${shipping_cost}'
         })
     
-    except Exception as e:
-        logger.error(f'âŒ Error al calcular envÃ­o: {str(e)}', exc_info=True)
+    except Exception:
+        logger.exception('Error al calcular envio')
         return JsonResponse({
-            'error': f'Error al calcular envÃ­o: {str(e)}'
+            'error': 'No fue posible calcular el costo de envio. Intenta nuevamente.'
         }, status=400)
 
 
@@ -1645,9 +1652,10 @@ def checkout_process(request):
     if request.method != 'POST':
         return redirect('core:checkout')
     
-    from apps.productos.models import Variante, Producto
+    from apps.productos.models import Variante
     from .models import Pedido, DetallePedido
     from decimal import Decimal
+    from datetime import datetime
     
     cart = Cart(request)
     
@@ -1692,7 +1700,6 @@ def checkout_process(request):
         
         # ðŸŽ­ CUPÃ“N DE CARNAVAL AUTOMÃTICO - FEBRERO 2026
         carnival_discount_applied = False
-        from datetime import datetime
         now = datetime.now()
         
         # TEMPORAL: Permitir en enero (mes 1) y febrero (mes 2) para pruebas
@@ -1703,9 +1710,10 @@ def checkout_process(request):
                 discount_amount += carnival_discount
                 discount_code = 'CARNAVAL2026' if not discount_code else f'{discount_code}+CARNAVAL2026'
                 carnival_discount_applied = True
-                print(f'ðŸŽ­ CupÃ³n de carnaval aplicado: ${carnival_discount}')
+                logger.info('Cupon de carnaval aplicado por %s', request.user.email)
         
         # Validar cÃ³digo de descuento manual si se proporcionÃ³ (ademÃ¡s del carnival)
+        codigo_descuento = None
         if discount_code and 'CARNAVAL2026' not in discount_code:
             from .models import CodigoDescuento
             try:
@@ -1716,9 +1724,7 @@ def checkout_process(request):
                     discount_amount = Decimal('0')
                     discount_code = ''
                 else:
-                    # Incrementar uso del cÃ³digo
-                    codigo.usos_actuales += 1
-                    codigo.save()
+                    codigo_descuento = codigo
             except CodigoDescuento.DoesNotExist:
                 messages.warning(request, 'El cÃ³digo de descuento no es vÃ¡lido')
                 discount_amount = Decimal('0')
@@ -1726,99 +1732,136 @@ def checkout_process(request):
         
         # Total = subtotal + envÃ­o + regalo - descuento
         total = subtotal + shipping_cost + gift_wrap_cost - discount_amount
-        
-        # Crear el pedido
-        pedido = Pedido.objects.create(
-            usuario=request.user if request.user.is_authenticated else None,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            phone=phone,
-            country=country,
-            city=city,
-            address=address,
-            order_note=order_note,
-            metodo_pago=payment_method,
-            subtotal=subtotal,
-            shipping_cost=shipping_cost,
-            gift_wrap=gift_wrap,
-            gift_wrap_cost=gift_wrap_cost,
-            discount_code=discount_code if discount_code else None,
-            discount_amount=discount_amount,
-            total=total,
-            estado='pendiente'
-        )
-        
-        # Crear los detalles del pedido
-        for item in cart:
-            # Obtener la variante para guardar la referencia correcta
-            variante_obj = None
-            if item['variante_id']:
-                try:
-                    variante_obj = Variante.objects.get(id=item['variante_id'])
-                except Variante.DoesNotExist:
-                    pass
-            
-            DetallePedido.objects.create(
-                pedido=pedido,
-                producto=item['producto'],
-                variante=variante_obj,  # Usar el objeto variante en lugar de variante_id
-                nombre_producto=item['nombre'],
-                talla=item.get('talla'),
-                color=item.get('color'),
-                precio_unitario=item['precio_decimal'],
-                cantidad=item['quantity'],
-                subtotal=item['total_precio'],
-                imagen_url=item['imagen']
+
+        cart_items = list(cart)
+        if not cart_items:
+            messages.error(request, 'Tu carrito estÃ¡ vacÃ­o.', extra_tags='storefront cart')
+            return redirect('core:view_cart')
+
+        # El stock solo se descuenta en checkout, dentro de una transaccion atomica.
+        with transaction.atomic():
+            variantes_bloqueadas = {}
+            cantidades_por_variante = {}
+            items_resueltos = []
+
+            for item in cart_items:
+                variante = None
+                if item.get('variante_id'):
+                    variante = (
+                        Variante.objects
+                        .select_for_update()
+                        .select_related('producto')
+                        .filter(id=item['variante_id'])
+                        .first()
+                    )
+                else:
+                    variante = (
+                        Variante.objects
+                        .select_for_update()
+                        .select_related('producto')
+                        .filter(producto_id=item['producto_id'])
+                        .order_by('id')
+                        .first()
+                    )
+
+                if not variante:
+                    raise ValueError(
+                        f'No encontramos stock para "{item["nombre"]}". Actualiza tu carrito e intenta nuevamente.'
+                    )
+
+                variantes_bloqueadas[variante.id] = variante
+                cantidades_por_variante[variante.id] = cantidades_por_variante.get(variante.id, 0) + int(item['quantity'])
+                items_resueltos.append((item, variante))
+
+            for variante_id, cantidad_requerida in cantidades_por_variante.items():
+                variante = variantes_bloqueadas[variante_id]
+                if variante.stock < cantidad_requerida:
+                    raise ValueError(
+                        f'Stock insuficiente para "{variante.producto.nombre}". '
+                        f'Disponible: {variante.stock}, solicitado: {cantidad_requerida}.'
+                    )
+
+            pedido = Pedido.objects.create(
+                usuario=request.user if request.user.is_authenticated else None,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                country=country,
+                city=city,
+                address=address,
+                order_note=order_note,
+                metodo_pago=payment_method,
+                subtotal=subtotal,
+                shipping_cost=shipping_cost,
+                gift_wrap=gift_wrap,
+                gift_wrap_cost=gift_wrap_cost,
+                discount_code=discount_code if discount_code else None,
+                discount_amount=discount_amount,
+                total=total,
+                estado='pendiente',
             )
-            
-            # Actualizar stock de la variante
-            if item['variante_id']:
-                try:
-                    variante = Variante.objects.get(id=item['variante_id'])
-                    if variante.stock >= item['quantity']:
-                        variante.stock -= item['quantity']
-                        variante.save()
-                except Variante.DoesNotExist:
-                    pass
+
+            if codigo_descuento is not None:
+                codigo_descuento.usos_actuales += 1
+                codigo_descuento.save(update_fields=['usos_actuales'])
+
+            for item, variante in items_resueltos:
+                DetallePedido.objects.create(
+                    pedido=pedido,
+                    producto=item['producto'],
+                    variante=variante,
+                    nombre_producto=item['nombre'],
+                    talla=item.get('talla'),
+                    color=item.get('color'),
+                    precio_unitario=item['precio_decimal'],
+                    cantidad=item['quantity'],
+                    subtotal=item['total_precio'],
+                    imagen_url=item['imagen'],
+                )
+
+            for variante_id, cantidad_requerida in cantidades_por_variante.items():
+                variante = variantes_bloqueadas[variante_id]
+                variante.stock -= cantidad_requerida
+                variante.save(update_fields=['stock', 'updated_at'])
+
+            if carnival_discount_applied and request.user.is_authenticated:
+                request.user.carnival_coupon_used_2026 = True
+                request.user.carnival_coupon_used_date = now
+                request.user.save()
         
         # Limpiar el carrito
         cart.clear()
-        
-        # ðŸŽ­ Marcar cupÃ³n de carnaval como usado
-        if carnival_discount_applied and request.user.is_authenticated:
-            request.user.carnival_coupon_used_2026 = True
-            request.user.carnival_coupon_used_date = now
-            request.user.save()
-            print(f'âœ… CupÃ³n de carnaval marcado como usado para {request.user.email}')
         
         # Asegurar que la sesiÃ³n se guarde completamente
         request.session.modified = True
         request.session.save()
         
         # ðŸ“± Enviar notificaciÃ³n a WhatsApp del administrador
-        from .whatsapp_utils import enviar_notificacion_pedido
-        resultado_whatsapp = enviar_notificacion_pedido(pedido)
-        
-        if resultado_whatsapp.get('success'):
-            messages.success(
-                request,
-                f'âœ… Â¡Pedido realizado! #{pedido.numero_pedido} | NotificaciÃ³n enviada al admin'
+        try:
+            from .whatsapp_utils import enviar_notificacion_pedido
+            resultado_whatsapp = enviar_notificacion_pedido(pedido)
+            if not resultado_whatsapp.get('success'):
+                logger.warning(
+                    'Checkout %s: no se pudo enviar notificacion de WhatsApp. Detalle: %s',
+                    pedido.numero_pedido,
+                    resultado_whatsapp.get('message'),
+                )
+        except Exception:
+            logger.exception(
+                'Checkout %s: fallo inesperado al enviar notificacion de WhatsApp',
+                pedido.numero_pedido,
             )
-        else:
-            messages.success(
-                request,
-                f'âœ… Â¡Pedido realizado! #{pedido.numero_pedido}'
-            )
-        
+
         # Redirigir a pÃ¡gina de confirmaciÃ³n
         return redirect('core:order_confirmation', numero_pedido=pedido.numero_pedido)
-        
-    except Exception as e:
-        import traceback
-        print(f'âŒ ERROR EN CHECKOUT_PROCESS: {str(e)}')
-        print(f'Traceback: {traceback.format_exc()}')
-        messages.error(request, f'Error al procesar el pedido: {str(e)}')
+
+    except ValueError as exc:
+        messages.warning(request, str(exc))
+        return redirect('core:checkout')
+    except Exception:
+        logger.exception('Error inesperado al procesar checkout')
+        messages.error(request, 'No pudimos procesar tu pedido en este momento. Intenta nuevamente.')
         return redirect('core:checkout')
 
 

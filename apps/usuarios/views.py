@@ -14,12 +14,66 @@ from django.http import JsonResponse
 from .models import Usuario, EmailVerificationToken
 import base64
 import os
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+ADMIN_MESSAGE_FRAGMENTS = (
+    'eliminado exitosamente',
+    'eliminada exitosamente',
+    'actualizado exitosamente',
+    'actualizada exitosamente',
+    'agregado exitosamente',
+    'agregada exitosamente',
+    'panel de administracion',
+    'panel de administración',
+)
+
+CHECKOUT_MESSAGE_FRAGMENTS = (
+    'pedido realizado con exito',
+    'pedido realizado con éxito',
+    '#ord-',
+    'notificacion enviada al admin',
+)
 
 
 def limpiar_mensajes_pendientes(request):
     """Consume mensajes pendientes para evitar arrastre entre panel admin y frontend."""
     storage = get_messages(request)
     storage.used = True
+
+
+def normalizar_mensajes_publicos(request):
+    """Filtra mensajes administrativos y elimina duplicados en vistas públicas."""
+    storage = get_messages(request)
+    vistos = set()
+    mensajes_validos = []
+
+    for message in storage:
+        text = str(message).strip()
+        tags = (message.tags or '').lower()
+        text_normalizado = ' '.join(text.lower().split())
+
+        if 'admin' in tags:
+            continue
+
+        if any(fragment in text_normalizado for fragment in ADMIN_MESSAGE_FRAGMENTS):
+            continue
+
+        if any(fragment in text_normalizado for fragment in CHECKOUT_MESSAGE_FRAGMENTS):
+            continue
+
+        key = (message.level, text_normalizado)
+        if key in vistos:
+            continue
+
+        vistos.add(key)
+        mensajes_validos.append(key)
+
+    for level, text, extra_tags in mensajes_validos:
+        messages.add_message(request, level, text, extra_tags=extra_tags)
 
 
 def obtener_logo_base64():
@@ -380,7 +434,7 @@ def enviar_email_verificacion(request, usuario):
 
 def login_usuario(request):
     """Vista de login para usuarios"""
-    limpiar_mensajes_pendientes(request)
+    normalizar_mensajes_publicos(request)
 
     # Si el usuario ya está autenticado, redirigir según su rol
     if request.user.is_authenticated:
@@ -428,6 +482,8 @@ def login_usuario(request):
 
 def registrar_usuario(request):
     """Vista de registro para nuevos clientes"""
+    normalizar_mensajes_publicos(request)
+
     # Si el usuario ya está autenticado, redirigir
     if request.user.is_authenticated:
         return redirect('usuarios:my_account')
@@ -569,8 +625,9 @@ def registrar_usuario(request):
             )
             return redirect('usuarios:login')
             
-        except Exception as e:
-            messages.error(request, f'Error al crear la cuenta: {str(e)}')
+        except Exception:
+            logger.exception('Error inesperado al crear cuenta para email=%s', email)
+            messages.error(request, 'No pudimos crear tu cuenta en este momento. Intenta nuevamente.')
             return render(request, 'register.html', construir_contexto_registro(
                 nombre=nombre,
                 apellido=apellido,
