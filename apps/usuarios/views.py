@@ -65,14 +65,18 @@ def normalizar_mensajes_publicos(request):
         if any(fragment in text_normalizado for fragment in CHECKOUT_MESSAGE_FRAGMENTS):
             continue
 
-        key = (message.level, text_normalizado)
+        extra_tags = (getattr(message, 'extra_tags', '') or '').strip()
+        key = (message.level, text_normalizado, extra_tags.lower())
         if key in vistos:
             continue
 
         vistos.add(key)
-        mensajes_validos.append(key)
+        mensajes_validos.append((message.level, text, extra_tags))
 
-    for level, text, extra_tags in mensajes_validos:
+    for msg in mensajes_validos:
+        level = msg[0]
+        text = msg[1]
+        extra_tags = msg[2] if len(msg) > 2 else ''
         messages.add_message(request, level, text, extra_tags=extra_tags)
 
 
