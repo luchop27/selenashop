@@ -82,7 +82,7 @@
                         <!-- Subir nuevas imágenes -->
                         <div class="upload-image mb-16">
                             <div class="up-load" id="upload-area" style="min-height: 150px; border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center;">
-                                <label class="uploadfile" for="imageFiles" style="cursor: pointer; display: block;">
+                                <label class="uploadfile" style="cursor: pointer; display: flex; width: 100%; min-height: 110px; align-items: center; justify-content: center; flex-direction: column;">
                                     <span class="icon">
                                         <i class="icon-upload-cloud"></i>
                                     </span>
@@ -773,14 +773,7 @@ const uploadArea = document.getElementById('upload-area');
 // Evento de cambio en el input file
 imageFilesInput.addEventListener('change', function(e) {
     handleFiles(e.target.files);
-});
-
-// Click en el área de upload para abrir selector de archivos
-uploadArea.addEventListener('click', function(e) {
-    // Evitar que el click en botones de eliminar active el input
-    if (!e.target.closest('button')) {
-        imageFilesInput.click();
-    }
+    e.target.value = '';
 });
 
 // Drag and Drop

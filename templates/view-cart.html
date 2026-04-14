@@ -51,6 +51,12 @@
 
 <section class="flat-spacing-11">
     <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} mb_20">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
         {% if not cart_items %}
             <div class="tf-page-cart text-center mt_140 mb_200">
                 <h5 class="mb_24">Tu carrito esta vacio</h5>

@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.messages import get_messages
+from django.core.exceptions import ValidationError
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -713,24 +716,105 @@ def my_account_orders_details(request, numero_pedido):
 
 
 @login_required(login_url='/')
-def my_account_address(request):
-    """Gestión de direcciones del usuario"""
-    # TODO: Obtener direcciones del usuario desde el modelo de Direcciones
-    return render(request, 'my-account-address.html', {
-        'user': request.user
-    })
-
-
-@login_required(login_url='/')
 def my_account_edit(request):
     """Edición de detalles de la cuenta"""
+    user = request.user
+
+    first_name_value = getattr(user, 'nombre', '') or getattr(user, 'first_name', '') or ''
+    last_name_value = getattr(user, 'apellido', '') or getattr(user, 'last_name', '') or ''
+    email_value = user.email or ''
+
     if request.method == 'POST':
-        # TODO: Actualizar información del usuario
-        messages.success(request, 'Información actualizada correctamente.')
+        first_name_value = (request.POST.get('first_name') or '').strip()
+        last_name_value = (request.POST.get('last_name') or '').strip()
+        email_value = (request.POST.get('email') or '').strip()
+        normalized_email = email_value.lower() if email_value else ''
+
+        current_password = request.POST.get('current_password', '')
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        wants_password_change = any([current_password, new_password, confirm_password])
+
+        profile_has_errors = False
+        password_has_errors = False
+
+        # Validación de email único
+        if not email_value:
+            messages.error(request, 'El email es obligatorio.')
+            profile_has_errors = True
+        else:
+            email_exists = Usuario.objects.filter(email__iexact=normalized_email).exclude(pk=user.pk).exists()
+            if email_exists:
+                messages.error(request, 'Este email ya pertenece a otra cuenta.')
+                profile_has_errors = True
+
+        if wants_password_change:
+            if not current_password:
+                messages.error(request, 'Debes ingresar la contraseña actual.')
+                password_has_errors = True
+            elif not user.check_password(current_password):
+                messages.error(request, 'La contraseña actual es incorrecta.')
+                password_has_errors = True
+
+            if not new_password:
+                messages.error(request, 'Debes ingresar una nueva contraseña.')
+                password_has_errors = True
+            elif new_password != confirm_password:
+                messages.error(request, 'Las nuevas contraseñas no coinciden.')
+                password_has_errors = True
+
+            if not password_has_errors:
+                try:
+                    validate_password(new_password, user=user)
+                except ValidationError as exc:
+                    password_has_errors = True
+                    for msg in exc.messages:
+                        messages.error(request, msg)
+
+        if profile_has_errors or password_has_errors:
+            return render(request, 'my-account-edit.html', {
+                'user': user,
+                'first_name': first_name_value,
+                'last_name': last_name_value,
+                'email': email_value,
+            })
+
+        profile_changed = False
+        password_changed = False
+
+        if (user.nombre or '') != first_name_value:
+            user.nombre = first_name_value
+            profile_changed = True
+
+        if (user.apellido or '') != last_name_value:
+            user.apellido = last_name_value
+            profile_changed = True
+
+        if (user.email or '').lower() != normalized_email:
+            user.email = normalized_email
+            profile_changed = True
+
+        if wants_password_change:
+            user.set_password(new_password)
+            password_changed = True
+
+        if profile_changed or password_changed:
+            user.save()
+
+        if profile_changed or not wants_password_change:
+            messages.success(request, 'Datos actualizados correctamente.')
+
+        if password_changed:
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Contraseña actualizada correctamente.')
+
         return redirect('usuarios:my_account_edit')
     
     return render(request, 'my-account-edit.html', {
-        'user': request.user
+        'user': user,
+        'first_name': first_name_value,
+        'last_name': last_name_value,
+        'email': email_value,
     })
 
 def password_reset_request(request):

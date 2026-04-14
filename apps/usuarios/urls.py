@@ -32,7 +32,6 @@ urlpatterns = [
     path('mi-cuenta/', views.my_account, name='my_account'),
     path('mi-cuenta/pedidos/', views.my_account_orders, name='my_account_orders'),
     path('mi-cuenta/pedidos/<str:numero_pedido>/', views.my_account_orders_details, name='my_account_orders_details'),
-    path('mi-cuenta/direcciones/', views.my_account_address, name='my_account_address'),
     path('mi-cuenta/detalles/', views.my_account_edit, name='my_account_edit'),
     path('mi-cuenta/favoritos/', views.my_account_wishlist, name='my_account_wishlist'),
 
@@ -40,7 +39,6 @@ urlpatterns = [
     path('my-account/', views.my_account),
     path('my-account/orders/', views.my_account_orders),
     path('my-account/orders/<str:numero_pedido>/', views.my_account_orders_details),
-    path('my-account/address/', views.my_account_address),
     path('my-account/edit/', views.my_account_edit),
     path('my-account/wishlist/', views.my_account_wishlist),
     

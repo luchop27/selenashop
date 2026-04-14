@@ -23,36 +23,45 @@
                     <div class="col-lg-9">
                         <div class="my-account-content account-edit">
                             <div class="">
-                                <form class="" id="form-password-change" action="#">
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }} mb_20">
+                                            {{ message }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+
+                                <form class="" id="form-password-change" method="post" action="{% url 'usuarios:my_account_edit' %}">
+                                    {% csrf_token %}
                                     <div class="tf-field style-1 mb_15">
                                         <input class="tf-field-input tf-input" placeholder=" " type="text"
-                                            id="property1" name="first name">
+                                            id="property1" name="first_name" value="{{ first_name|default:'' }}" autocomplete="given-name">
                                         <label class="tf-field-label fw-4 text_black-2" for="property1">Nombre</label>
                                     </div>
                                     <div class="tf-field style-1 mb_15">
                                         <input class="tf-field-input tf-input" placeholder=" " type="text"
-                                            id="property2" name="last name">
+                                            id="property2" name="last_name" value="{{ last_name|default:'' }}" autocomplete="family-name">
                                         <label class="tf-field-label fw-4 text_black-2" for="property2">Apellido</label>
                                     </div>
                                     <div class="tf-field style-1 mb_15">
                                         <input class="tf-field-input tf-input" placeholder=" " type="email"
-                                            id="property3" name="email">
+                                            id="property3" name="email" value="{{ email|default:'' }}" autocomplete="email">
                                         <label class="tf-field-label fw-4 text_black-2" for="property3">Email</label>
                                     </div>
                                     <h6 class="mb_20">Cambio de Contraseña</h6>
                                     <div class="tf-field style-1 mb_30">
                                         <input class="tf-field-input tf-input" placeholder=" " type="password"
-                                            id="property4" name="password">
+                                            id="property4" name="current_password" autocomplete="current-password">
                                         <label class="tf-field-label fw-4 text_black-2" for="property4">Contraseña actual</label>
                                     </div>
                                     <div class="tf-field style-1 mb_30">
                                         <input class="tf-field-input tf-input" placeholder=" " type="password"
-                                            id="property5" name="password">
+                                            id="property5" name="new_password" autocomplete="new-password">
                                         <label class="tf-field-label fw-4 text_black-2" for="property5">Nueva contraseña</label>
                                     </div>
                                     <div class="tf-field style-1 mb_30">
                                         <input class="tf-field-input tf-input" placeholder=" " type="password"
-                                            id="property6" name="password">
+                                            id="property6" name="confirm_password" autocomplete="new-password">
                                         <label class="tf-field-label fw-4 text_black-2" for="property6">Confirmar contraseña</label>
                                     </div>
                                     <div class="mb_20">

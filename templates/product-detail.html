@@ -227,15 +227,16 @@ html, body {
                                         <div class="variant-picker-item">
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <div class="variant-picker-label">
-                                                    Talla: <span class="fw-6 variant-picker-label-value value-currentSize">{{ tallas_disponibles.0.codigo }}</span>
+                                                    Talla: <span class="fw-6 variant-picker-label-value value-currentSize">{% if talla_default_codigo %}{{ talla_default_codigo }}{% else %}{{ tallas_disponibles.0.codigo }}{% endif %}</span>
                                                 </div>
                                                 <a href="#find_size" data-bs-toggle="modal" class="find-size fw-6">Encuentra tu talla</a>
                                             </div>
                                             <div class="variant-picker-values" id="size-picker-container">
                                                 {% for talla in tallas_disponibles %}
-                                                <input type="radio" name="size1" id="values-size-{{ forloop.counter }}" value="{{ talla.codigo }}" {% if forloop.first %}checked{% endif %} data-size="{{ talla.codigo }}">
-                                                <label class="style-text size-btn" for="values-size-{{ forloop.counter }}" data-value="{{ talla.codigo }}">
+                                                <input type="radio" name="size1" id="values-size-{{ forloop.counter }}" value="{{ talla.codigo }}" {% if talla_default_codigo and talla.codigo == talla_default_codigo %}checked{% endif %} data-size="{{ talla.codigo }}" data-stock="{{ talla.stock|default:0 }}" {% if talla.agotada %}disabled{% endif %}>
+                                                <label class="style-text size-btn{% if talla.agotada %} size-disabled{% endif %}" for="values-size-{{ forloop.counter }}" data-value="{{ talla.codigo }}" data-stock="{{ talla.stock|default:0 }}">
                                                     <p>{{ talla.codigo }}</p>
+                                                    {% if talla.agotada %}<small class="size-soldout-text">Agotada</small>{% endif %}
                                                 </label>
                                                 {% endfor %}
                                             </div>
@@ -253,9 +254,9 @@ html, body {
                                     <div class="tf-product-info-buy-button">
                                         <form class="">
                                             <a href="#"
-                                                class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart"><span>Agregar
-                                                    al carrito -&nbsp;</span><span
-                                                    class="tf-qty-price total-price">${{ precio_min|default:producto.precio_base }}</span></a>
+                                                id="mainAddToCartBtn"
+                                                class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart {% if producto_agotado %}inventory-action-disabled{% endif %}"><span class="add-cart-text">{% if producto_agotado %}Agotado{% else %}Agregar al carrito - {% endif %}</span><span
+                                                    class="tf-qty-price total-price" {% if producto_agotado %}style="display: none;"{% endif %}>${{ precio_min|default:producto.precio_base }}</span></a>
                                             <a href="#"
                                                 class="tf-product-btn-wishlist hover-tooltip box-icon bg_white wishlist btn-icon-action{% if in_wishlist %} active{% endif %}"
                                                 data-product-id="{{ producto.id }}"
@@ -349,9 +350,11 @@ html, body {
                                             <option value="{{ variante.id }}" 
                                                     data-precio="{{ variante.precio|default:producto.precio_base }}"
                                                     data-stock="{{ variante.stock }}"
-                                                    {% if forloop.first %}selected="selected"{% endif %}>
+                                                    data-size="{% if variante.talla %}{{ variante.talla.codigo }}{% endif %}"
+                                                    {% if variante.stock <= 0 %}disabled{% endif %}
+                                                    {% if talla_default_codigo and variante.talla and variante.talla.codigo == talla_default_codigo %}selected="selected"{% elif not talla_default_codigo and forloop.first %}selected="selected"{% endif %}>
                                                 {% if variante.talla %}{{ variante.talla.codigo }}{% else %}Size{% endif %} - 
-                                                ${{ variante.precio|default:producto.precio_base }}
+                                                ${{ variante.precio|default:producto.precio_base }}{% if variante.stock <= 0 %} (Agotada){% endif %}
                                             </option>
                                         {% endfor %}
                                     </select>
@@ -365,7 +368,8 @@ html, body {
                                         </div>
                                     </div>
                                     <a href="#"
-                                        class="tf-btn btn-fill radius-3 justify-content-center fw-6 fs-14 flex-grow-1 animate-hover-btn btn-add-to-cart sticky-add-cart"><span>Agregar al carrito</span></a>
+                                        id="stickyAddToCartBtn"
+                                        class="tf-btn btn-fill radius-3 justify-content-center fw-6 fs-14 flex-grow-1 animate-hover-btn btn-add-to-cart sticky-add-cart {% if producto_agotado %}inventory-action-disabled{% endif %}"><span class="sticky-add-cart-text">{% if producto_agotado %}Agotado{% else %}Agregar al carrito{% endif %}</span></a>
                                 </div>
                             </form>
                         </div>
@@ -994,31 +998,196 @@ html, body {
         document.addEventListener('DOMContentLoaded', function() {
             console.log('=== SISTEMA DE VARIANTES CARGADO (SOLO TALLAS) ===');
 
-            // Datos seguros desde Django
             const variantesMap = JSON.parse('{{ variantes_map_json|escapejs }}');
             const precioBase = parseFloat('{{ producto.precio_base|default:0 }}');
-
-            console.log('Mapa de variantes:', variantesMap);
 
             let tallaSeleccionada = null;
             let varianteActual = null;
 
-            const sizeInputs = document.querySelectorAll('input[name="size1"]');
-            const quantityInput = document.querySelector('.quantity-product');
+            const sizeInputs = Array.from(document.querySelectorAll('input[name="size1"]'));
             const totalPriceElements = document.querySelectorAll('.total-price');
-                          const btnIncreases = document.querySelectorAll('.btn-increase, .sticky-plus-btn');
-              const btnDecreases = document.querySelectorAll('.btn-decrease, .sticky-minus-btn');
-              const quantityInputs = document.querySelectorAll('.quantity-product, .sticky-qty-input');
-              const sizeLabel = document.querySelector('.value-currentSize');
+            const btnIncreases = document.querySelectorAll('.btn-increase, .sticky-plus-btn');
+            const btnDecreases = document.querySelectorAll('.btn-decrease, .sticky-minus-btn');
+            const quantityInputs = document.querySelectorAll('.quantity-product, .sticky-qty-input');
+            const sizeLabel = document.querySelector('.value-currentSize');
+            const mainAddToCartBtn = document.getElementById('mainAddToCartBtn');
+            const mainAddToCartText = mainAddToCartBtn ? mainAddToCartBtn.querySelector('.add-cart-text') : null;
+            const stickyAddToCartBtn = document.getElementById('stickyAddToCartBtn');
+            const stickyAddToCartText = stickyAddToCartBtn ? stickyAddToCartBtn.querySelector('.sticky-add-cart-text') : null;
+            const stickyVariantSelect = document.getElementById('stickyVariantSelect');
 
-            if (sizeInputs.length > 0) {
-                sizeInputs.forEach(input => {
-                    if (input.checked) tallaSeleccionada = input.value;
+            function getFirstEnabledSizeInput() {
+                return sizeInputs.find(input => !input.disabled) || null;
+            }
+
+            function setActionDisabledState(button, labelEl, disabled, enabledLabel, disabledLabel) {
+                if (!button) return;
+                button.classList.toggle('inventory-action-disabled', disabled);
+                button.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+                button.dataset.blocked = disabled ? '1' : '0';
+                if (labelEl) {
+                    labelEl.textContent = disabled ? disabledLabel : enabledLabel;
+                }
+            }
+
+            function actualizarEstadoCompra(disponible) {
+                setActionDisabledState(mainAddToCartBtn, mainAddToCartText, !disponible, 'Agregar al carrito - ', 'Agotado');
+                setActionDisabledState(stickyAddToCartBtn, stickyAddToCartText, !disponible, 'Agregar al carrito', 'Agotado');
+                totalPriceElements.forEach(el => {
+                    el.style.display = disponible ? '' : 'none';
                 });
+            }
+
+            function syncStickySelectWithSize(sizeCode) {
+                if (!stickyVariantSelect || !sizeCode) return;
+
+                const options = Array.from(stickyVariantSelect.options);
+                const matchedOption = options.find(opt => opt.dataset.size === sizeCode);
+                if (matchedOption && !matchedOption.disabled) {
+                    stickyVariantSelect.value = matchedOption.value;
+                    return;
+                }
+
+                const firstEnabled = options.find(opt => !opt.disabled);
+                if (firstEnabled) {
+                    stickyVariantSelect.value = firstEnabled.value;
+                }
+            }
+
+            function syncSizeWithStickySelect(selectedOption) {
+                if (!selectedOption) return;
+
+                if (!sizeInputs.length) {
+                    const stock = parseInt(selectedOption.dataset.stock, 10) || 0;
+                    const precio = selectedOption.dataset.precio || precioBase;
+                    window.currentVariantId = selectedOption.value || null;
+                    varianteActual = {
+                        id: selectedOption.value || null,
+                        stock: stock,
+                        precio: precio,
+                    };
+                    actualizarStock(stock);
+                    actualizarPrecio(precio);
+                    return;
+                }
+
+                const sizeCode = selectedOption.dataset.size;
+                const targetInput = sizeInputs.find(input => input.value === sizeCode);
+                if (!targetInput || targetInput.disabled) {
+                    window.currentVariantId = null;
+                    varianteActual = null;
+                    actualizarStock(0);
+                    actualizarPrecio(precioBase);
+                    return;
+                }
+
+                targetInput.checked = true;
+                tallaSeleccionada = targetInput.value;
+                if (sizeLabel) {
+                    const label = targetInput.nextElementSibling;
+                    if (label) sizeLabel.textContent = label.dataset.value;
+                }
+                actualizarVariante();
+            }
+
+            function actualizarVariante() {
+                if (!tallaSeleccionada) {
+                    varianteActual = null;
+                    window.currentVariantId = null;
+                    actualizarStock(0);
+                    actualizarPrecio(precioBase);
+                    return;
+                }
+
+                varianteActual = variantesMap[tallaSeleccionada] || null;
+                if (varianteActual) {
+                    window.currentVariantId = varianteActual.id;
+                    const stock = parseInt(varianteActual.stock, 10) || 0;
+                    actualizarStock(stock);
+                    actualizarPrecio(varianteActual.precio);
+                    syncStickySelectWithSize(tallaSeleccionada);
+                } else {
+                    window.currentVariantId = null;
+                    actualizarStock(0);
+                    actualizarPrecio(precioBase);
+                }
+            }
+
+            function actualizarStock(stock) {
+                window.currentMaxStock = stock;
+
+                quantityInputs.forEach(inpt => {
+                    inpt.setAttribute('max', stock);
+                    inpt.value = 1;
+                    inpt.disabled = stock === 0;
+                });
+
+                actualizarBotones();
+                const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                actualizarPrecio(precio);
+                actualizarEstadoCompra(stock > 0 && !!window.currentVariantId);
+            }
+
+            function actualizarPrecio(precio) {
+                if (quantityInputs.length === 0) return;
+
+                const qty = parseInt(quantityInputs[0].value, 10) || 1;
+                const total = (parseFloat(precio || 0) * qty).toFixed(2);
+                totalPriceElements.forEach(el => {
+                    el.textContent = '$' + total;
+                });
+            }
+
+            function actualizarBotones() {
+                if (quantityInputs.length === 0) return;
+
+                const qty = parseInt(quantityInputs[0].value, 10) || 1;
+                const maxStock = window.currentMaxStock || 0;
+
+                btnIncreases.forEach(btn => {
+                    btn.disabled = (qty >= maxStock || maxStock === 0);
+                    btn.style.opacity = btn.disabled ? '0.5' : '1';
+                    btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
+                });
+
+                btnDecreases.forEach(btn => {
+                    btn.disabled = qty <= 1 || maxStock === 0;
+                    btn.style.opacity = btn.disabled ? '0.5' : '1';
+                    btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
+                });
+            }
+
+            if (stickyVariantSelect) {
+                const selected = stickyVariantSelect.options[stickyVariantSelect.selectedIndex];
+                if (!selected || selected.disabled) {
+                    const firstEnabled = Array.from(stickyVariantSelect.options).find(opt => !opt.disabled);
+                    if (firstEnabled) {
+                        stickyVariantSelect.value = firstEnabled.value;
+                    }
+                }
+
+                stickyVariantSelect.addEventListener('change', function() {
+                    const option = this.options[this.selectedIndex];
+                    syncSizeWithStickySelect(option);
+                });
+            }
+
+            let defaultInput = null;
+            if (sizeInputs.length > 0) {
+                defaultInput = sizeInputs.find(input => input.checked && !input.disabled) || getFirstEnabledSizeInput();
+                if (defaultInput) {
+                    defaultInput.checked = true;
+                    tallaSeleccionada = defaultInput.value;
+                    if (sizeLabel) {
+                        const label = defaultInput.nextElementSibling;
+                        if (label) sizeLabel.textContent = label.dataset.value;
+                    }
+                }
             }
 
             sizeInputs.forEach(input => {
                 input.addEventListener('change', function() {
+                    if (this.disabled) return;
                     tallaSeleccionada = this.value;
 
                     if (sizeLabel) {
@@ -1030,113 +1199,69 @@ html, body {
                 });
             });
 
-            function actualizarVariante() {
-                if (!tallaSeleccionada) return;
+            btnIncreases.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
 
-                varianteActual = variantesMap[tallaSeleccionada];
+                    const qty = parseInt(quantityInputs[0].value, 10) || 1;
+                    const maxStock = window.currentMaxStock || 0;
 
-                if (varianteActual) {
-                    window.currentVariantId = varianteActual.id;
-                    actualizarStock(varianteActual.stock);
-                    actualizarPrecio(varianteActual.precio);
-                } else {
-                    actualizarStock(0);
-                    actualizarPrecio(precioBase);
-                }
+                    if (qty < maxStock && maxStock > 0) {
+                        quantityInputs.forEach(inpt => {
+                            inpt.value = qty + 1;
+                        });
+                        actualizarBotones();
+                        const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                        actualizarPrecio(precio);
+                    }
+                }, true);
+            });
+
+            btnDecreases.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const qty = parseInt(quantityInputs[0].value, 10) || 1;
+                    if (qty > 1) {
+                        quantityInputs.forEach(inpt => {
+                            inpt.value = qty - 1;
+                        });
+                        actualizarBotones();
+                        const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                        actualizarPrecio(precio);
+                    }
+                }, true);
+            });
+
+            quantityInputs.forEach(inpt => {
+                inpt.addEventListener('input', function() {
+                    let val = parseInt(this.value, 10);
+                    const maxStock = window.currentMaxStock || 0;
+
+                    if (Number.isNaN(val)) val = 1;
+                    if (val > maxStock && maxStock > 0) val = maxStock;
+                    if (val < 1) val = 1;
+
+                    quantityInputs.forEach(i => {
+                        i.value = val;
+                    });
+                    actualizarBotones();
+
+                    const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
+                    actualizarPrecio(precio);
+                });
+            });
+
+            if (tallaSeleccionada) {
+                actualizarVariante();
+            } else if (stickyVariantSelect && stickyVariantSelect.options.length > 0) {
+                const selectedOption = stickyVariantSelect.options[stickyVariantSelect.selectedIndex];
+                syncSizeWithStickySelect(selectedOption);
+            } else {
+                actualizarEstadoCompra(false);
+                window.currentVariantId = null;
+                window.currentMaxStock = 0;
             }
-
-            function actualizarStock(stock) {
-                  window.currentMaxStock = stock;
-                  
-                  quantityInputs.forEach(inpt => {
-                      inpt.setAttribute('max', stock);
-                      inpt.value = 1;
-                  });
-
-                  actualizarBotones();
-
-                  const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
-                  actualizarPrecio(precio);
-              }
-
-              function actualizarPrecio(precio) {
-                  if (quantityInputs.length === 0) return;
-
-                  const qty = parseInt(quantityInputs[0].value) || 1;
-                  const total = (parseFloat(precio) * qty).toFixed(2);
-
-                  totalPriceElements.forEach(el => {
-                      el.textContent = '$' + total;
-                  });
-              }
-
-              function actualizarBotones() {
-                  if (quantityInputs.length === 0) return;
-
-                  const qty = parseInt(quantityInputs[0].value) || 1;
-
-                  btnIncreases.forEach(btn => {
-                      btn.disabled = (qty >= window.currentMaxStock || window.currentMaxStock === 0);
-                      btn.style.opacity = btn.disabled ? '0.5' : '1';
-                      btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
-                  });
-
-                  btnDecreases.forEach(btn => {
-                      btn.disabled = qty <= 1;
-                      btn.style.opacity = btn.disabled ? '0.5' : '1';
-                      btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
-                  });
-              }
-
-              btnIncreases.forEach(btn => {
-                  btn.addEventListener('click', function(e) {
-                      e.preventDefault();
-
-                      const qty = parseInt(quantityInputs[0].value) || 1;
-                      const maxStock = window.currentMaxStock !== undefined ? window.currentMaxStock : 999;
-
-                      if (qty < maxStock && maxStock > 0) {
-                          quantityInputs.forEach(inpt => inpt.value = qty + 1);
-                          actualizarBotones();
-
-                          const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
-                          actualizarPrecio(precio);
-                      }
-                  }, true);
-              });
-
-              btnDecreases.forEach(btn => {
-                  btn.addEventListener('click', function(e) {
-                      e.preventDefault();
-
-                      const qty = parseInt(quantityInputs[0].value) || 1;
-                      if (qty > 1) {
-                          quantityInputs.forEach(inpt => inpt.value = qty - 1);
-                          actualizarBotones();
-
-                          const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
-                          actualizarPrecio(precio);
-                      }
-                  }, true);
-              });
-
-              quantityInputs.forEach(inpt => {
-                  inpt.addEventListener('input', function() {
-                      let val = parseInt(this.value) || 1;
-                      const maxStock = window.currentMaxStock !== undefined ? window.currentMaxStock : 999;
-
-                      if (val > maxStock && maxStock > 0) val = maxStock;
-                      if (val < 1) val = 1;
-
-                      quantityInputs.forEach(i => i.value = val);
-                      actualizarBotones();
-
-                      const precio = varianteActual && varianteActual.precio ? varianteActual.precio : precioBase;
-                      actualizarPrecio(precio);
-                  });
-              });
-
-            if (tallaSeleccionada) actualizarVariante();
 
             console.log('=== INICIALIZACION COMPLETA ===');
         });

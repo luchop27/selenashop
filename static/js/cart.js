@@ -38,6 +38,40 @@
         });
     }
 
+    function updateMiniCartCheckoutState(items, syncNotice) {
+        const checkoutBtn = document.getElementById('miniCartCheckoutBtn');
+        const warningBox = document.getElementById('miniCartStockWarning');
+        if (!checkoutBtn) return;
+
+        const hasUnavailableItems = (items || []).some(function(item) {
+            const stock = parseInt(item.stock, 10) || 0;
+            const quantity = parseInt(item.quantity, 10) || 0;
+            return stock <= 0 || quantity > stock;
+        });
+
+        checkoutBtn.dataset.blocked = hasUnavailableItems ? '1' : '0';
+        checkoutBtn.classList.toggle('inventory-action-disabled', hasUnavailableItems);
+        checkoutBtn.setAttribute('aria-disabled', hasUnavailableItems ? 'true' : 'false');
+        checkoutBtn.style.pointerEvents = hasUnavailableItems ? 'none' : 'auto';
+        checkoutBtn.style.opacity = hasUnavailableItems ? '0.55' : '1';
+
+        if (warningBox) {
+            if (!warningBox.dataset.defaultText) {
+                warningBox.dataset.defaultText = warningBox.textContent.trim();
+            }
+
+            if (hasUnavailableItems) {
+                warningBox.textContent = warningBox.dataset.defaultText;
+                warningBox.style.display = 'block';
+            } else if (syncNotice) {
+                warningBox.textContent = syncNotice;
+                warningBox.style.display = 'block';
+            } else {
+                warningBox.style.display = 'none';
+            }
+        }
+    }
+
     // Cargar y mostrar los items del carrito
     function loadCartItems() {
         fetch('/cart/detail/', {
@@ -52,6 +86,8 @@
                 updateCartCount(data.cart_count);
                 updateCartTotal(data.cart_total);
                 renderCartItems(data.items);
+                const syncNotice = data.stock_sync_notice || data.stock_sync_adjust_notice || '';
+                updateMiniCartCheckoutState(data.items, syncNotice);
                 loadCartRecommendations(); // Cargar recomendaciones
             }
         })
@@ -151,6 +187,7 @@
                     <p class="text-muted">Tu carrito está vacío</p>
                 </div>
             `;
+            updateMiniCartCheckoutState([], '');
             return;
         }
 
@@ -162,6 +199,10 @@
             const stock = item.stock || 0;
             const isAtMaxStock = item.quantity >= stock;
             const isAtMinQuantity = item.quantity <= 1;
+            const isUnavailable = stock <= 0 || item.quantity > stock;
+            const unavailableMessage = stock <= 0
+                ? 'Esta variante ya no tiene stock. Elimínala para continuar.'
+                : `Solo quedan ${stock} unidades para esta variante.`;
             
             // Debug: mostrar info en consola
             console.log(`📦 Renderizando: ${item.nombre}, Qty: ${item.quantity}, Stock: ${stock}, Max: ${isAtMaxStock}`);
@@ -177,6 +218,7 @@
                         <a class="title link" href="/product/${item.producto_id}/">${item.nombre}</a>
                         ${variant ? `<div class="meta-variant">${variant}</div>` : ''}
                         ${stock > 0 ? `<div class="meta-variant text-muted" style="font-size: 0.85rem;">Stock disponible: ${stock}</div>` : ''}
+                        ${isUnavailable ? `<div class="mini-cart-stock-alert">${unavailableMessage}</div>` : ''}
                         <div class="price fw-6">$${parseFloat(item.precio).toFixed(2)}</div>
                         <div class="tf-mini-cart-btns">
                             <div class="wg-quantity small">
@@ -192,6 +234,7 @@
         });
 
         cartItemsContainer.innerHTML = html;
+        updateMiniCartCheckoutState(items, '');
         attachCartItemListeners();
     }
 
@@ -394,6 +437,16 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Cargar el carrito al inicio
         loadCartItems();
+
+        const miniCartCheckoutBtn = document.getElementById('miniCartCheckoutBtn');
+        if (miniCartCheckoutBtn) {
+            miniCartCheckoutBtn.addEventListener('click', function(e) {
+                if (this.dataset.blocked === '1') {
+                    e.preventDefault();
+                    showNotification('Hay productos agotados en tu carrito. Debes eliminarlos para continuar.', 'error');
+                }
+            });
+        }
 
         // Listener global para limpiar backdrops cuando cualquier modal se cierra
         document.addEventListener('hidden.bs.modal', function(event) {

@@ -1,6 +1,7 @@
 {% load static %}
 {% comment %} Partial: tarjeta de producto (usada en home-05 y respuesta AJAX) {% endcomment %}
-<div class="card-product style-4 fl-item">
+{% with stock_state=producto.availability|default:''|lower %}
+<div class="card-product style-4 fl-item {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}out-of-stock{% endif %}">
     <div class="card-product-wrapper">
         <a href="{{ producto.get_absolute_url }}" class="product-img">
             {% if producto.main_image_src %}
@@ -12,6 +13,9 @@
                 <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}" src="{{ producto.hover_image_src }}" alt="{{ producto.nombre }}">
             {% endif %}
         </a>
+        {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}
+            <span class="product-stock-badge">Agotado</span>
+        {% endif %}
         <div class="list-product-btn column-right"> 
             <a href="#" class="box-icon wishlist bg_white round btn-icon-action {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}" 
                data-product-id="{{ producto.id }}" 
@@ -20,6 +24,7 @@
                 <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span> 
                 <span class="icon icon-delete"></span> 
             </a> 
+            {% if stock_state != 'agotado' and stock_state != 'out-of-stock' %}
             <a href="#quick_view" data-bs-toggle="modal" class="box-icon quickview bg_white round tf-btn-loading btn-open-quickview d-md-none" 
                data-product-id="{{ producto.id }}" 
                data-product-name="{{ producto.nombre|escapejs }}" 
@@ -33,6 +38,7 @@
                 <span class="icon icon-view"></span> 
                 <span class="tooltip">Visualizar</span> 
             </a> 
+            {% endif %}
         </div> 
         {% if producto.sizes %}
             <div class="size-list">
@@ -41,6 +47,7 @@
                 {% endfor %}
             </div>
         {% endif %}
+    {% if stock_state != 'agotado' and stock_state != 'out-of-stock' %}
     <a href="#quick_view" data-bs-toggle="modal" class="btn-quick-add quickview btn-open-quickview d-none d-md-flex" 
        data-product-id="{{ producto.id }}" 
        data-product-name="{{ producto.nombre|escapejs }}" 
@@ -51,6 +58,9 @@
        data-product-url="{{ producto.get_absolute_url }}" 
        data-product-colors="{% if producto.colors %}{% for c in producto.colors %}{% if not forloop.first %},{% endif %}{{ c.valor }}{% endfor %}{% endif %}" 
        data-product-sizes="{% if producto.sizes %}{{ producto.sizes|join:',' }}{% endif %}">VISUALIZAR</a> 
+    {% else %}
+    <span class="sold-out-chip d-none d-md-inline-flex">Agotado</span>
+    {% endif %}
     </div>
     <div class="card-product-info">
         <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
@@ -71,4 +81,5 @@
     </div>
     
 </div>
+{% endwith %}
 

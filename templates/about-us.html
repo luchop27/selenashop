@@ -26,7 +26,7 @@
 }
 
 .text-pane {
-  padding: 4rem 3rem;
+  padding: clamp(2rem, 4vw, 4rem) clamp(1.4rem, 3vw, 3rem);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -76,6 +76,28 @@
   margin-bottom: 1.5rem;
 }
 
+.story-kicker {
+  margin: 0 0 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #8B7D5C;
+}
+
+.story-kicker::before,
+.story-kicker::after {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: rgba(139, 125, 92, 0.5);
+}
+
 .title-text {
   font-family: 'Playfair Display', serif;
   font-size: clamp(2rem, 4vw, 3rem);
@@ -97,14 +119,25 @@
   opacity: 0;
   animation: fadeUp 0.8s ease forwards;
   animation-delay: 0.7s;
+  max-width: 58ch;
 }
 
 .desc-text {
   font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
+  font-size: 15.5px;
   line-height: 1.8;
   color: #555;
   margin-bottom: 1.5rem;
+  text-wrap: pretty;
+}
+
+.desc-text-intro {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.02rem, 1.3vw, 1.18rem);
+  line-height: 1.55;
+  color: #3b3327;
+  font-style: italic;
+  margin-bottom: 1.1rem;
 }
 
 .highlight-text {
@@ -115,6 +148,113 @@
   border-left: 2px solid #8B7D5C;
   padding-left: 1rem;
   margin: 2rem 0;
+}
+
+.brand-story {
+  margin-top: 1rem;
+  padding: 1.25rem 1.25rem 1.25rem 1.1rem;
+  border-left: 3px solid #8B7D5C;
+  background: linear-gradient(180deg, rgba(139, 125, 92, 0.08), rgba(139, 125, 92, 0.02));
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(139, 125, 92, 0.22);
+  box-shadow: 0 14px 34px rgba(91, 73, 45, 0.08);
+}
+
+.brand-story::before {
+  content: "\201C";
+  position: absolute;
+  top: -44px;
+  right: 10px;
+  font-family: 'Playfair Display', serif;
+  font-size: 170px;
+  line-height: 1;
+  color: rgba(139, 125, 92, 0.15);
+  pointer-events: none;
+}
+
+.brand-story::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #8B7D5C 0%, rgba(139, 125, 92, 0.1) 100%);
+}
+
+.brand-story p {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15.5px;
+  line-height: 1.9;
+  color: #2f2f2f;
+  text-wrap: pretty;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-story-initial {
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 125, 92, 0.45);
+  background: rgba(139, 125, 92, 0.08);
+  color: #6e5f44;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15em;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+.brand-story .brand-story-lead {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: #3b3223;
+  letter-spacing: 0.01em;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .brand-story .brand-story-lead {
+    background: linear-gradient(110deg, #4f412a 0%, #8B7D5C 42%, #2f2920 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-story {
+    margin-top: 0.5rem;
+    padding: 1rem 0.95rem;
+  }
+
+  .brand-story::before {
+    font-size: 130px;
+    top: -36px;
+    right: 6px;
+  }
+
+  .brand-story-initial {
+    width: 1.55rem;
+    height: 1.55rem;
+    font-size: 1.02em;
+    margin-right: 0.22rem;
+  }
+
+  .story-kicker {
+    letter-spacing: 0.14em;
+  }
+
+  .desc-wrap {
+    max-width: 100%;
+  }
 }
 
 .image-pane {
@@ -178,22 +318,17 @@
     
 
         <div class="title-wrap">
+          <p class="story-kicker">Origen y propósito</p>
           <h2 class="title-text">Selena <span>Boutique</span></h2>
         </div>
 
         <div class="desc-wrap">
-          <p class="desc-text">
-            Nacimos de la pasión por la moda elegante y accesible. Desde nuestros inicios 
-            en Machala, hemos buscado empoderar a cada mujer, ofreciendo prendas que 
-            combinan tendencias globales con un ajuste perfecto.
-          </p>
-          <div class="highlight-text">
-            "No solo vestimos cuerpos, abrazamos la confianza y el estilo único de cada mujer ecuatoriana."
+          <p class="desc-text desc-text-intro">Una historia real de crecimiento, propósito y amor por cada detalle.</p>
+          <div class="brand-story">
+            <p>
+              <span class="brand-story-initial" aria-hidden="true">S</span><span class="brand-story-lead">elena Boutique nació de un sueño</span> y de la determinación de empezar con poco, pero con un gran propósito. Con esfuerzo, constancia y fe, ese pequeño comienzo se transformó en una empresa sólida dedicada a ofrecer ropa de calidad. Cada prenda refleja pasión, trabajo y amor, recordando que todo es posible cuando se cree y se lucha con el corazón.
+            </p>
           </div>
-          <p class="desc-text">
-            Hoy en día, Selena Boutique es más que una tienda; es un espacio donde la 
-            calidad se encuentra con la exclusividad, cuidadosamente curada para ti.
-          </p>
         </div>
 
               </div>

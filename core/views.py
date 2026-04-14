@@ -724,19 +724,16 @@ def product_detail(request, slug=None):
         for v in variantes:
             print(f"DEBUG - Variante ID: {v.id}, Talla: {v.talla}, Color: {v.color}, Stock: {v.stock}")
         
-        # Extraer tallas Ãºnicas (solo variantes con stock > 0)
-        tallas_disponibles = []
-        tallas_vistas = set()
+        # Extraer tallas unicas y consolidar stock por talla para bloquear agotadas en UI.
+        tallas_map = {}
         for variante in variantes:
+            codigo_talla = None
+            nombre_talla = None
+
             # Primero intentar desde FK talla directa
             if hasattr(variante, 'talla') and variante.talla and hasattr(variante.talla, 'codigo'):
-                codigo = variante.talla.codigo
-                if codigo and codigo not in tallas_vistas:
-                    tallas_disponibles.append({
-                        'codigo': codigo,
-                        'nombre': getattr(variante.talla, 'nombre', codigo)
-                    })
-                    tallas_vistas.add(codigo)
+                codigo_talla = variante.talla.codigo
+                nombre_talla = getattr(variante.talla, 'nombre', codigo_talla)
             else:
                 # Fallback: buscar en sistema de atributos
                 for va in variante.atributos.all():
@@ -744,13 +741,38 @@ def product_detail(request, slug=None):
                     if val and val.atributo:
                         nombre_attr = (val.atributo.slug or val.atributo.nombre).lower()
                         if 'talla' in nombre_attr or 'size' in nombre_attr:
-                            valor = val.valor
-                            if valor and valor not in tallas_vistas:
-                                tallas_disponibles.append({
-                                    'codigo': valor,
-                                    'nombre': valor
-                                })
-                                tallas_vistas.add(valor)
+                            codigo_talla = val.valor
+                            nombre_talla = val.valor
+                            break
+
+            if not codigo_talla:
+                continue
+
+            stock_variante = int(variante.stock or 0)
+            if codigo_talla not in tallas_map:
+                tallas_map[codigo_talla] = {
+                    'codigo': codigo_talla,
+                    'nombre': nombre_talla or codigo_talla,
+                    'stock': stock_variante,
+                }
+            else:
+                # Si hay duplicados por talla, conservar el mayor stock visible para esa talla.
+                tallas_map[codigo_talla]['stock'] = max(tallas_map[codigo_talla]['stock'], stock_variante)
+
+        tallas_disponibles = []
+        for talla_data in tallas_map.values():
+            talla_data['agotada'] = talla_data['stock'] <= 0
+            tallas_disponibles.append(talla_data)
+
+        talla_default_codigo = None
+        for talla_data in tallas_disponibles:
+            if talla_data['stock'] > 0:
+                talla_default_codigo = talla_data['codigo']
+                break
+        if not talla_default_codigo and tallas_disponibles:
+            talla_default_codigo = tallas_disponibles[0]['codigo']
+
+        producto_agotado = all((v.stock or 0) <= 0 for v in variantes) if variantes else True
         
         # Calcular precio mÃ­nimo y mÃ¡ximo
         precios = [v.precio for v in variantes if v.precio]
@@ -909,12 +931,15 @@ def product_detail(request, slug=None):
             if variante.talla:
                 key = f"{variante.talla.codigo}"
                 
-                variantes_stock[key] = {
+                variante_payload = {
                     'id': variante.id,
                     'stock': variante.stock,
                     'talla': variante.talla.codigo if variante.talla else None,
                     'precio': str(variante.precio) if variante.precio else str(producto.precio_base)
                 }
+                existente_stock = variantes_stock.get(key, {}).get('stock', -1)
+                if not variantes_stock.get(key) or (variante.stock or 0) > (existente_stock or 0):
+                    variantes_stock[key] = variante_payload
                 
                 # Obtener imagen asociada a esta variante
                 imagen_url = None
@@ -924,13 +949,16 @@ def product_detail(request, slug=None):
                 elif imagenes:  # Fallback a primera imagen
                     imagen_url = imagenes[0].src
                 
-                variantes_map[key] = {
+                variante_map_payload = {
                     'stock': variante.stock,
                     'precio': str(variante.precio) if variante.precio else str(producto.precio_base),
                     'imagen': imagen_url,
                     'id': variante.id,
                     'talla': variante.talla.codigo if variante.talla else None
                 }
+                existente_map_stock = variantes_map.get(key, {}).get('stock', -1)
+                if not variantes_map.get(key) or (variante.stock or 0) > (existente_map_stock or 0):
+                    variantes_map[key] = variante_map_payload
                 
                 # Debug: imprimir informaciÃ³n de la variante
                 print(f"DEBUG Backend - Talla '{key}' - Stock: {variante.stock} - Precio: {variante.precio} - Imagen: {imagen_url}")
@@ -970,6 +998,8 @@ def product_detail(request, slug=None):
             'variantes': variantes,
             'variantes_map_json': variantes_map_json,  # Mapa completo de variantes para JS
             'tallas_disponibles': tallas_disponibles,
+            'talla_default_codigo': talla_default_codigo,
+            'producto_agotado': producto_agotado,
             'precio_min': precio_min,
             'precio_max': precio_max,
             'tiene_descuento': tiene_descuento,
@@ -994,6 +1024,44 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .cart import Cart
 from apps.productos.models import Variante
+
+
+class CheckoutStockSyncRequired(Exception):
+    """Señala conflictos de stock detectados al confirmar checkout."""
+
+    def __init__(self, conflicts):
+        self.conflicts = conflicts
+        super().__init__('Se detectaron cambios de stock en el carrito.')
+
+
+def _build_cart_item_key(item):
+    """Obtiene la clave real del item en carrito (sesión/BD)."""
+    if item.get('cart_key'):
+        return str(item['cart_key'])
+    if item.get('variante_id'):
+        return f"{item['producto_id']}_{item['variante_id']}"
+    return str(item['producto_id'])
+
+
+def _sync_cart_with_stock_for_ui(request, cart, include_messages=False):
+    """Sincroniza carrito con stock real para vistas de carrito y checkout."""
+    report = cart.sync_with_stock(adjust_to_stock=True)
+
+    if include_messages and report['removed_items']:
+        messages.warning(
+            request,
+            'Algunos productos de tu carrito ya no están disponibles.',
+            extra_tags='storefront cart',
+        )
+
+    if include_messages and report['adjusted_items']:
+        messages.info(
+            request,
+            'Actualizamos algunas cantidades según el stock disponible.',
+            extra_tags='storefront cart',
+        )
+
+    return report
 
 @require_POST
 def cart_add(request):
@@ -1082,6 +1150,7 @@ def cart_detail(request):
     Vista para obtener los detalles completos del carrito via AJAX
     """
     cart = Cart(request)
+    stock_sync_report = _sync_cart_with_stock_for_ui(request, cart, include_messages=False)
     
     items = []
     for item in cart:
@@ -1092,6 +1161,19 @@ def cart_detail(request):
                 from apps.productos.models import Variante
                 variante = Variante.objects.get(id=item['variante_id'])
                 stock = variante.stock
+            except:
+                stock = 0
+        else:
+            # Si no hay variante explícita, usar variante default del producto
+            try:
+                variante_default = (
+                    Variante.objects
+                    .filter(producto_id=item['producto_id'])
+                    .order_by('id')
+                    .first()
+                )
+                if variante_default:
+                    stock = variante_default.stock
             except:
                 stock = 0
         
@@ -1114,7 +1196,9 @@ def cart_detail(request):
         'cart_count': len(cart),
         'cart_total': str(cart.get_total_price()),
         'note': cart.get_note(),
-        'has_gift_wrap': cart.has_gift_wrap()
+        'has_gift_wrap': cart.has_gift_wrap(),
+        'stock_sync_notice': 'Algunos productos de tu carrito ya no están disponibles.' if stock_sync_report['removed_items'] else '',
+        'stock_sync_adjust_notice': 'Actualizamos cantidades según el stock disponible.' if stock_sync_report['adjusted_items'] else '',
     })
 
 
@@ -1190,6 +1274,7 @@ def view_cart(request):
     from apps.productos.models import Variante, Producto
     
     cart = Cart(request)
+    _sync_cart_with_stock_for_ui(request, cart, include_messages=True)
     cart_items = []
     
     for item in cart:
@@ -1491,6 +1576,7 @@ def checkout(request):
     from apps.usuarios.models import Ciudad, Provincia
     
     cart = Cart(request)
+    _sync_cart_with_stock_for_ui(request, cart, include_messages=True)
     
     # Verificar si el carrito está vacío
     if len(cart) == 0:
@@ -1658,6 +1744,29 @@ def checkout_process(request):
     from datetime import datetime
     
     cart = Cart(request)
+
+    pre_sync_report = cart.sync_with_stock(adjust_to_stock=True)
+    if pre_sync_report['removed_items'] or pre_sync_report['adjusted_items']:
+        for removed in pre_sync_report['removed_items']:
+            nombre = removed.get('nombre', 'Producto')
+            talla = removed.get('talla', 'Sin talla')
+            messages.warning(
+                request,
+                f'¡Lo sentimos! El producto {nombre} en talla {talla} se ha agotado y ha sido removido de tu carrito.',
+                extra_tags='storefront cart',
+            )
+
+        for adjusted in pre_sync_report['adjusted_items']:
+            nombre = adjusted.get('nombre', 'Producto')
+            talla = adjusted.get('talla', 'Sin talla')
+            nueva_cantidad = adjusted.get('to_quantity', 1)
+            messages.info(
+                request,
+                f'Actualizamos {nombre} en talla {talla} a {nueva_cantidad} unidades según stock disponible.',
+                extra_tags='storefront cart',
+            )
+
+        return redirect('core:view_cart')
     
     # Verificar si el carrito está vacío
     if len(cart) == 0:
@@ -1743,8 +1852,11 @@ def checkout_process(request):
             variantes_bloqueadas = {}
             cantidades_por_variante = {}
             items_resueltos = []
+            conflictos_stock = []
 
             for item in cart_items:
+                cart_key = _build_cart_item_key(item)
+                talla_item = item.get('talla') or 'Sin talla'
                 variante = None
                 if item.get('variante_id'):
                     variante = (
@@ -1765,21 +1877,37 @@ def checkout_process(request):
                     )
 
                 if not variante:
-                    raise ValueError(
-                        f'No encontramos stock para "{item["nombre"]}". Actualiza tu carrito e intenta nuevamente.'
-                    )
+                    conflictos_stock.append({
+                        'product_key': cart_key,
+                        'nombre': item.get('nombre', 'Producto'),
+                        'talla': talla_item,
+                        'available': 0,
+                        'requested': int(item.get('quantity') or 0),
+                        'reason': 'missing_variant',
+                    })
+                    continue
 
                 variantes_bloqueadas[variante.id] = variante
                 cantidades_por_variante[variante.id] = cantidades_por_variante.get(variante.id, 0) + int(item['quantity'])
-                items_resueltos.append((item, variante))
+                items_resueltos.append((item, variante, cart_key))
 
             for variante_id, cantidad_requerida in cantidades_por_variante.items():
                 variante = variantes_bloqueadas[variante_id]
                 if variante.stock < cantidad_requerida:
-                    raise ValueError(
-                        f'Stock insuficiente para "{variante.producto.nombre}". '
-                        f'Disponible: {variante.stock}, solicitado: {cantidad_requerida}.'
-                    )
+                    for item, item_variante, cart_key in items_resueltos:
+                        if item_variante.id != variante_id:
+                            continue
+                        conflictos_stock.append({
+                            'product_key': cart_key,
+                            'nombre': item.get('nombre', variante.producto.nombre),
+                            'talla': item.get('talla') or 'Sin talla',
+                            'available': int(variante.stock or 0),
+                            'requested': int(item.get('quantity') or 0),
+                            'reason': 'insufficient_stock',
+                        })
+
+            if conflictos_stock:
+                raise CheckoutStockSyncRequired(conflicts=conflictos_stock)
 
             pedido = Pedido.objects.create(
                 usuario=request.user if request.user.is_authenticated else None,
@@ -1806,7 +1934,7 @@ def checkout_process(request):
                 codigo_descuento.usos_actuales += 1
                 codigo_descuento.save(update_fields=['usos_actuales'])
 
-            for item, variante in items_resueltos:
+            for item, variante, _cart_key in items_resueltos:
                 DetallePedido.objects.create(
                     pedido=pedido,
                     producto=item['producto'],
@@ -1855,6 +1983,51 @@ def checkout_process(request):
 
         # Redirigir a pÃ¡gina de confirmaciÃ³n
         return redirect('core:order_confirmation', numero_pedido=pedido.numero_pedido)
+
+    except CheckoutStockSyncRequired as exc:
+        conflictos_por_clave = {}
+        for conflicto in exc.conflicts:
+            product_key = conflicto.get('product_key')
+            if not product_key:
+                continue
+
+            previo = conflictos_por_clave.get(product_key)
+            if not previo:
+                conflictos_por_clave[product_key] = conflicto
+                continue
+
+            if int(conflicto.get('available') or 0) < int(previo.get('available') or 0):
+                conflictos_por_clave[product_key] = conflicto
+
+        for product_key, conflicto in conflictos_por_clave.items():
+            nombre = conflicto.get('nombre', 'Producto')
+            talla = conflicto.get('talla') or 'Sin talla'
+            disponible = int(conflicto.get('available') or 0)
+            solicitado = int(conflicto.get('requested') or 0)
+
+            cart.remove(product_key)
+
+            if disponible <= 0:
+                messages.warning(
+                    request,
+                    f'¡Lo sentimos! El producto {nombre} en talla {talla} se ha agotado y ha sido removido de tu carrito.',
+                    extra_tags='storefront cart',
+                )
+            else:
+                messages.warning(
+                    request,
+                    f'¡Lo sentimos! El producto {nombre} en talla {talla} tenía {disponible} unidades disponibles y solicitaste {solicitado}. Fue removido de tu carrito.',
+                    extra_tags='storefront cart',
+                )
+
+        if conflictos_por_clave:
+            messages.warning(
+                request,
+                'Algunos productos de tu carrito ya no están disponibles.',
+                extra_tags='storefront cart',
+            )
+
+        return redirect('core:view_cart')
 
     except ValueError as exc:
         messages.warning(request, str(exc))

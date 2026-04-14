@@ -166,7 +166,8 @@
                     <div class="tf-list-layout wrapper-shop" id="listLayout">
                         {% comment %} LIST LAYOUT - Loop productos {% endcomment %}
                         {% for producto in productos %}
-                            <div class="card-product list-layout" data-product-id="{{ producto.id }}" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'Ecomus' }}">
+                            {% with stock_state=producto.availability|default:''|lower %}
+                            <div class="card-product list-layout {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}out-of-stock{% endif %}" data-product-id="{{ producto.id }}" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'Ecomus' }}">
                                 <div class="card-product-wrapper">
                                     <a href="{{ producto.get_absolute_url }}" class="product-img">
                                         {% if producto.main_image_src %}
@@ -181,6 +182,9 @@
                                                 src="{{ producto.hover_image_src }}" alt="image-product">
                                         {% endif %}
                                     </a>
+                                    {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}
+                                        <span class="product-stock-badge">Agotado</span>
+                                    {% endif %}
                                 </div>
                                 <div class="card-product-info">
                                     <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
@@ -217,12 +221,14 @@
                                             <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                             <span class="icon icon-delete"></span>
                                         </button>
+                                        {% if stock_state != 'agotado' and stock_state != 'out-of-stock' %}
                                         <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
                                             data-producto-id="{{ producto.id }}"
                                             data-product-sizes="{{ producto.sizes|join:',' }}">
                                             <span class="icon icon-view"></span>
                                             <span class="tooltip">Quick View</span>
                                         </a>
+                                        {% endif %}
                                     </div>
                                     {% if producto.sizes %}
                                         <div class="size-list">
@@ -233,6 +239,7 @@
                                     {% endif %}
                                 </div>
                             </div>
+                            {% endwith %}
                         {% empty %}
                             <p>No se encontraron productos.</p>
                         {% endfor %}
@@ -276,7 +283,8 @@
                     <div class="tf-grid-layout wrapper-shop tf-col-4" id="gridLayout">
                         {% comment %} GRID LAYOUT - Loop productos {% endcomment %}
                         {% for producto in productos %}
-                            <div class="card-product grid" data-product-id="{{ producto.id }}" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'Ecomus' }}">
+                            {% with stock_state=producto.availability|default:''|lower %}
+                            <div class="card-product grid {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}out-of-stock{% endif %}" data-product-id="{{ producto.id }}" data-availability="{{ producto.availability }}" data-brand="{{ producto.marca|default:'Ecomus' }}">
                                 <div class="card-product-wrapper">
                                     <a href="{{ producto.get_absolute_url }}" class="product-img">
                                         {% if producto.main_image_src %}
@@ -291,6 +299,9 @@
                                                 src="{{ producto.hover_image_src }}" alt="image-product">
                                         {% endif %}
                                     </a>
+                                    {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}
+                                        <span class="product-stock-badge">Agotado</span>
+                                    {% endif %}
                                     <div class="list-product-btn">
                                         <button type="button" class="box-icon bg_white wishlist btn-icon-action {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}"
                                                 data-product-id="{{ producto.id }}"
@@ -306,11 +317,13 @@
                                             <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
                                             <span class="icon icon-delete"></span>
                                         </button>
+                                        {% if stock_state != 'agotado' and stock_state != 'out-of-stock' %}
                                         <a href="#quick_view" data-bs-toggle="modal" class="box-icon bg_white quickview btn-open-quickview tf-btn-loading"
                                             data-producto-id="{{ producto.id }}">
                                             <span class="icon icon-view"></span>
                                             <span class="tooltip">Quick View</span>
                                         </a>
+                                        {% endif %}
                                     </div>
                                     {% if producto.sizes %}
                                         <div class="size-list">
@@ -339,6 +352,7 @@
                                     {% endif %}
                                 </div>
                             </div>
+                            {% endwith %}
                         {% empty %}
                             <p>No se encontraron productos.</p>
                         {% endfor %}

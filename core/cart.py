@@ -228,6 +228,7 @@ class Cart:
         for key, item_data in valid_items.items():
             # Crear una copia del item para no modificar el original
             item = item_data.copy()
+            item['cart_key'] = key
             
             # Encontrar el producto correspondiente
             producto = next((p for p in productos if p.id == item['producto_id']), None)
@@ -295,6 +296,125 @@ class Cart:
             else:
                 self.remove(product_id)
             self.save()
+
+    def _resolve_variant_for_item(self, item_data):
+        """Obtiene la variante real asociada a un item del carrito."""
+        variante_id = item_data.get('variante_id')
+        if variante_id:
+            return (
+                Variante.objects
+                .select_related('producto', 'talla')
+                .filter(id=variante_id)
+                .first()
+            )
+
+        producto_id = item_data.get('producto_id')
+        if not producto_id:
+            return None
+
+        return (
+            Variante.objects
+            .select_related('producto', 'talla')
+            .filter(producto_id=producto_id)
+            .order_by('id')
+            .first()
+        )
+
+    def sync_with_stock(self, adjust_to_stock=True):
+        """
+        Sincroniza el carrito con el stock real.
+
+        - Elimina items con stock 0 o sin variante válida.
+        - Ajusta cantidades que exceden stock (si adjust_to_stock=True).
+        """
+        valid_items = {
+            key: item
+            for key, item in self.cart.items()
+            if not key.startswith('_') and isinstance(item, dict)
+        }
+
+        removed_items = []
+        adjusted_items = []
+        has_changes = False
+
+        for product_key, item_data in list(valid_items.items()):
+            variante = self._resolve_variant_for_item(item_data)
+            nombre = item_data.get('nombre')
+            talla = item_data.get('talla')
+
+            if variante and not nombre:
+                nombre = variante.producto.nombre
+            if variante and not talla and variante.talla:
+                talla = variante.talla.codigo
+
+            nombre = nombre or 'Producto'
+            talla = talla or 'Sin talla'
+
+            if not variante:
+                removed_items.append({
+                    'product_key': product_key,
+                    'nombre': nombre,
+                    'talla': talla,
+                    'reason': 'missing_variant',
+                })
+                self.cart.pop(product_key, None)
+                has_changes = True
+                continue
+
+            stock_real = int(variante.stock or 0)
+            quantity = int(item_data.get('quantity') or 0)
+
+            if stock_real <= 0:
+                removed_items.append({
+                    'product_key': product_key,
+                    'nombre': nombre,
+                    'talla': talla,
+                    'reason': 'out_of_stock',
+                })
+                self.cart.pop(product_key, None)
+                has_changes = True
+                continue
+
+            if quantity <= 0:
+                removed_items.append({
+                    'product_key': product_key,
+                    'nombre': nombre,
+                    'talla': talla,
+                    'reason': 'invalid_quantity',
+                })
+                self.cart.pop(product_key, None)
+                has_changes = True
+                continue
+
+            if quantity > stock_real:
+                if adjust_to_stock:
+                    self.cart[product_key]['quantity'] = stock_real
+                    adjusted_items.append({
+                        'product_key': product_key,
+                        'nombre': nombre,
+                        'talla': talla,
+                        'from_quantity': quantity,
+                        'to_quantity': stock_real,
+                    })
+                    has_changes = True
+                else:
+                    removed_items.append({
+                        'product_key': product_key,
+                        'nombre': nombre,
+                        'talla': talla,
+                        'reason': 'insufficient_stock',
+                    })
+                    self.cart.pop(product_key, None)
+                    has_changes = True
+
+        if has_changes:
+            self.save()
+
+        return {
+            'had_changes': has_changes,
+            'removed_items': removed_items,
+            'adjusted_items': adjusted_items,
+        }
     
     def set_note(self, note):
         """

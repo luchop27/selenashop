@@ -107,7 +107,7 @@ class CheckoutProcessTests(TestCase):
         response = self._post_checkout()
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('core:checkout'))
+        self.assertEqual(response.url, reverse('core:view_cart'))
         self.assertEqual(Pedido.objects.count(), 0)
         self.assertEqual(DetallePedido.objects.count(), 0)
 
@@ -177,7 +177,7 @@ class CheckoutProcessTests(TestCase):
         response = self._post_checkout()
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('core:checkout'))
+        self.assertEqual(response.url, reverse('core:view_cart'))
         self.assertEqual(Pedido.objects.count(), 0)
 
         variante.refresh_from_db()
@@ -283,7 +283,7 @@ class CheckoutConcurrencyTransactionTests(TransactionTestCase):
 
         urls = [resultados[1]['url'], resultados[2]['url']]
         exitosos = [url for url in urls if '/pedido/confirmacion/' in url]
-        fallidos = [url for url in urls if url == reverse('core:checkout')]
+        fallidos = [url for url in urls if url == reverse('core:view_cart')]
 
         self.assertEqual(len(exitosos), 1)
         self.assertEqual(len(fallidos), 1)

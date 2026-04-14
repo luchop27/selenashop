@@ -225,6 +225,85 @@
             position: relative;
             z-index: 2;
         }
+
+        .product-stock-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 3;
+            background: #111;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 5px 8px;
+            border-radius: 999px;
+        }
+
+        .card-product.out-of-stock .product-img {
+            opacity: 0.82;
+        }
+
+        .card-product.out-of-stock .btn-quick-add,
+        .card-product.out-of-stock .quickview.btn-open-quickview {
+            pointer-events: none;
+            opacity: 0.55;
+        }
+
+        .sold-out-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f7ecec;
+            color: #8a2d2d;
+            border: 1px solid #e9caca;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .size-btn.size-disabled,
+        .option-soldout {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .size-soldout-text {
+            display: block;
+            font-size: 10px;
+            line-height: 1;
+            color: #8a2d2d;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        .inventory-action-disabled {
+            pointer-events: none;
+            opacity: 0.55;
+        }
+
+        .tf-cart-stock-warning {
+            margin: 10px 0;
+            font-size: 13px;
+            line-height: 1.35;
+            color: #8a2d2d;
+            background: #fff1f1;
+            border: 1px solid #f2c7c7;
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .mini-cart-stock-alert {
+            color: #8a2d2d;
+            font-size: 12px;
+            margin-top: 4px;
+        }
         
     </style>
     
@@ -434,9 +513,6 @@
                                             </a>
                                             <a class="dropdown-item" href="{% url 'usuarios:my_account_orders' %}">
                                                 <i class="icon icon-bag me-2"></i>Mis Pedidos
-                                            </a>
-                                            <a class="dropdown-item" href="{% url 'usuarios:my_account_address' %}">
-                                                <i class="icon icon-location me-2"></i>Mis Direcciones
                                             </a>
                                             <a class="dropdown-item" href="{% url 'usuarios:my_account_edit' %}">
                                                 <i class="icon icon-edit me-2"></i>Detalles de Cuenta
@@ -877,12 +953,17 @@
                                 </div>
                                 <div class="tf-cart-tax">Impuestos y <a href="#">envío</a> calculados al finalizar la compra</div>
                                 <div class="tf-mini-cart-line"></div>
+                                <div id="miniCartStockWarning" class="tf-cart-stock-warning" style="display: none;">
+                                    Hay productos sin stock o con cantidad fuera de disponibilidad. Elimínalos o ajusta cantidades para continuar al checkout.
+                                </div>
                                 
                                 <div class="tf-mini-cart-view-checkout">
                                     <a href="{% url 'core:view_cart' %}"
                                         class="tf-btn btn-outline radius-3 link w-100 justify-content-center">Ver
                                         carrito</a>
                                     <a href="{% url 'core:checkout' %}"
+                                        id="miniCartCheckoutBtn"
+                                        data-blocked="0"
                                         class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Finalizar
                                             compra</span></a>
                                 </div>

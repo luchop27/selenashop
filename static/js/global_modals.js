@@ -271,6 +271,83 @@
                 });
         }
 
+        function updateQuickViewAddToCartState() {
+            const modal = document.getElementById('quick_view');
+            const button = modal ? modal.querySelector('.btn-add-to-cart-quickview') : null;
+            if (!button) return;
+
+            const label = button.querySelector('span');
+            const totalPrice = document.getElementById('quickview-total-price');
+            const variantId = modal.dataset.selectedVariantId;
+            const maxStock = parseInt(modal.dataset.maxStock, 10) || 0;
+            const isAvailable = !!variantId && maxStock > 0;
+
+            if (!button.dataset.availableLabel) {
+                button.dataset.availableLabel = 'Agregar al carrito - ';
+            }
+
+            button.classList.toggle('inventory-action-disabled', !isAvailable);
+            button.setAttribute('aria-disabled', isAvailable ? 'false' : 'true');
+            button.dataset.blocked = isAvailable ? '0' : '1';
+            button.style.pointerEvents = isAvailable ? 'auto' : 'none';
+
+            if (label) {
+                label.textContent = isAvailable ? button.dataset.availableLabel : 'Agotado';
+            }
+            button.dataset.defaultLabel = isAvailable ? button.dataset.availableLabel : 'Agotado';
+
+            if (totalPrice) {
+                totalPrice.style.display = isAvailable ? '' : 'none';
+            }
+        }
+
+        function updateAttributeOptionAvailability(modal, atributos, variantes, selectedAttrs) {
+            const normalizedAttrs = Object.assign({}, selectedAttrs);
+
+            atributos.forEach(atributo => {
+                const inputs = Array.from(modal.querySelectorAll(`input[name="atributo_${atributo.id}"]`));
+                if (!inputs.length) return;
+
+                inputs.forEach(input => {
+                    const valueId = parseInt(input.value, 10);
+                    const candidateAttrs = Object.assign({}, normalizedAttrs, { [atributo.slug]: valueId });
+
+                    const hasStockCombination = variantes.some(variante => {
+                        const variantStock = parseInt(variante.stock, 10) || 0;
+                        if (variantStock <= 0) return false;
+
+                        return Object.keys(candidateAttrs).every(slug => {
+                            const varianteAttr = variante.atributos[slug];
+                            return varianteAttr && varianteAttr.valor_id === candidateAttrs[slug];
+                        });
+                    });
+
+                    const optionLabel = input.nextElementSibling;
+                    input.disabled = !hasStockCombination;
+                    if (optionLabel) {
+                        optionLabel.classList.toggle('option-soldout', !hasStockCombination);
+                    }
+                });
+
+                const checkedInput = modal.querySelector(`input[name="atributo_${atributo.id}"]:checked`);
+                if (!checkedInput || checkedInput.disabled) {
+                    const firstEnabled = inputs.find(input => !input.disabled);
+                    if (firstEnabled) {
+                        firstEnabled.checked = true;
+                        normalizedAttrs[atributo.slug] = parseInt(firstEnabled.value, 10);
+                    } else if (checkedInput) {
+                        normalizedAttrs[atributo.slug] = parseInt(checkedInput.value, 10);
+                    } else {
+                        delete normalizedAttrs[atributo.slug];
+                    }
+                } else {
+                    normalizedAttrs[atributo.slug] = parseInt(checkedInput.value, 10);
+                }
+            });
+
+            return normalizedAttrs;
+        }
+
         function populateQuickView(data) {
             const modal = document.getElementById('quick_view');
             
@@ -349,6 +426,7 @@
                     console.log('  - Stock:', variantesStock['default'].stock);
                     console.log('  - Precio:', variantesStock['default'].precio);
                 }
+                updateQuickViewButtons();
                 updateQuickViewPrice();
             } else if (data.atributos && data.atributos.length > 0) {
                 data.atributos.forEach((atributo, index) => {
@@ -422,6 +500,7 @@
             modal.querySelector('input[name="number"]').value = 1;
             updateQuickViewButtons();
             updateQuickViewPrice();
+            updateQuickViewAddToCartState();
         }
 
         function closeQuickViewModal() {
@@ -463,18 +542,25 @@
             const atributos = JSON.parse(modal.dataset.atributos || '[]');
             
             // Obtener atributos seleccionados
-            const selectedAttrs = {};
+            let selectedAttrs = {};
             atributos.forEach(atributo => {
                 const selectedInput = modal.querySelector(`input[name="atributo_${atributo.id}"]:checked`);
                 if (selectedInput) {
                     const valorId = parseInt(selectedInput.value);
                     selectedAttrs[atributo.slug] = valorId;
-                    
-                    // Actualizar label
-                    const label = selectedInput.closest('.variant-picker-item').querySelector('.variant-picker-label-value');
-                    if (label) {
-                        label.textContent = selectedInput.nextElementSibling.dataset.value;
-                    }
+                }
+            });
+
+            // Marcar opciones agotadas por combinación y forzar una combinación válida cuando exista.
+            selectedAttrs = updateAttributeOptionAvailability(modal, atributos, variantes, selectedAttrs);
+
+            // Actualizar labels visibles
+            atributos.forEach(atributo => {
+                const selectedInput = modal.querySelector(`input[name="atributo_${atributo.id}"]:checked`);
+                if (!selectedInput) return;
+                const label = selectedInput.closest('.variant-picker-item').querySelector('.variant-picker-label-value');
+                if (label) {
+                    label.textContent = selectedInput.nextElementSibling.dataset.value;
                 }
             });
             
@@ -542,6 +628,7 @@
             
             const currentQty = parseInt(quantityInput.value) || 1;
             const maxStock = parseInt(modal.dataset.maxStock) || 0;
+            quantityInput.disabled = maxStock === 0;
             
             console.log('QuickView - Actualizando botones:', {currentQty, maxStock});
             
@@ -570,6 +657,8 @@
                 btnDecrease.style.cursor = 'pointer';
                 btnDecrease.style.pointerEvents = 'auto';
             }
+
+            updateQuickViewAddToCartState();
         }
 
         function addToCartFromQuickView() {
