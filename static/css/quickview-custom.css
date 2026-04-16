@@ -15,20 +15,22 @@
     display: flex;
     align-items: stretch;
     justify-content: flex-start;
-    min-height: 650px;
-    max-height: 650px;
-    gap: 18px;
+    min-height: 630px;
+    max-height: 630px;
+    height: 630px;
+    gap: 16px;
     padding: 0;
     overflow: hidden;
 }
 
-/* Columna de imagen adaptable al contenido, sin estirar */
+/* Columna de imagen con marco fijo para estandarizar proporciones */
 #quick_view .tf-product-media-wrap {
     flex: 0 0 auto;
-    width: min(40vw, 420px) !important;
-    min-width: min(40vw, 420px) !important;
-    max-width: min(40vw, 420px) !important;
-    height: 650px;
+    width: 420px !important;
+    min-width: 420px !important;
+    max-width: 420px !important;
+    height: 630px;
+    aspect-ratio: 2 / 3;
     overflow: hidden;
     flex-shrink: 0;
     position: relative;
@@ -55,24 +57,22 @@
 /* Item de imagen - SIN espacios arriba/abajo */
 #quick_view .tf-product-media-wrap .swiper-slide .item {
     width: 100%;
-    height: 650px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+    height: 100%;
+    display: block;
     background-color: #fff;
     overflow: hidden;
     padding: 0;
     margin: 0;
 }
 
-/* Imagen natural: completa, sin deformación ni zoom artificial */
+/* Imagen estandarizada: llena el marco fijo sin deformarse */
 #quick_view .tf-product-media-wrap .swiper-slide .item img {
     width: 100%;
     height: 100%;
-    max-width: 420px;
+    max-width: none;
     display: block;
-    object-fit: contain;
-    object-position: left center;
+    object-fit: cover;
+    object-position: center top;
     margin: 0;
 }
 
@@ -82,15 +82,16 @@
     width: auto;
     min-width: 0;
     max-width: none;
+    height: 630px;
     padding: 0;
-    overflow-y: auto;
-    max-height: 650px;
+    overflow: hidden;
+    max-height: 630px;
 }
 
 #quick_view .tf-product-info-wrap .tf-product-info-list {
     position: absolute;
     inset: 0;
-    padding: 24px 20px 20px 0;
+    padding: 22px 20px 18px 0;
     overflow-y: auto;
 }
 
@@ -120,30 +121,30 @@
     }
 
     #quick_view .modal-content .wrap {
+        min-height: 540px;
+        max-height: 540px;
+        height: 540px;
         gap: 14px;
     }
     
     #quick_view .tf-product-media-wrap {
-        width: min(42vw, 360px) !important;
-        min-width: min(42vw, 360px) !important;
-        max-width: min(42vw, 360px) !important;
-        height: 600px;
+        width: 360px !important;
+        min-width: 360px !important;
+        max-width: 360px !important;
+        height: 540px;
+        aspect-ratio: 2 / 3;
     }
     
     #quick_view .tf-product-media-wrap .swiper-slide .item {
-        height: 600px;
-    }
-    
-    #quick_view .modal-content .wrap {
-        min-height: 600px;
-        max-height: 600px;
+        height: 100%;
     }
     
     #quick_view .tf-product-info-wrap {
         width: auto;
         min-width: 0;
         max-width: none;
-        max-height: 600px;
+        height: 540px;
+        max-height: 540px;
         padding: 0;
     }
 
@@ -169,11 +170,12 @@
         width: 100%;
         min-width: 100%;
         max-width: 100%;
-        height: 400px;
+        height: 420px;
+        aspect-ratio: 2 / 3;
     }
     
     #quick_view .tf-product-media-wrap .swiper-slide .item {
-        height: 400px;
+        height: 100%;
     }
     
     #quick_view .tf-product-info-wrap {
@@ -197,7 +199,7 @@
     top: 50%;
     transform: translateY(-50%);
     margin-top: 0 !important;
-    z-index: 5;
+    z-index: 6;
     color: #000;
     background: rgba(255, 255, 255, 0.72);
     width: 40px;
