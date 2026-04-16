@@ -2,30 +2,54 @@
 
 /* Forzar ancho máximo del modal */
 #quick_view .modal-dialog {
-    max-width: 1200px !important;
-    width: 95% !important;
+    max-width: 1000px !important;
+    width: 92% !important;
+}
+
+#quick_view .modal-content {
+    overflow: hidden;
 }
 
 /* Contenedor principal del modal con altura fija */
 #quick_view .modal-content .wrap {
     display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
     min-height: 650px;
     max-height: 650px;
+    gap: 18px;
+    padding: 0;
+    overflow: hidden;
 }
 
-/* Contenedor de imagen - tamaño fijo */
+/* Columna de imagen adaptable al contenido, sin estirar */
 #quick_view .tf-product-media-wrap {
-    width: 433px;
-    min-width: 433px;
-    max-width: 433px;
+    flex: 0 0 auto;
+    width: min(40vw, 420px) !important;
+    min-width: min(40vw, 420px) !important;
+    max-width: min(40vw, 420px) !important;
     height: 650px;
     overflow: hidden;
     flex-shrink: 0;
+    position: relative;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Contenedor del swiper con altura fija */
 #quick_view .tf-product-media-wrap .swiper {
+    width: 100%;
     height: 100%;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+#quick_view .tf-product-media-wrap .swiper-wrapper,
+#quick_view .tf-product-media-wrap .swiper-slide {
+    margin: 0;
+    padding: 0;
 }
 
 /* Item de imagen - SIN espacios arriba/abajo */
@@ -34,30 +58,40 @@
     height: 650px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background-color: #f8f8f8;
+    justify-content: flex-start;
+    background-color: #fff;
     overflow: hidden;
     padding: 0;
     margin: 0;
 }
 
-/* Imágenes del modal completas, sin recorte excesivo */
+/* Imagen natural: completa, sin deformación ni zoom artificial */
 #quick_view .tf-product-media-wrap .swiper-slide .item img {
     width: 100%;
     height: 100%;
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 420px;
+    display: block;
     object-fit: contain;
-    object-position: center center;
+    object-position: left center;
+    margin: 0;
 }
 
 /* Contenedor de información del producto */
 #quick_view .tf-product-info-wrap {
-    width: calc(100% - 433px);
-    padding: 40px;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    padding: 0;
     overflow-y: auto;
     max-height: 650px;
-    flex: 1 1 auto;
+}
+
+#quick_view .tf-product-info-wrap .tf-product-info-list {
+    position: absolute;
+    inset: 0;
+    padding: 24px 20px 20px 0;
+    overflow-y: auto;
 }
 
 /* Ajustar scrollbar del panel de información */
@@ -84,11 +118,15 @@
     #quick_view .modal-dialog {
         max-width: 90% !important;
     }
+
+    #quick_view .modal-content .wrap {
+        gap: 14px;
+    }
     
     #quick_view .tf-product-media-wrap {
-        min-width: 400px;
-        max-width: 400px;
-        width: 400px;
+        width: min(42vw, 360px) !important;
+        min-width: min(42vw, 360px) !important;
+        max-width: min(42vw, 360px) !important;
         height: 600px;
     }
     
@@ -102,9 +140,15 @@
     }
     
     #quick_view .tf-product-info-wrap {
-        width: calc(100% - 400px);
+        width: auto;
+        min-width: 0;
+        max-width: none;
         max-height: 600px;
-        padding: 30px;
+        padding: 0;
+    }
+
+    #quick_view .tf-product-info-wrap .tf-product-info-list {
+        padding: 20px 18px 18px 0;
     }
 }
 
@@ -134,24 +178,46 @@
     
     #quick_view .tf-product-info-wrap {
         width: 100%;
+        min-width: 100%;
+        max-width: 100%;
         max-height: none;
-        padding: 20px;
+        padding: 0;
+    }
+
+    #quick_view .tf-product-info-wrap .tf-product-info-list {
+        position: static;
+        padding: 20px 16px;
     }
 }
 
 /* Asegurar que los botones de navegación del swiper estén visibles */
-#quick_view .swiper-button-next,
-#quick_view .swiper-button-prev {
+#quick_view .tf-product-media-wrap .swiper-button-next,
+#quick_view .tf-product-media-wrap .swiper-button-prev {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-top: 0 !important;
+    z-index: 5;
     color: #000;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.72);
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
-#quick_view .swiper-button-next:after,
-#quick_view .swiper-button-prev:after {
+#quick_view .tf-product-media-wrap .swiper-button-prev {
+    left: 10px;
+    right: auto;
+}
+
+#quick_view .tf-product-media-wrap .swiper-button-next {
+    right: 10px;
+    left: auto;
+}
+
+#quick_view .tf-product-media-wrap .swiper-button-next:after,
+#quick_view .tf-product-media-wrap .swiper-button-prev:after {
     font-size: 18px;
 }
 

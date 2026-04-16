@@ -60,6 +60,13 @@
                         updateQuickViewPrice();
                         console.log('Modal abierto - cantidad reiniciada a 1');
                     }
+
+                    // Recalcula el slider cuando el modal ya es visible para evitar offsets.
+                    const sliderEl = this.querySelector('.tf-single-slide');
+                    if (sliderEl && sliderEl.swiper) {
+                        sliderEl.swiper.update();
+                        sliderEl.swiper.slideTo(0, 0);
+                    }
                 });
                 
                 const minusBtn = modal.querySelector('.minus-btn');
@@ -404,6 +411,12 @@
                         </div>
                     </div>
                 `;
+            }
+
+            const sliderEl = modal.querySelector('.tf-single-slide');
+            if (sliderEl && sliderEl.swiper) {
+                sliderEl.swiper.update();
+                sliderEl.swiper.slideTo(0, 0);
             }
             
             // Renderizar atributos
