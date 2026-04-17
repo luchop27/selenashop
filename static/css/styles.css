@@ -3164,7 +3164,7 @@ header.header-bg {
   overflow-x: auto;
   overflow-y: hidden;
   position: fixed;
-  z-index: 200;
+  z-index: 1000;
   bottom: 0;
   right: 0;
   left: 0;
@@ -3226,6 +3226,18 @@ header.header-bg {
 }
 .tf-toolbar-bottom .toolbar-item.active .toolbar-icon i {
   color: var(--primary);
+}
+
+@media only screen and (max-width: 767px) {
+  .tf-toolbar-bottom {
+    display: flex;
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .tf-toolbar-bottom {
+    display: none !important;
+  }
 }
 
 /*------------ tabs ---------------- */
@@ -19790,6 +19802,18 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
   }
 }
 @media only screen and (max-width: 991px) {
+  .page-my-account .wrap-sidebar-account {
+    display: block;
+    margin-bottom: 20px;
+  }
+  .page-my-account .my-account-nav {
+    position: static;
+    margin-bottom: 20px;
+  }
+  .page-my-account .my-account-nav .my-account-nav-item {
+    line-height: 20px;
+    padding: 12px 15px;
+  }
   .lg-radius-20 {
     border-radius: 20px !important;
   }

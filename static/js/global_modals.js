@@ -62,10 +62,10 @@
                     }
 
                     // Recalcula el slider cuando el modal ya es visible para evitar offsets.
-                    const sliderEl = this.querySelector('.tf-single-slide');
-                    if (sliderEl && sliderEl.swiper) {
-                        sliderEl.swiper.update();
-                        sliderEl.swiper.slideTo(0, 0);
+                    const quickViewSwiper = ensureQuickViewSwiper(this);
+                    if (quickViewSwiper) {
+                        quickViewSwiper.update();
+                        quickViewSwiper.slideTo(0, 0);
                     }
                 });
                 
@@ -355,6 +355,47 @@
             return normalizedAttrs;
         }
 
+        function ensureQuickViewSwiper(modal) {
+            const sliderEl = modal ? modal.querySelector('.tf-single-slide') : null;
+            if (!sliderEl || typeof Swiper === 'undefined') return null;
+
+            const nextEl = modal.querySelector('.single-slide-prev');
+            const prevEl = modal.querySelector('.single-slide-next');
+            const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+            function applyQuickViewSwiperParams(swiperInstance) {
+                swiperInstance.params.touchStartPreventDefault = false;
+                swiperInstance.params.touchStartForcePreventDefault = false;
+                swiperInstance.params.touchMoveStopPropagation = false;
+                swiperInstance.params.allowTouchMove = !isMobile;
+            }
+
+            if (sliderEl.swiper && !sliderEl.swiper.destroyed) {
+                applyQuickViewSwiperParams(sliderEl.swiper);
+                sliderEl.swiper.update();
+                return sliderEl.swiper;
+            }
+
+            const quickViewSwiper = new Swiper(sliderEl, {
+                slidesPerView: 1,
+                spaceBetween: 0,
+                speed: 800,
+                observer: true,
+                observeParents: true,
+                allowTouchMove: !isMobile,
+                touchStartPreventDefault: false,
+                touchStartForcePreventDefault: false,
+                touchMoveStopPropagation: false,
+                navigation: {
+                    nextEl: nextEl,
+                    prevEl: prevEl
+                }
+            });
+
+            applyQuickViewSwiperParams(quickViewSwiper);
+            return quickViewSwiper;
+        }
+
         function populateQuickView(data) {
             const modal = document.getElementById('quick_view');
             
@@ -413,10 +454,10 @@
                 `;
             }
 
-            const sliderEl = modal.querySelector('.tf-single-slide');
-            if (sliderEl && sliderEl.swiper) {
-                sliderEl.swiper.update();
-                sliderEl.swiper.slideTo(0, 0);
+            const quickViewSwiper = ensureQuickViewSwiper(modal);
+            if (quickViewSwiper) {
+                quickViewSwiper.update();
+                quickViewSwiper.slideTo(0, 0);
             }
             
             // Renderizar atributos

@@ -16,6 +16,36 @@
         object-position: center;
         display: block;
     }
+
+    .tf-slideshow .wrap-slider .collection-hero-picture {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .tf-slideshow .wrap-slider .collection-hero-picture img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .tf-slideshow .wrap-slider {
+            height: auto;
+        }
+
+        .tf-slideshow .wrap-slider .collection-hero-picture {
+            height: auto;
+        }
+
+        .tf-slideshow .wrap-slider .collection-hero-picture img {
+            width: 100%;
+            height: auto;
+            object-fit: initial;
+        }
+    }
     
     /* Forzar altura consistente para Featured Collections */
     .collection-item-v3 .collection-image.img-style {
@@ -160,13 +190,10 @@
                 {% for coleccion in colecciones %}
                     <div class="swiper-slide" lazy="true">
                         <div class="wrap-slider">
-                            {% if coleccion.imagen %}
-                                <img class="lazyload" data-src="{{ coleccion.imagen.url }}"
-                                    src="{{ coleccion.imagen.url }}" alt="{{ coleccion.nombre }}">
-                            {% else %}
-                                <img class="lazyload" data-src="{% static 'images/slider/fashion-slideshow-10.jpg' %}"
-                                    src="{% static 'images/slider/fashion-slideshow-10.jpg' %}" alt="{{ coleccion.nombre }}">
-                            {% endif %}
+                            <picture class="collection-hero-picture">
+                                <source media="(max-width: 768px)" srcset="{% if coleccion.imagen_mobile %}{{ coleccion.imagen_mobile.url }}{% elif coleccion.imagen %}{{ coleccion.imagen.url }}{% else %}{% static 'images/slider/fashion-slideshow-10.jpg' %}{% endif %}">
+                                <img src="{% if coleccion.imagen %}{{ coleccion.imagen.url }}{% else %}{% static 'images/slider/fashion-slideshow-10.jpg' %}{% endif %}" alt="{{ coleccion.nombre }}">
+                            </picture>
                             <div class="box-content text-center">
                                 <div class="container">
                                     <h1 class="fade-item fade-item-1 text-white heading">{{ coleccion.nombre }}</h1>

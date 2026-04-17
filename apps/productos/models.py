@@ -33,12 +33,20 @@ class Coleccion(models.Model):
     slug = models.SlugField(max_length=180, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     
-    # Imagen de la colección
+    # Imagen desktop de la colección (formato horizontal)
     imagen = models.ImageField(
         upload_to='colecciones/',
         blank=True,
         null=True,
         help_text="Imagen representativa de la colección"
+    )
+
+    # Imagen mobile de la colección (formato vertical/rectangular)
+    imagen_mobile = models.ImageField(
+        upload_to='colecciones/mobile/',
+        blank=True,
+        null=True,
+        help_text="Imagen para móviles (opcional)"
     )
     
     activo = models.BooleanField(default=True)

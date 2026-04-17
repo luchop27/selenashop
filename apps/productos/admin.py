@@ -54,7 +54,7 @@ class ColeccionAdmin(admin.ModelAdmin):
 			'fields': ('nombre', 'slug', 'descripcion')
 		}),
 		('Imagen', {
-			'fields': ('imagen',)
+			'fields': ('imagen', 'imagen_mobile')
 		}),
 		('Configuración', {
 			'fields': ('activo', 'destacada')

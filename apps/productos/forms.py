@@ -150,12 +150,13 @@ class CategoriaForm(forms.ModelForm):
 class ColeccionForm(forms.ModelForm):
     class Meta:
         model = Coleccion
-        fields = ['nombre', 'slug', 'descripcion', 'imagen', 'activo', 'destacada']
+        fields = ['nombre', 'slug', 'descripcion', 'imagen', 'imagen_mobile', 'activo', 'destacada']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Nombre de la colección'}),
             'slug': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'slug-ejemplo'}),
             'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'tf-input', 'placeholder': 'Descripción de la colección'}),
             'imagen': forms.FileInput(attrs={'class': 'tf-input'}),
+            'imagen_mobile': forms.FileInput(attrs={'class': 'tf-input'}),
             'activo': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
             'destacada': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
         }
@@ -166,6 +167,7 @@ class ColeccionForm(forms.ModelForm):
         self.fields['nombre'].label = 'Nombre'
         self.fields['slug'].label = 'Slug'
         self.fields['descripcion'].label = 'Descripción'
-        self.fields['imagen'].label = 'Imagen'
+        self.fields['imagen'].label = 'Imagen Desktop'
+        self.fields['imagen_mobile'].label = 'Imagen Mobile'
         self.fields['activo'].label = 'Activa'
         self.fields['destacada'].label = 'Destacada'
