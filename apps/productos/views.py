@@ -15,6 +15,28 @@ from django.views.decorators.http import require_POST
 from core.decorators import admin_required, superuser_required
 
 
+def _get_marcas_existentes():
+	"""Devuelve marcas existentes limpias para sugerencias en formularios de producto."""
+	marcas_qs = (
+		Producto.objects
+		.exclude(marca__isnull=True)
+		.values_list('marca', flat=True)
+	)
+	marcas = []
+	seen = set()
+	for marca in marcas_qs:
+		valor = ' '.join((marca or '').split())
+		if not valor:
+			continue
+		key = valor.lower()
+		if key in seen:
+			continue
+		seen.add(key)
+		marcas.append(valor)
+	marcas.sort(key=lambda m: m.lower())
+	return marcas
+
+
 @admin_required
 def panel_dashboard(request):
 	"""Vista principal del dashboard"""
@@ -760,9 +782,16 @@ def admin_producto_add(request):
 				try:
 					atributos_data = json.loads(atributos_json)
 					for attr in atributos_data:
+						atributo_nombre = (attr.get('atributoNombre') or '').strip().lower()
+						if atributo_nombre == 'marca':
+							continue
+
 						valor_id = attr.get('valorId')
 						if valor_id:
 							valor_atributo = ValorAtributo.objects.get(id=valor_id)
+							if valor_atributo.atributo.nombre.strip().lower() == 'marca':
+								continue
+
 							VarianteAtributo.objects.create(
 								variante=variante,
 								valor_atributo=valor_atributo
@@ -830,6 +859,7 @@ def admin_producto_add(request):
 	
 	return render(request, 'add-product.html', {
 		'form': form,
+		'marcas_existentes': _get_marcas_existentes(),
 	})
 
 
@@ -992,9 +1022,16 @@ def admin_producto_edit(request, pk):
 						try:
 							atributos_data = json.loads(atributos_json)
 							for attr in atributos_data:
+								atributo_nombre = (attr.get('atributoNombre') or '').strip().lower()
+								if atributo_nombre == 'marca':
+									continue
+
 								valor_id = attr.get('valorId')
 								if valor_id:
 									valor_atributo = ValorAtributo.objects.get(id=valor_id)
+									if valor_atributo.atributo.nombre.strip().lower() == 'marca':
+										continue
+
 									VarianteAtributo.objects.create(
 										variante=variante,
 										valor_atributo=valor_atributo
@@ -1078,6 +1115,9 @@ def admin_producto_edit(request, pk):
 			# Si no se encontraron atributos desde campos directos, buscar en sistema de atributos
 			if not atributos:
 				for va in variante.atributos.all():
+					if va.valor_atributo.atributo.nombre.strip().lower() == 'marca':
+						continue
+
 					atributos.append({
 						'atributoId': va.valor_atributo.atributo.id,
 						'atributoNombre': va.valor_atributo.atributo.nombre,
@@ -1130,9 +1170,10 @@ def admin_producto_edit(request, pk):
 		'producto': producto,
 		'categorias': Categoria.objects.filter(estado=True),
 		'colecciones': Coleccion.objects.filter(activo=True),
-		'atributos': Atributo.objects.filter(activo=True).exclude(nombre__iexact='color'),
+		'atributos': Atributo.objects.filter(activo=True).exclude(nombre__iexact='color').exclude(nombre__iexact='marca'),
 		'variantes_json': variantes_json,
 		'imagenes_producto': imagenes_json,
+		'marcas_existentes': _get_marcas_existentes(),
 	})
 
 
@@ -1340,7 +1381,7 @@ from django.http import JsonResponse
 @login_required
 def api_atributos_list(request):
 	"""API para obtener atributos activos con sus valores"""
-	atributos = Atributo.objects.filter(activo=True).prefetch_related('valores').order_by('posicion', 'nombre')
+	atributos = Atributo.objects.filter(activo=True).exclude(nombre__iexact='marca').prefetch_related('valores').order_by('posicion', 'nombre')
 	
 	data = []
 	for atributo in atributos:

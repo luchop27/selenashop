@@ -257,64 +257,42 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📱 Script de WhatsApp para despacho iniciado');
-    
-    const numeroPedido = "{{ pedido.numero_pedido }}";
+    // URL de WhatsApp con factura profesional, generada en el servidor
+    const whatsappURL = "{{ whatsapp_url|escapejs }}";
+    const numeroPedido = "{{ pedido.numero_pedido|escapejs }}";
+
     const whatsappModal = new bootstrap.Modal(document.getElementById('whatsappInfoModal'));
-    
-    // Número de WhatsApp de la tienda (con código de país)
-    const storeWhatsAppNumber = '593989387657'; // +593 sin el +
-    
-    // Mostrar modal automáticamente al cargar la página
-    console.log('🚀 Mostrando modal de WhatsApp automáticamente...');
+
+    // Mostrar modal automáticamente al cargar la página (con pequeño delay)
     setTimeout(() => {
         whatsappModal.show();
-    }, 500); // Pequeño delay para que la página cargue primero
-    
-    // Botón de información en las acciones
+    }, 600);
+
+    // Botón "Contactar por WhatsApp" en la página
     const btnWhatsappInfo = document.getElementById('btn-whatsapp-info');
     if (btnWhatsappInfo) {
         btnWhatsappInfo.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('🔔 Usuario hizo click en botón de WhatsApp');
             whatsappModal.show();
         });
     }
-    
-    // Botón de continuar a WhatsApp dentro del modal
+
+    // Botón "Continuar a WhatsApp" dentro del modal
     const btnContinueWhatsapp = document.getElementById('btn-continue-whatsapp');
     if (btnContinueWhatsapp) {
         btnContinueWhatsapp.addEventListener('click', function() {
-            console.log('✅ Usuario confirma para ir a WhatsApp');
-            
-            // Crear mensaje personalizado con saludo y número de pedido
-            const mensaje = `Hola! He realizado mi pedido en SelenasShop. Mi número de pedido es: ${numeroPedido}. Gracias!`;
-            
-            // Codificar mensaje para URL
-            const mensajeCodificado = encodeURIComponent(mensaje);
-            
-            // Generar URL de WhatsApp compatible con web, desktop y mobile
-            // Formato: https://wa.me/NUMERO?text=MENSAJE
-            const whatsappURL = `https://wa.me/${storeWhatsAppNumber}?text=${mensajeCodificado}`;
-            
-            console.log('📱 Abriendo WhatsApp con URL:', whatsappURL);
-            console.log('📝 Mensaje:', mensaje);
-            
-            // Abrir en nueva pestaña (funciona en web, desktop y mobile)
+            // Abrir WhatsApp con la factura profesional en nueva pestaña
             window.open(whatsappURL, '_blank');
-            
-            // Cerrar modal después de 1 segundo
+
+            // Cerrar modal tras 1 segundo
             setTimeout(() => {
                 whatsappModal.hide();
             }, 1000);
         });
     }
-    
-    console.log('✅ Script de WhatsApp completamente inicializado');
-    console.log('Número de pedido:', numeroPedido);
-    console.log('Número de WhatsApp de la tienda:', storeWhatsAppNumber);
 });
 </script>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -222,6 +222,85 @@ def enviar_mensaje_whatsapp(numero_destino, mensaje):
         }
 
 
+def generar_mensaje_factura_cliente(pedido, request=None):
+    """
+    Genera un mensaje estilo FACTURA PROFESIONAL para que el cliente
+    lo envíe por WhatsApp a la tienda al finalizar su compra.
+
+    Incluye:
+    - Encabezado de orden de compra con ID
+    - Datos del cliente
+    - Listado detallado de productos (talla, color, cantidad, precio)
+    - Desglose de totales (subtotal, envío, descuento, total)
+    - Link de seguimiento personalizado (vista web del pedido)
+    - Instrucciones para enviar el comprobante de pago
+
+    Args:
+        pedido: Objeto Pedido ya guardado en la DB
+        request: HttpRequest (opcional) para construir URLs absolutas
+
+    Returns:
+        str: Mensaje formateado listo para encodeURIComponent
+    """
+
+    # ── Encabezado ──────────────────────────────────────────────────────────
+    mensaje = (
+        "*ORDEN DE COMPRA - SELENA BOUTIQUE*\n"
+        "--------------------------------\n\n"
+        f"*Pedido:* #{pedido.numero_pedido}\n"
+        f"*Cliente:* {pedido.first_name} {pedido.last_name}\n"
+        f"*Ciudad:* {pedido.city}, {pedido.country}\n"
+        f"*Telefono:* {pedido.phone}\n"
+    )
+
+    # ── Detalle de productos ─────────────────────────────────────────────────
+    mensaje += "\n*DETALLE:*\n"
+    for item in pedido.items.all():
+        partes = []
+        if item.talla:
+            partes.append(item.talla)
+        if item.color:
+            partes.append(item.color)
+        variantes_str = f" [{' / '.join(partes)}]" if partes else ""
+        mensaje += f"  - {item.cantidad}x {item.nombre_producto}{variantes_str} - ${item.precio_unitario:.2f}\n"
+
+    # ── Totales ──────────────────────────────────────────────────────────────
+    mensaje += "\n--------------------------------\n"
+    mensaje += f"Subtotal: ${pedido.subtotal:.2f}\n"
+
+    if pedido.shipping_cost and pedido.shipping_cost > 0:
+        mensaje += f"Envio: ${pedido.shipping_cost:.2f}\n"
+    else:
+        mensaje += "Envio: $0.00 (Gratis)\n"
+
+    if pedido.gift_wrap and pedido.gift_wrap_cost:
+        mensaje += f"Envoltura de regalo: ${pedido.gift_wrap_cost:.2f}\n"
+
+    if pedido.discount_amount and pedido.discount_amount > 0:
+        codigo = f" ({pedido.discount_code})" if pedido.discount_code else ""
+        mensaje += f"Descuento{codigo}: -${pedido.discount_amount:.2f}\n"
+
+    mensaje += f"\n*TOTAL A PAGAR: ${pedido.total:.2f}*\n"
+
+    # ── Donde ver el pedido (sin link) ───────────────────────────────────────
+    mensaje += (
+        "\n--------------------------------\n"
+        "Para ver tu pedido con las fotos de los productos:\n"
+        "Ingresa a tu cuenta > Mis Pedidos\n"
+    )
+
+    # ── Instrucciones de pago ────────────────────────────────────────────────
+    mensaje += (
+        "\n*INSTRUCCIONES DE PAGO:*\n"
+        "1. Realiza la transferencia al numero de cuenta indicado.\n"
+        "2. Envia el comprobante a este WhatsApp.\n"
+        "3. Tu pedido se procesara al confirmar el pago.\n"
+        "\nGracias por comprar en Selena Boutique!"
+    )
+
+    return mensaje
+
+
 def generar_link_whatsapp_web(numero_destino, mensaje_preview=''):
     """
     Genera un enlace para abrir WhatsApp Web o App con un mensaje predeterminado.

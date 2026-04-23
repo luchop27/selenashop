@@ -310,9 +310,10 @@ class ProductoAdmin(admin.ModelAdmin):
 			formset.save()
 
 	fieldsets = (
-		('Datos básicos', {
+		('Información General', {
 			'fields': (
 				'nombre',
+				'marca',
 				'slug',
 				'tipo',
 				'descripcion_corta',
@@ -323,7 +324,6 @@ class ProductoAdmin(admin.ModelAdmin):
 			'fields': (
 				'categoria',
 				'coleccion',
-				'marca',
 			)
 		}),
 		('Venta', {

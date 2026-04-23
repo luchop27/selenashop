@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
@@ -2040,22 +2040,39 @@ def checkout_process(request):
 
 def order_confirmation(request, numero_pedido):
     """
-    Vista para mostrar la confirmaciÃ³n del pedido
+    Vista para mostrar la confirmación del pedido.
+    Genera la URL de WhatsApp con factura profesional lista para el cliente.
     """
     from django.shortcuts import get_object_or_404
+    from urllib.parse import quote
     from .models import Pedido
-    
+    from django.conf import settings as django_settings
+
     pedido = get_object_or_404(Pedido, numero_pedido=numero_pedido)
-    
-    # Verificar que el pedido pertenece al usuario (si estÃ¡ autenticado)
+
+    # Verificar que el pedido pertenece al usuario (si está autenticado)
     if request.user.is_authenticated and pedido.usuario and pedido.usuario != request.user:
         messages.error(request, 'No tienes permiso para ver este pedido.')
         return redirect('core:inicio')
-    
+
+    # ── Generar URL de WhatsApp con mensaje de factura profesional ────────────
+    whatsapp_url = ''
+    try:
+        from .whatsapp_utils import generar_mensaje_factura_cliente
+        mensaje_factura = generar_mensaje_factura_cliente(pedido, request)
+        numero_tienda = getattr(django_settings, 'WHATSAPP_ADMIN_NUMBER', '+593989387657')
+        numero_limpio = numero_tienda.replace('+', '').replace(' ', '').replace('-', '')
+        mensaje_encoded = quote(mensaje_factura, encoding='utf-8')
+        whatsapp_url = f"https://wa.me/{numero_limpio}?text={mensaje_encoded}"
+    except Exception:
+        logger.exception('order_confirmation: Error generando URL de WhatsApp')
+        whatsapp_url = 'https://wa.me/593989387657'
+
     context = {
         'pedido': pedido,
+        'whatsapp_url': whatsapp_url,
     }
-    
+
     return render(request, 'order-confirmation.html', context)
 
 

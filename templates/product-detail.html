@@ -203,23 +203,19 @@ html, body {
                                             <div class="price">${{ precio_min|default:producto.precio_base }}</div>
                                         {% endif %}
                                     </div>
-                                    {% if producto.marca or producto.categoria or producto.tipo %}
-                                    <div class="tf-product-info-meta mb_15">
-                                        {% if producto.marca %}
-                                        <div class="meta-item">
-                                            <span class="fw-6">Brand:</span> <span>{{ producto.marca }}</span>
-                                        </div>
-                                        {% endif %}
+                                    <div class="tf-product-info-meta mb_10">
                                         {% if producto.categoria %}
                                         <div class="meta-item">
-                                            <span class="fw-6">Category:</span> <span>{{ producto.categoria.nombre }}</span>
+                                            <span class="fw-6">Categoría:</span> <span>{{ producto.categoria.nombre }}</span>
                                         </div>
                                         {% endif %}
-                                        {% if producto.tipo %}
                                         <div class="meta-item">
-                                            <span class="fw-6">Type:</span> <span>{{ producto.tipo }}</span>
+                                            <span class="fw-6">Marca:</span> <span>{{ producto.marca|default:'Básica' }}</span>
                                         </div>
-                                        {% endif %}
+                                    </div>
+                                    {% if producto.descripcion_corta %}
+                                    <div class="tf-product-info-description mb_20">
+                                        <p>{{ producto.descripcion_corta }}</p>
                                     </div>
                                     {% endif %}
                                     <div class="tf-product-info-variant-picker">
@@ -1277,6 +1273,12 @@ html, body {
     <script src="{% static 'js/wishlist.js' %}"></script>
 
     <style>
+        .tf-product-info-description p {
+            margin-bottom: 0;
+            color: var(--text-3);
+            line-height: 1.7;
+        }
+
         /* Estilos para videos en el detalle del producto */
         .video-container {
             position: relative;

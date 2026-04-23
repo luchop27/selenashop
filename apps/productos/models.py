@@ -202,6 +202,11 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
+    def save(self, *args, **kwargs):
+        """Garantiza una marca por defecto cuando el campo llega vacio."""
+        self.marca = (self.marca or '').strip() or 'Básica'
+        super().save(*args, **kwargs)
+
     def get_absolute_url(self):
         """Retorna la URL absoluta del producto usando slug"""
         from django.urls import reverse

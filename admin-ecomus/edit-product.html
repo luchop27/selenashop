@@ -160,6 +160,12 @@
                         <fieldset class="choose-brand mb-20" id="marca-field">
                             <div class="body-title mb-10">Marca</div>
                             {{ form.marca }}
+                            <datalist id="marca-sugerencias">
+                                {% for marca in marcas_existentes %}
+                                <option value="{{ marca }}"></option>
+                                {% endfor %}
+                            </datalist>
+                            <div class="text-tiny text-surface-2 mt-5">Opcional. Puedes seleccionar una marca sugerida o escribir una nueva.</div>
                             {% if form.marca.errors %}
                                 <div class="text-danger">{{ form.marca.errors }}</div>
                             {% endif %}
@@ -429,9 +435,8 @@ document.getElementById('id_categoria_principal').addEventListener('change', fun
             document.getElementById('submit-buttons').style.display = 'block';
             
             // Mostrar u ocultar marca según categoría
-            const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
             const marcaField = document.getElementById('marca-field');
-            if (marcaField) marcaField.style.display = esRopa ? 'none' : 'block';
+            if (marcaField) marcaField.style.display = 'block';
         }
     }
 });
@@ -449,9 +454,8 @@ document.getElementById('id_categoria').addEventListener('change', function() {
         document.getElementById('submit-buttons').style.display = 'block';
         
         // Mostrar u ocultar marca según categoría
-        const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
         const marcaField = document.getElementById('marca-field');
-        if (marcaField) marcaField.style.display = esRopa ? 'none' : 'block';
+        if (marcaField) marcaField.style.display = 'block';
     }
 });
 

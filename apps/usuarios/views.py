@@ -702,16 +702,29 @@ def my_account_orders(request):
 
 @login_required(login_url='/')
 def my_account_orders_details(request, numero_pedido):
-    """Detalles de una orden específica"""
-    # Obtener la orden del usuario
+    """Detalles de una orden específica con URL de WhatsApp factura."""
     from django.shortcuts import get_object_or_404
+    from urllib.parse import quote
     from core.models import Pedido
-    
+    from django.conf import settings as django_settings
+
     orden = get_object_or_404(Pedido, numero_pedido=numero_pedido, usuario=request.user)
-    
+
+    # ── Generar URL de WhatsApp con factura profesional (recordatorio) ────────
+    whatsapp_url = ''
+    try:
+        from core.whatsapp_utils import generar_mensaje_factura_cliente
+        mensaje_factura = generar_mensaje_factura_cliente(orden, request)
+        numero_tienda = getattr(django_settings, 'WHATSAPP_ADMIN_NUMBER', '+593989387657')
+        numero_limpio = numero_tienda.replace('+', '').replace(' ', '').replace('-', '')
+        whatsapp_url = f"https://wa.me/{numero_limpio}?text={quote(mensaje_factura, encoding='utf-8')}"
+    except Exception:
+        whatsapp_url = 'https://wa.me/593989387657'
+
     return render(request, 'my-account-orders-details.html', {
         'user': request.user,
         'orden': orden,
+        'whatsapp_url': whatsapp_url,
     })
 
 

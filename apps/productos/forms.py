@@ -20,7 +20,7 @@ class ProductoForm(forms.ModelForm):
             'tipo': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Tipo (ej: vestido)'}),
             'descripcion_corta': forms.Textarea(attrs={'rows': 2, 'class': 'tf-input mb-10', 'placeholder': 'Descripción corta del producto'}),
             'descripcion_larga': forms.Textarea(attrs={'rows': 4, 'class': 'tf-input', 'placeholder': 'Descripción larga del producto'}),
-            'marca': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Marca'}),
+            'marca': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Selecciona o escribe una marca', 'list': 'marca-sugerencias'}),
             'precio_base': forms.NumberInput(attrs={'class': 'tf-input', 'placeholder': 'Precio base'}),
             'tiene_tallas': forms.CheckboxInput(attrs={'class': 'tf-checkbox', 'style': 'width: 21px; height: 21px;'}),
             'bajo_pedido': forms.CheckboxInput(attrs={'class': 'tf-checkbox', 'style': 'width: 21px; height: 21px;'}),
@@ -37,6 +37,11 @@ class ProductoForm(forms.ModelForm):
         self.fields['coleccion'].label = 'Colección'
         self.fields['categoria'].empty_label = 'Seleccionar categoría'
         self.fields['coleccion'].empty_label = 'Seleccionar colección (opcional)'
+        self.fields['marca'].required = False
+
+    def clean_marca(self):
+        marca = (self.cleaned_data.get('marca') or '').strip()
+        return marca or None
     
     def save(self, commit=True):
         """

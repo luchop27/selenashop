@@ -133,6 +133,12 @@
                         <fieldset class="choose-brand mb-20" id="marca-field">
                             <div class="body-title mb-10">Marca</div>
                             {{ form.marca }}
+                            <datalist id="marca-sugerencias">
+                                {% for marca in marcas_existentes %}
+                                <option value="{{ marca }}"></option>
+                                {% endfor %}
+                            </datalist>
+                            <div class="text-tiny text-surface-2 mt-5">Opcional. Puedes seleccionar una marca sugerida o escribir una nueva.</div>
                             {% if form.marca.errors %}
                                 <div class="text-danger">{{ form.marca.errors }}</div>
                             {% endif %}
@@ -324,8 +330,9 @@ document.getElementById('id_categoria_principal').addEventListener('change', fun
             document.getElementById('product-fields').style.display = 'block';
             
             // Mostrar u ocultar marca según categoría
+            document.getElementById('marca-field').style.display = 'block';
+
             const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
-            document.getElementById('marca-field').style.display = esRopa ? 'none' : 'block';
             
             // Solo mostrar atributos si es categoría Ropa, para otras categorías son opcionales
             if (esRopa) {
@@ -360,8 +367,9 @@ document.getElementById('id_categoria').addEventListener('change', function() {
         document.getElementById('product-fields').style.display = 'block';
         
         // Mostrar u ocultar marca según categoría
+        document.getElementById('marca-field').style.display = 'block';
+
         const esRopa = categoriaPrincipalActual && categoriaPrincipalActual.nombre.toLowerCase() === 'ropa';
-        document.getElementById('marca-field').style.display = esRopa ? 'none' : 'block';
         
         // Solo mostrar atributos si es categoría Ropa, para otras categorías son opcionales
         if (esRopa) {
