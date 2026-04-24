@@ -7,6 +7,12 @@
 
 {% block content %}
                     {% csrf_token %}
+                    <style>
+                        .product-title-link:hover {
+                            text-decoration: underline !important;
+                            color: var(--primary-color, #007bff) !important;
+                        }
+                    </style>
                     <!-- main-content -->
                     <div class="main-content">
                         <!-- main-content-wrap -->
@@ -105,7 +111,7 @@
                                                     {% endwith %}
                                                 </div>
                                                 <div class="title line-clamp-2 mb-0">
-                                                    <a href="#" class="body-text">
+                                                    <a href="{% url 'productos:admin_producto_edit' producto.pk %}" class="body-text product-title-link">
                                                         {{ producto.nombre }}
                                                     </a>
                                                     <div class="text-tiny">
