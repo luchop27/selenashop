@@ -191,6 +191,7 @@
     </div>
 </section>
 
+{% if testimonials %}
 <section class="flat-spacing-17 pt_0 flat-testimonial">
     <div class="container">
         <div class="flat-title">
@@ -238,24 +239,6 @@
                                 </div>
                             </div>
                         {% endfor %}
-                    {% else %}
-                        <div class="swiper-slide">
-                            <div class="testimonial-item style-column">
-                                <div class="rating">
-                                    <i class="icon-star"></i>
-                                    <i class="icon-star"></i>
-                                    <i class="icon-star"></i>
-                                    <i class="icon-star"></i>
-                                    <i class="icon-star"></i>
-                                </div>
-                                <div class="heading">Aun no hay resenas</div>
-                                <div class="text">Se el primero en dejar una resena para nuestros productos.</div>
-                                <div class="author">
-                                    <div class="name">Cliente</div>
-                                    <div class="metas">-</div>
-                                </div>
-                            </div>
-                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -265,6 +248,7 @@
         </div>
     </div>
 </section>
+{% endif %}
 
 <section class="flat-spacing-17 pt_0">
     <div class="container">

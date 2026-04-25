@@ -1815,3 +1815,281 @@ def producto_quick_view(request, producto_id):
         return JsonResponse({
             'error': str(e)
         }, status=500)
+
+
+# =============================================================================
+#  QUICK EDIT - Edición rápida de productos (solo administradores is_staff)
+# =============================================================================
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
+
+@staff_member_required(login_url='/login/')
+@require_GET
+def get_product_data_quick_edit(request, producto_id):
+    """
+    Vista GET que devuelve los datos de un producto en JSON para rellenar
+    el formulario del modal de edición rápida.
+
+    URL: /productos/api/quick-edit/<producto_id>/
+    Respuesta: JSON con datos básicos, imágenes y variantes del producto.
+    """
+    from .models import Producto, Imagen, Variante
+
+    try:
+        # Obtener el producto con sus relaciones
+        producto = get_object_or_404(
+            Producto.objects
+            .prefetch_related('imagenes', 'variantes__talla'),
+            pk=producto_id
+        )
+
+        # Serializar imágenes (solo imágenes, no videos)
+        imagenes_data = []
+        for img in producto.imagenes.filter(tipo_medio='imagen').order_by('posicion', 'created_at'):
+            if img.imagen:
+                imagenes_data.append({
+                    'id': img.id,
+                    'url': img.imagen.url,
+                    'posicion': img.posicion,
+                })
+            elif img.url:
+                imagenes_data.append({
+                    'id': img.id,
+                    'url': img.url,
+                    'posicion': img.posicion,
+                })
+
+        # Serializar variantes con talla y stock (sin precio por variante)
+        variantes_data = []
+        for variante in producto.variantes.all().select_related('talla'):
+            variantes_data.append({
+                'id': variante.id,
+                'sku': variante.sku,
+                'talla_codigo': variante.talla.codigo if variante.talla else None,
+                'color': variante.color,
+                'stock': variante.stock,
+            })
+
+        # Todas las tallas del sistema (para el selector "Agregar Talla")
+        from .models import ValorAtributo
+        valores_talla = ValorAtributo.objects.filter(
+            atributo__nombre__icontains='talla',
+            activo=True
+        ).order_by('posicion', 'valor')
+        
+        tallas_disponibles = []
+        for v in valores_talla:
+            tallas_disponibles.append({
+                'id': v.id,
+                'codigo': v.valor.upper(),
+                'nombre': v.valor
+            })
+
+        # Construir respuesta JSON
+        data = {
+            'id': producto.id,
+            'nombre': producto.nombre,
+            'marca': producto.marca or '',
+            'precio_base': float(producto.precio_base),
+            'descripcion_corta': producto.descripcion_corta or '',
+            'imagenes': imagenes_data,
+            'variantes': variantes_data,
+            'tallas_disponibles': tallas_disponibles,
+        }
+
+        return JsonResponse(data)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@staff_member_required(login_url='/login/')
+def update_product_quick(request, producto_id):
+    """
+    Vista POST que recibe y guarda los cambios del formulario de edición rápida.
+
+    Maneja:
+    - Actualización de datos básicos (nombre, marca, precio, descripción).
+    - Reemplazo de imágenes existentes (si se sube un archivo nuevo).
+    - Eliminación de imágenes (si se marca el checkbox de eliminar).
+    - Agregar nuevas imágenes adicionales.
+    - Actualización de stock y precio de cada variante.
+
+    URL: /productos/api/quick-edit/<producto_id>/guardar/
+    Respuesta: JSON { ok: true, nombre: ..., precio_base: ..., main_image_url: ... }
+    """
+    import os
+    from .models import Producto, Imagen, Variante
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        producto = get_object_or_404(Producto, pk=producto_id)
+
+        # ── 1. Actualizar datos básicos ────────────────────────────────────
+        nombre = request.POST.get('nombre', '').strip()
+        if nombre:
+            producto.nombre = nombre
+
+        marca = request.POST.get('marca', '').strip()
+        if marca:
+            producto.marca = marca
+
+        precio_base_raw = request.POST.get('precio_base', '').strip()
+        if precio_base_raw:
+            try:
+                from decimal import Decimal
+                producto.precio_base = Decimal(precio_base_raw)
+            except Exception:
+                pass  # Ignorar si no es un número válido
+
+        descripcion_corta = request.POST.get('descripcion_corta', '').strip()
+        producto.descripcion_corta = descripcion_corta
+
+        producto.save(update_fields=['nombre', 'marca', 'precio_base', 'descripcion_corta', 'updated_at'])
+
+        # ── 2. Eliminar imágenes marcadas para borrar ──────────────────────
+        ids_a_eliminar = request.POST.getlist('eliminar_imagenes[]')
+        for imagen_id_str in ids_a_eliminar:
+            try:
+                imagen_id = int(imagen_id_str)
+                img_obj = Imagen.objects.get(pk=imagen_id, producto=producto)
+                # Borrar archivo físico del disco
+                if img_obj.imagen and img_obj.imagen.name:
+                    ruta_archivo = img_obj.imagen.path
+                    if os.path.isfile(ruta_archivo):
+                        os.remove(ruta_archivo)
+                # Eliminar el registro de la BD
+                img_obj.delete()
+            except (Imagen.DoesNotExist, ValueError, OSError) as e:
+                # No interrumpir el flujo por una imagen que ya no existe
+                print(f'[QuickEdit] Advertencia al eliminar imagen {imagen_id_str}: {e}')
+
+        # ── 3. Reemplazar imágenes existentes con archivos nuevos ──────────
+        # Los campos de reemplazo se envían como imagen_nueva_<ID>
+        for clave, archivo in request.FILES.items():
+            if not clave.startswith('imagen_nueva_'):
+                continue
+            try:
+                imagen_id = int(clave.replace('imagen_nueva_', ''))
+                img_obj = Imagen.objects.get(pk=imagen_id, producto=producto)
+
+                # Borrar archivo físico anterior
+                if img_obj.imagen and img_obj.imagen.name:
+                    ruta_antigua = img_obj.imagen.path
+                    if os.path.isfile(ruta_antigua):
+                        os.remove(ruta_antigua)
+
+                # Guardar el nuevo archivo
+                img_obj.imagen = archivo
+                img_obj.save(update_fields=['imagen'])
+            except (Imagen.DoesNotExist, ValueError, OSError) as e:
+                print(f'[QuickEdit] Advertencia al reemplazar imagen {clave}: {e}')
+
+        # ── 4. Agregar nuevas imágenes adicionales ─────────────────────────
+        nuevas_imagenes = request.FILES.getlist('imagenes_nuevas')
+        posicion_max = producto.imagenes.count()  # Posición inicial para las nuevas
+        for idx, archivo_nuevo in enumerate(nuevas_imagenes):
+            Imagen.objects.create(
+                producto=producto,
+                imagen=archivo_nuevo,
+                tipo_medio='imagen',
+                posicion=posicion_max + idx,
+            )
+
+        # ── 5. Actualizar stock de variantes EXISTENTES (precio único en producto) ──
+        for clave, valor in request.POST.items():
+            if clave.startswith('variante_stock_'):
+                try:
+                    variante_id = int(clave.replace('variante_stock_', ''))
+                    variante = Variante.objects.get(pk=variante_id, producto=producto)
+                    variante.stock = max(0, int(valor)) if valor.strip() else 0
+                    variante.save(update_fields=['stock', 'updated_at'])
+                except (Variante.DoesNotExist, ValueError) as e:
+                    print(f'[QuickEdit] Advertencia al actualizar stock variante {clave}: {e}')
+
+        # ── 6. Eliminar variantes (tallas) marcadas para quitar ────────────
+        from django.db import IntegrityError
+        ids_variantes_eliminar = request.POST.getlist('eliminar_variantes[]')
+        for var_id_str in ids_variantes_eliminar:
+            try:
+                var_id = int(var_id_str)
+                variante = Variante.objects.get(pk=var_id, producto=producto)
+                variante.delete()
+            except (Variante.DoesNotExist, ValueError) as e:
+                print(f'[QuickEdit] Advertencia al eliminar variante {var_id_str}: {e}')
+
+        # ── 7. Crear nuevas variantes (tallas agregadas en el modal) ───────
+        import uuid
+        from .models import Talla, ValorAtributo, VarianteAtributo
+        idx = 0
+        while True:
+            talla_id_str = request.POST.get(f'nueva_variante_talla_{idx}')
+            if talla_id_str is None:
+                break
+            try:
+                talla_id  = int(talla_id_str) # Esto ahora es el ID de ValorAtributo
+                stock_raw = request.POST.get(f'nueva_variante_stock_{idx}', '0').strip()
+                stock     = max(0, int(stock_raw)) if stock_raw else 0
+
+                # Obtener el ValorAtributo
+                valor_attr = ValorAtributo.objects.get(pk=talla_id)
+                
+                # Sincronizar o crear la Talla correspondiente
+                talla, _ = Talla.objects.get_or_create(
+                    codigo=valor_attr.valor.upper(),
+                    defaults={'nombre': valor_attr.valor}
+                )
+
+                # Verificar que la combinación producto + talla no exista ya
+                if Variante.objects.filter(producto=producto, talla=talla).exists():
+                    print(f'[QuickEdit] Talla {talla.codigo} ya existe para este producto.')
+                else:
+                    # Generar SKU único: slug-TALLA[-sufijo si colisiona]
+                    sku_base = f"{producto.slug}-{talla.codigo}"
+                    sku = sku_base
+                    if Variante.objects.filter(sku=sku).exists():
+                        sku = f"{sku_base}-{uuid.uuid4().hex[:4]}"
+
+                    nueva_variante = Variante.objects.create(
+                        producto=producto,
+                        talla=talla,
+                        sku=sku,
+                        precio=producto.precio_base,  # hereda el precio base del producto
+                        stock=stock,
+                    )
+                    
+                    # Para mantener consistencia con el sistema de atributos
+                    VarianteAtributo.objects.create(
+                        variante=nueva_variante,
+                        valor_atributo=valor_attr
+                    )
+                    
+            except (ValorAtributo.DoesNotExist, Talla.DoesNotExist, ValueError, IntegrityError) as e:
+                print(f'[QuickEdit] Advertencia al crear variante {idx}: {e}')
+            idx += 1
+
+        # ── 8. Preparar URL de imagen principal para actualizar el DOM ─────
+        main_image_url = ''
+        primera_imagen = producto.imagenes.filter(tipo_medio='imagen').order_by('posicion', 'created_at').first()
+        if primera_imagen and primera_imagen.imagen:
+            main_image_url = primera_imagen.imagen.url
+
+        # ── 9. Respuesta de éxito ──────────────────────────────────────────
+        return JsonResponse({
+            'ok': True,
+            'nombre': producto.nombre,
+            'precio_base': float(producto.precio_base),
+            'main_image_url': main_image_url,
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)

@@ -1,85 +1,101 @@
 {% load static %}
 {% comment %} Partial: tarjeta de producto (usada en home-05 y respuesta AJAX) {% endcomment %}
 {% with stock_state=producto.availability|default:''|lower %}
-<div class="card-product style-4 fl-item {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}out-of-stock{% endif %}">
+<div
+    class="card-product style-4 fl-item {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}out-of-stock{% endif %}">
     <div class="card-product-wrapper">
         <a href="{{ producto.get_absolute_url }}" class="product-img">
             {% if producto.main_image_src %}
-                <img class="lazyload img-product" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}" alt="{{ producto.nombre }}">
+            <img class="lazyload img-product" data-src="{{ producto.main_image_src }}"
+                src="{{ producto.main_image_src }}" alt="{{ producto.nombre }}">
             {% else %}
-                <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}" src="{% static 'images/products/placeholder.jpg' %}" alt="{{ producto.nombre }}">
+            <img class="lazyload img-product" data-src="{% static 'images/products/placeholder.jpg' %}"
+                src="{% static 'images/products/placeholder.jpg' %}" alt="{{ producto.nombre }}">
             {% endif %}
             {% if producto.hover_image_src %}
-                <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}" src="{{ producto.hover_image_src }}" alt="{{ producto.nombre }}">
+            <img class="lazyload img-hover" data-src="{{ producto.hover_image_src }}"
+                src="{{ producto.hover_image_src }}" alt="{{ producto.nombre }}">
             {% endif %}
         </a>
         {% if stock_state == 'agotado' or stock_state == 'out-of-stock' %}
-            <span class="product-stock-badge">Agotado</span>
+        <span class="product-stock-badge">Agotado</span>
         {% endif %}
-        <div class="list-product-btn column-right"> 
-            <a href="#" class="box-icon wishlist bg_white round btn-icon-action {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}" 
-               data-product-id="{{ producto.id }}" 
-               data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}"> 
-                <span class="icon icon-heart"></span> 
-                <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de Favoritos{% else %}Agregar a Favoritos{% endif %}</span> 
-                <span class="icon icon-delete"></span> 
-            </a> 
+        <div class="list-product-btn column-right">
+            <a href="#"
+                class="box-icon wishlist bg_white round btn-icon-action {% if producto.in_wishlist or producto.id in user_wishlist_ids %}active{% endif %}"
+                data-product-id="{{ producto.id }}" data-wishlist-id="{{ producto.wishlist_item_id|default:'' }}">
+                <span class="icon icon-heart"></span>
+                <span class="tooltip">{% if producto.in_wishlist or producto.id in user_wishlist_ids %}Eliminar de
+                    Favoritos{% else %}Agregar a Favoritos{% endif %}</span>
+                <span class="icon icon-delete"></span>
+            </a>
             {% if stock_state != 'agotado' and stock_state != 'out-of-stock' %}
-            <a href="#quick_view" data-bs-toggle="modal" class="box-icon quickview bg_white round tf-btn-loading btn-open-quickview d-md-none" 
-               data-product-id="{{ producto.id }}" 
-               data-product-name="{{ producto.nombre|escapejs }}" 
-               data-product-price="{{ producto.display_price }}" 
-               data-product-desc="{{ producto.descripcion_corta|escapejs }}" 
-               data-product-main-image="{{ producto.main_image_src }}" 
-               data-product-hover-image="{{ producto.hover_image_src }}" 
-               data-product-url="{{ producto.get_absolute_url }}" 
-               data-product-colors="{% if producto.colors %}{% for c in producto.colors %}{% if not forloop.first %},{% endif %}{{ c.valor }}{% endfor %}{% endif %}" 
-               data-product-sizes="{% if producto.sizes %}{{ producto.sizes|join:',' }}{% endif %}"> 
-                <span class="icon icon-view"></span> 
-                <span class="tooltip">Visualizar</span> 
-            </a> 
+            <a href="#quick_view" data-bs-toggle="modal"
+                class="box-icon quickview bg_white round tf-btn-loading btn-open-quickview d-md-none"
+                data-product-id="{{ producto.id }}" data-product-name="{{ producto.nombre|escapejs }}"
+                data-product-price="{{ producto.display_price }}"
+                data-product-desc="{{ producto.descripcion_corta|escapejs }}"
+                data-product-main-image="{{ producto.main_image_src }}"
+                data-product-hover-image="{{ producto.hover_image_src }}"
+                data-product-url="{{ producto.get_absolute_url }}"
+                data-product-colors="{% if producto.colors %}{% for c in producto.colors %}{% if not forloop.first %},{% endif %}{{ c.valor }}{% endfor %}{% endif %}"
+                data-product-sizes="{% if producto.sizes %}{{ producto.sizes|join:',' }}{% endif %}">
+                <span class="icon icon-view"></span>
+                <span class="tooltip">Visualizar</span>
+            </a>
             {% endif %}
-        </div> 
+            {# Botón de edición rápida: solo visible para administradores #}
+            {% if user.is_staff %}
+            <a href="#quick_edit_modal"
+                data-bs-toggle="modal"
+                class="box-icon bg_white round btn-quick-edit"
+                data-product-id="{{ producto.id }}"
+                style="color: #0d6efd; border: 1.5px solid #0d6efd;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                </svg>
+                <span class="tooltip">Edición Rápida</span>
+            </a>
+            {% endif %}
+        </div>
         {% if producto.sizes %}
-            <div class="size-list">
-                {% for s in producto.sizes %}
-                    <span>{{ s }}</span>
-                {% endfor %}
-            </div>
+        <div class="size-list">
+            {% for s in producto.sizes %}
+            <span>{{ s }}</span>
+            {% endfor %}
+        </div>
         {% endif %}
-    {% if stock_state != 'agotado' and stock_state != 'out-of-stock' %}
-    <a href="#quick_view" data-bs-toggle="modal" class="btn-quick-add quickview btn-open-quickview d-none d-md-flex" 
-       data-product-id="{{ producto.id }}" 
-       data-product-name="{{ producto.nombre|escapejs }}" 
-       data-product-price="{{ producto.display_price }}" 
-       data-product-desc="{{ producto.descripcion_corta|escapejs }}" 
-       data-product-main-image="{{ producto.main_image_src }}" 
-       data-product-hover-image="{{ producto.hover_image_src }}" 
-       data-product-url="{{ producto.get_absolute_url }}" 
-       data-product-colors="{% if producto.colors %}{% for c in producto.colors %}{% if not forloop.first %},{% endif %}{{ c.valor }}{% endfor %}{% endif %}" 
-       data-product-sizes="{% if producto.sizes %}{{ producto.sizes|join:',' }}{% endif %}">VISUALIZAR</a> 
-    {% else %}
-    <span class="sold-out-chip d-none d-md-inline-flex">Agotado</span>
-    {% endif %}
+        {% if stock_state != 'agotado' and stock_state != 'out-of-stock' %}
+        <a href="#quick_view" data-bs-toggle="modal" class="btn-quick-add quickview btn-open-quickview d-none d-md-flex"
+            data-product-id="{{ producto.id }}" data-product-name="{{ producto.nombre|escapejs }}"
+            data-product-price="{{ producto.display_price }}"
+            data-product-desc="{{ producto.descripcion_corta|escapejs }}"
+            data-product-main-image="{{ producto.main_image_src }}"
+            data-product-hover-image="{{ producto.hover_image_src }}" data-product-url="{{ producto.get_absolute_url }}"
+            data-product-colors="{% if producto.colors %}{% for c in producto.colors %}{% if not forloop.first %},{% endif %}{{ c.valor }}{% endfor %}{% endif %}"
+            data-product-sizes="{% if producto.sizes %}{{ producto.sizes|join:',' }}{% endif %}">VISUALIZAR</a>
+        {% else %}
+        <span class="sold-out-chip d-none d-md-inline-flex">Agotado</span>
+        {% endif %}
     </div>
     <div class="card-product-info">
         <a href="{{ producto.get_absolute_url }}" class="title link">{{ producto.nombre }}</a>
         <span class="price">${{ producto.display_price }}</span>
         {% if producto.colors %}
-            <ul class="list-color-product">
-                {% for color in producto.colors %}
-                    <li class="list-color-item color-swatch{% if forloop.first %} active{% endif %}">
-                        <span class="tooltip">{{ color.valor }}</span>
-                        <span class="swatch-value bg_{{ color.valor|lower }}"></span>
-                        {% if producto.main_image_src %}
-                            <img class="lazyload" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}" alt="{{ producto.nombre }}">
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
+        <ul class="list-color-product">
+            {% for color in producto.colors %}
+            <li class="list-color-item color-swatch{% if forloop.first %} active{% endif %}">
+                <span class="tooltip">{{ color.valor }}</span>
+                <span class="swatch-value bg_{{ color.valor|lower }}"></span>
+                {% if producto.main_image_src %}
+                <img class="lazyload" data-src="{{ producto.main_image_src }}" src="{{ producto.main_image_src }}"
+                    alt="{{ producto.nombre }}">
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
         {% endif %}
     </div>
-    
+
 </div>
 {% endwith %}
-

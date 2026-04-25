@@ -1097,6 +1097,11 @@
 
     <script src="{% static 'js/global_modals.js' %}"></script>
 
+    {# Quick Edit: solo se carga si el usuario es staff/admin #}
+    {% if user.is_staff %}
+    <script src="{% static 'js/quick_edit.js' %}"></script>
+    {% endif %}
+
     {% if disable_cart_nav %}
     <script>
         // Bloquea cualquier intento de abrir el carrito en login/registro.

@@ -95,43 +95,6 @@ def _get_testimonials_data():
     except Exception:
         testimonials = []
 
-    if not testimonials:
-        testimonials = [
-            {
-                'rating': 5,
-                'heading': 'Excelente servicio',
-                'text': 'Me encantó la calidad del producto y la rapidez en el envío.',
-                'author_name': 'María López',
-                'metas': 'Cliente de España',
-                'product_image': '/static/images/shop/products/img-p2.png',
-                'product_title': 'Jersey thong body',
-                'product_url': '#',
-                'product_price': '105.95',
-            },
-            {
-                'rating': 5,
-                'heading': 'Muy buena calidad',
-                'text': 'La tela es suave y el tallaje es perfecto. Volveré a comprar.',
-                'author_name': 'Carlos Ruiz',
-                'metas': 'Cliente de México',
-                'product_image': '/static/images/shop/products/img-p3.png',
-                'product_title': 'Cotton jersey top',
-                'product_url': '#',
-                'product_price': '7.95',
-            },
-            {
-                'rating': 5,
-                'heading': 'Recomiendo 100%',
-                'text': 'Muy buena atención al cliente y producto tal como se describe.',
-                'author_name': 'Ana Gómez',
-                'metas': 'Cliente de USA',
-                'product_image': '/static/images/shop/products/img-p4.png',
-                'product_title': 'Ribbed modal T-shirt',
-                'product_url': '#',
-                'product_price': '18.95',
-            },
-        ]
-
     return testimonials
 
 

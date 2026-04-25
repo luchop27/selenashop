@@ -48,4 +48,12 @@ urlpatterns = [
     path('admin-panel/categorias/nueva/', views.panel_categoria_crear, name='panel_categoria_crear'),
     path('admin-panel/categorias/editar/<int:pk>/', views.panel_categoria_edit, name='panel_categoria_edit'),
     path('admin-panel/categorias/eliminar/<int:pk>/', views.panel_categoria_delete, name='panel_categoria_delete'),
+
+    # ── Quick Edit: API de edición rápida (solo administradores is_staff) ──
+    path('productos/api/quick-edit/<int:producto_id>/',
+         views.get_product_data_quick_edit,
+         name='get_product_data_quick_edit'),
+    path('productos/api/quick-edit/<int:producto_id>/guardar/',
+         views.update_product_quick,
+         name='update_product_quick'),
 ]

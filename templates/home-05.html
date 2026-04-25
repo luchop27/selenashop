@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 {% block content %}
 <style>
@@ -360,6 +360,7 @@
 </section>
 <!-- /New Arrivals -->
 <!-- Testimonial -->
+        {% if testimonials %}
         <section class="flat-spacing-5 pt_0 flat-testimonial">
             <div class="container">
                 <div class="flat-title wow fadeInUp" data-wow-delay="0s">
@@ -408,25 +409,6 @@
                                         </div>
                                     </div>
                                 {% endfor %}
-                            {% else %}
-                                <!-- Fallback: mostrar 1 slide vacío si no hay reseñas -->
-                                <div class="swiper-slide">
-                                    <div class="testimonial-item style-column wow fadeInUp" data-wow-delay="0s">
-                                        <div class="rating">
-                                            <i class="icon-star"></i>
-                                            <i class="icon-star"></i>
-                                            <i class="icon-star"></i>
-                                            <i class="icon-star"></i>
-                                            <i class="icon-star"></i>
-                                        </div>
-                                        <div class="heading">Aún no hay reseñas</div>
-                                        <div class="text">Sé el primero en dejar una reseña para nuestros productos.</div>
-                                        <div class="author">
-                                            <div class="name">Cliente</div>
-                                            <div class="metas">-</div>
-                                        </div>
-                                    </div>
-                                </div>
                             {% endif %}
                         </div>
                     </div>
@@ -438,6 +420,7 @@
                 </div>
             </div>
         </section>
+        {% endif %}
         <!-- /Testimonial -->
         <!-- Store -->
         <section class="flat-spacing-6 pt_0">
