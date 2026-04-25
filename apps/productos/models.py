@@ -20,6 +20,59 @@ def validate_image_extension(value):
     if ext not in valid_extensions:
         raise ValidationError(f'Archivo no permitido. Solo se aceptan: {", ".join(valid_extensions)}')
 
+def optimize_image_field(instance, field_name, max_size=(1400, 1400), quality=85):
+    """
+    Helper para optimizar imágenes (redimensionar a max_size y convertir a WebP).
+    Verifica si el campo es nuevo o ha cambiado antes de procesar.
+    """
+    field = getattr(instance, field_name)
+    if not field:
+        return
+
+    # Verificar si es nuevo o cambió
+    is_new = False
+    if not instance.pk:
+        is_new = True
+    else:
+        try:
+            old_obj = type(instance).objects.get(pk=instance.pk)
+            old_field = getattr(old_obj, field_name)
+            if old_field != field:
+                is_new = True
+        except type(instance).DoesNotExist:
+            is_new = True
+
+    if is_new:
+        import logging
+        logger = logging.getLogger(__name__)
+        try:
+            from io import BytesIO
+            from PIL import Image, ImageOps
+            from django.core.files.base import ContentFile
+            import os
+            
+            logger.info(f"Optimizando imagen {field_name}: {field.name}")
+            img = Image.open(field)
+            img = ImageOps.exif_transpose(img)
+            
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+                
+            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            
+            output = BytesIO()
+            img.save(output, format='WEBP', quality=quality)
+            output.seek(0)
+            
+            filename = os.path.basename(field.name)
+            name, _ = os.path.splitext(filename)
+            new_filename = f"{name}.webp"
+            
+            field.save(new_filename, ContentFile(output.read()), save=False)
+            logger.info(f"Imagen optimizada guardada como: {new_filename}")
+        except Exception as e:
+            logger.error(f"Error optimizando {field_name} (se guardará original): {e}")
+
 
 # -----------------------------
 # COLECCIÓN
@@ -62,6 +115,11 @@ class Coleccion(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        optimize_image_field(self, 'imagen')
+        optimize_image_field(self, 'imagen_mobile')
+        super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse('productos:lista_por_coleccion', args=[self.slug])
@@ -117,6 +175,10 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        optimize_image_field(self, 'imagen')
+        super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse('productos:lista_por_categoria', args=[self.slug])
@@ -435,6 +497,11 @@ class Imagen(models.Model):
     
     def save(self, *args, **kwargs):
         import logging
+        from io import BytesIO
+        from PIL import Image, ImageOps
+        from django.core.files.base import ContentFile
+        import os
+        
         logger = logging.getLogger(__name__)
         
         logger.info(f"=== SAVE IMAGEN ===")
@@ -442,6 +509,55 @@ class Imagen(models.Model):
         logger.info(f"Tiene imagen: {bool(self.imagen)}")
         logger.info(f"Tiene video: {bool(self.video)}")
         
+        # Procesamiento y Optimización de Imagen
+        if self.imagen and self.tipo_medio == 'imagen':
+            # Solo procesar si es un archivo nuevo o ha sido cambiado
+            is_new = False
+            if not self.pk:
+                is_new = True
+            else:
+                try:
+                    old_obj = type(self).objects.get(pk=self.pk)
+                    if old_obj.imagen != self.imagen:
+                        is_new = True
+                except type(self).DoesNotExist:
+                    is_new = True
+            
+            if is_new:
+                try:
+                    logger.info(f"Iniciando optimización de la imagen: {self.imagen.name}")
+                    
+                    # Abrir imagen con Pillow
+                    img = Image.open(self.imagen)
+                    
+                    # Conservar orientación original de los metadatos EXIF
+                    img = ImageOps.exif_transpose(img)
+                    
+                    # Convertir a RGB para asegurar compatibilidad con WebP y eliminar canal alpha si es necesario
+                    if img.mode in ("RGBA", "P"):
+                        img = img.convert("RGB")
+                    
+                    # Redimensionar proporcionalmente a máximo 1400x1400px
+                    MAX_SIZE = (1400, 1400)
+                    img.thumbnail(MAX_SIZE, Image.Resampling.LANCZOS)
+                    
+                    # Guardar la imagen optimizada en memoria
+                    output = BytesIO()
+                    # Calidad dinámica entre 80-85% reduce el peso drásticamente manteniendo nitidez
+                    img.save(output, format='WEBP', quality=85)
+                    output.seek(0)
+                    
+                    # Cambiar extensión del archivo a .webp
+                    filename = os.path.basename(self.imagen.name)
+                    name, _ = os.path.splitext(filename)
+                    new_filename = f"{name}.webp"
+                    
+                    # Reemplazar el archivo en el campo (save=False evita un loop infinito)
+                    self.imagen.save(new_filename, ContentFile(output.read()), save=False)
+                    logger.info(f"Imagen optimizada y renombrada exitosamente a: {new_filename}")
+                except Exception as e:
+                    logger.error(f"Error durante la optimización de la imagen (se guardará la original): {e}")
+
         try:
             super().save(*args, **kwargs)
             logger.info("✓ Guardado exitoso")
