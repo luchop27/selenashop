@@ -1945,14 +1945,21 @@ def update_product_quick(request, producto_id):
         if precio_base_raw:
             try:
                 from decimal import Decimal
+                # Reemplazar coma por punto para evitar fallos de conversión
+                precio_base_raw = precio_base_raw.replace(',', '.')
                 producto.precio_base = Decimal(precio_base_raw)
-            except Exception:
+            except Exception as e:
+                print(f"[QuickEdit] Error convirtiendo precio_base '{precio_base_raw}': {e}")
                 pass  # Ignorar si no es un número válido
 
         descripcion_corta = request.POST.get('descripcion_corta', '').strip()
         producto.descripcion_corta = descripcion_corta
 
         producto.save(update_fields=['nombre', 'marca', 'precio_base', 'descripcion_corta', 'updated_at'])
+        
+        # Sincronizar el precio de TODAS las variantes con el precio base
+        # (El Quick Edit asume precio único para todo el producto)
+        producto.variantes.all().update(precio=producto.precio_base)
 
         # ── 2. Eliminar imágenes marcadas para borrar ──────────────────────
         ids_a_eliminar = request.POST.getlist('eliminar_imagenes[]')

@@ -121,16 +121,16 @@ class DatosContacto(models.Model):
     
     direccion = models.CharField(
         max_length=300,
-        default='Av. Principal 123, Quito, Ecuador',
+        default='Av. 25 de Junio y Páez, Machala, El Oro',
         help_text='Dirección de la tienda'
     )
     email = models.EmailField(
-        default='info@selenashop.com',
+        default='selenastore.oficial.ec@gmail.com',
         help_text='Email de contacto principal'
     )
     telefono = models.CharField(
         max_length=20,
-        default='+593 99 999 9999',
+        default='0979184413',
         help_text='Número de teléfono'
     )
     facebook = models.URLField(
