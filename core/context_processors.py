@@ -67,8 +67,17 @@ def delivery_return_info(request):
         info = DeliveryReturnInfo.objects.filter(activo=True).first()
     except:
         info = None
+        
+    try:
+        from apps.ayudas.models import DatosContacto
+        store_settings = DatosContacto.objects.first()
+    except:
+        store_settings = None
     
-    return {'delivery_return_info': info}
+    return {
+        'delivery_return_info': info,
+        'store_settings': store_settings
+    }
 
 
 def wishlist_count(request):

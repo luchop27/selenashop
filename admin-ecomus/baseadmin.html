@@ -228,6 +228,17 @@
                                             </li>
                                         </ul>
                                     </li>
+                                    
+                                    <!-- Configuración -->
+                                    <li class="menu-item {% block menu_settings %}{% endblock %}">
+                                        <a href="{% url 'productos:admin_store_settings' %}" class="">
+                                            <div class="icon">
+                                                <i class="icon-settings"></i>
+                                            </div>
+                                            <div class="text">Configuración</div>
+                                        </a>
+                                    </li>
+
                                     <li class="menu-item has-children">
                                         <a href="#" class="menu-item-button">
                                             <div class="icon">

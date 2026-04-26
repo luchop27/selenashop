@@ -714,12 +714,16 @@ def my_account_orders_details(request, numero_pedido):
     whatsapp_url = ''
     try:
         from core.whatsapp_utils import generar_mensaje_factura_cliente
+        from apps.ayudas.models import DatosContacto
+        
+        contacto = DatosContacto.objects.first()
+        numero_tienda = contacto.whatsapp_pedidos if contacto and contacto.whatsapp_pedidos else '593979184413'
+        
         mensaje_factura = generar_mensaje_factura_cliente(orden, request)
-        numero_tienda = getattr(django_settings, 'WHATSAPP_ADMIN_NUMBER', '+593989387657')
         numero_limpio = numero_tienda.replace('+', '').replace(' ', '').replace('-', '')
         whatsapp_url = f"https://wa.me/{numero_limpio}?text={quote(mensaje_factura, encoding='utf-8')}"
     except Exception:
-        whatsapp_url = 'https://wa.me/593989387657'
+        whatsapp_url = 'https://wa.me/593979184413'
 
     return render(request, 'my-account-orders-details.html', {
         'user': request.user,

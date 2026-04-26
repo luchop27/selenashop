@@ -133,6 +133,11 @@ class DatosContacto(models.Model):
         default='0979184413',
         help_text='Número de teléfono'
     )
+    whatsapp_pedidos = models.CharField(
+        max_length=20,
+        default='0979184413',
+        help_text='Número de WhatsApp donde llegarán los pedidos (sin código de país o con el, ej: 593979184413)'
+    )
     facebook = models.URLField(
         blank=True,
         help_text='URL de Facebook (opcional)'
@@ -141,6 +146,17 @@ class DatosContacto(models.Model):
         blank=True,
         help_text='URL de Instagram (opcional)'
     )
+    
+    # Configuraciones de la tienda (Toggles)
+    mostrar_guia_tallas = models.BooleanField(
+        default=False,
+        help_text='Activar o desactivar el enlace "Encuentra tu talla" en los productos'
+    )
+    mostrar_envios_devoluciones = models.BooleanField(
+        default=True,
+        help_text='Activar o desactivar la sección "Envío y Devolución" en los productos'
+    )
+    
     tiktok = models.URLField(
         blank=True,
         help_text='URL de TikTok (opcional)'

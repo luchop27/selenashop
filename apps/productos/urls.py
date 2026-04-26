@@ -56,4 +56,10 @@ urlpatterns = [
     path('productos/api/quick-edit/<int:producto_id>/guardar/',
          views.update_product_quick,
          name='update_product_quick'),
+    path('admin-panel/api/products/<int:producto_id>/toggle-active/', 
+         views.api_toggle_product_active, 
+         name='api_toggle_product_active'),
+         
+    # Configuración de tienda
+    path('admin-panel/settings/', views.admin_store_settings, name='admin_store_settings'),
 ]

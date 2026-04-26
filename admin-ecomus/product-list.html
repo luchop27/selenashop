@@ -94,7 +94,11 @@
                                         {% for producto in productos %}
                                         <li class="wg-product item-row gap20">
                                             <!-- nombre + imagen -->
-                                            <div class="name">
+                                            <div class="name" style="display: flex; align-items: center; gap: 15px;">
+                                                <label class="custom-toggle" style="margin-right: 10px;">
+                                                    <input class="toggle-product-active" type="checkbox" data-producto-id="{{ producto.id }}" {% if producto.activo %}checked{% endif %} title="Activar/Desactivar Producto">
+                                                    <span class="toggle-slider"></span>
+                                                </label>
                                                 <div class="image">
                                                     {% with img=producto.imagenes.first %}
                                                         {% if img %}
@@ -261,6 +265,62 @@
 
 {% endblock %}
 
+{% block extra_css %}
+<style>
+/* Custom Toggle Switch Style */
+.custom-toggle {
+    position: relative;
+    display: inline-block;
+    width: 64px;
+    height: 36px;
+    margin: 0;
+    flex-shrink: 0;
+}
+.custom-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #4b4d58;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232a2c33' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><path d='M18 6L6 18M6 6l12 12'/></svg>");
+    background-position: calc(100% - 10px) center;
+    background-repeat: no-repeat;
+    background-size: 14px;
+    transition: .4s;
+    border-radius: 36px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 28px;
+    width: 28px;
+    left: 4px;
+    bottom: 4px;
+    background-color: #f1f1f1;
+    transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.custom-toggle input:checked + .toggle-slider {
+    background-color: #00d26a;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+    background-position: 10px center;
+}
+.custom-toggle input:checked + .toggle-slider:before {
+    transform: translateX(28px);
+}
+.custom-toggle input:disabled + .toggle-slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 function eliminarProducto(productoId, productoNombre, cantidadVariantes) {
@@ -291,5 +351,66 @@ function eliminarProducto(productoId, productoNombre, cantidadVariantes) {
         form.submit();
     }
 }
+
+// Lógica para activar/desactivar producto
+document.addEventListener('DOMContentLoaded', function() {
+    const toggles = document.querySelectorAll('.toggle-product-active');
+    
+    toggles.forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const productoId = this.dataset.productoId;
+            const nuevoEstado = this.checked;
+            const toggleEl = this;
+            
+            // Obtener CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+            
+            // Efecto visual de cargando
+            toggleEl.disabled = true;
+            toggleEl.style.opacity = '0.5';
+            
+            fetch(`/admin-panel/api/products/${productoId}/toggle-active/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ activo: nuevoEstado })
+            })
+            .then(response => response.json())
+            .then(data => {
+                toggleEl.disabled = false;
+                toggleEl.style.opacity = '1';
+                
+                if (data.ok) {
+                    // Refrescar la página para actualizar las etiquetas y otros estados (opcional)
+                    // window.location.reload(); 
+                    // Mostramos una alerta o simplemente lo dejamos cambiar si no se quiere recargar
+                    const badgeEl = toggleEl.closest('.wg-product').querySelector('.block-available, .block-not-available');
+                    if (badgeEl) {
+                        if (data.activo) {
+                            badgeEl.className = 'block-available bg-1 fw-7';
+                            badgeEl.textContent = 'Activo';
+                        } else {
+                            badgeEl.className = 'block-not-available bg-1 fw-7';
+                            badgeEl.textContent = 'Inactivo';
+                        }
+                    }
+                } else {
+                    alert('Error: ' + (data.error || 'No se pudo actualizar el estado'));
+                    toggleEl.checked = !nuevoEstado; // revertir
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ocurrió un error al intentar cambiar el estado del producto.');
+                toggleEl.disabled = false;
+                toggleEl.style.opacity = '1';
+                toggleEl.checked = !nuevoEstado; // revertir
+            });
+        });
+    });
+});
 </script>
 {% endblock %}

@@ -31,11 +31,15 @@ def enviar_notificacion_pedido(pedido):
         dict: Resultado del envío {'success': True/False, 'message': str, 'message_id': str}
     """
     
+    from apps.ayudas.models import DatosContacto
+    contacto = DatosContacto.objects.first()
+    numero_destino = contacto.whatsapp_pedidos if contacto and contacto.whatsapp_pedidos else getattr(settings, 'WHATSAPP_ADMIN_NUMBER', '')
+    
     # Verificar que tenemos los datos necesarios
     if not all([
         _credencial_configurada(settings.WHATSAPP_PHONE_NUMBER_ID),
         _credencial_configurada(settings.WHATSAPP_ACCESS_TOKEN),
-        _credencial_configurada(settings.WHATSAPP_ADMIN_NUMBER),
+        _credencial_configurada(numero_destino),
     ]):
         logger.warning('WhatsApp: Credenciales no configuradas completamente')
         return {
@@ -48,7 +52,7 @@ def enviar_notificacion_pedido(pedido):
     
     # Enviar a través de la API de Meta
     resultado = enviar_mensaje_whatsapp(
-        numero_destino=settings.WHATSAPP_ADMIN_NUMBER,
+        numero_destino=numero_destino,
         mensaje=mensaje
     )
     
@@ -91,6 +95,16 @@ def formatear_mensaje_pedido(pedido):
    📊 Cantidad: {item.cantidad}
    💵 Precio unitario: ${item.precio_unitario:.2f}
    📋 Subtotal: ${item.subtotal:.2f}"""
+        if item.producto:
+            from django.urls import reverse
+            url_path = reverse('productos:producto_detail', kwargs={'slug': item.producto.slug})
+            # Intenta crear URL absoluta, si no usa la relativa
+            try:
+                # Si tenemos request guardado (esto no es común en formatear_mensaje_pedido)
+                pass
+            except:
+                pass
+            mensaje += f"\n   URL: {url_path}"
     
     # Notas si existen
     if pedido.order_note:
@@ -263,6 +277,14 @@ def generar_mensaje_factura_cliente(pedido, request=None):
             partes.append(item.color)
         variantes_str = f" [{' / '.join(partes)}]" if partes else ""
         mensaje += f"  - {item.cantidad}x {item.nombre_producto}{variantes_str} - ${item.precio_unitario:.2f}\n"
+        if item.producto:
+            from django.urls import reverse
+            url_path = reverse('productos:producto_detail', kwargs={'slug': item.producto.slug})
+            if request:
+                url_abs = request.build_absolute_uri(url_path)
+                mensaje += f"    URL: {url_abs}\n"
+            else:
+                mensaje += f"    URL: {url_path}\n"
 
     # ── Totales ──────────────────────────────────────────────────────────────
     mensaje += "\n--------------------------------\n"

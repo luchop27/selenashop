@@ -2099,4 +2099,60 @@ def update_product_quick(request, producto_id):
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=500)
+
+from django.views.decorators.http import require_POST
+
+@staff_member_required(login_url='/login/')
+@require_POST
+def api_toggle_product_active(request, producto_id):
+    """
+    Vista POST para activar o desactivar un producto rápidamente desde el panel admin.
+    """
+    from .models import Producto
+    import json
+    
+    try:
+        producto = get_object_or_404(Producto, pk=producto_id)
+        
+        try:
+            data = json.loads(request.body)
+            nuevo_estado = data.get('activo')
+        except:
+            nuevo_estado = request.POST.get('activo') == 'true'
+            
+        if nuevo_estado is not None:
+            producto.activo = bool(nuevo_estado)
+            producto.save(update_fields=['activo', 'updated_at'])
+            return JsonResponse({'ok': True, 'activo': producto.activo})
+            
+        return JsonResponse({'error': 'Estado no proporcionado'}, status=400)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@staff_member_required(login_url='/login/')
+def admin_store_settings(request):
+    """Vista para configurar datos generales de la tienda (DatosContacto)"""
+    from apps.ayudas.models import DatosContacto
+    from django.contrib import messages
+    
+    contacto = DatosContacto.objects.first()
+    if not contacto:
+        contacto = DatosContacto.objects.create()
+        
+    if request.method == 'POST':
+        contacto.whatsapp_pedidos = request.POST.get('whatsapp_pedidos', contacto.whatsapp_pedidos)
+        contacto.telefono = request.POST.get('telefono', contacto.telefono)
+        contacto.email = request.POST.get('email', contacto.email)
+        contacto.direccion = request.POST.get('direccion', contacto.direccion)
+        
+        # Toggles visuales
+        contacto.mostrar_guia_tallas = request.POST.get('mostrar_guia_tallas') == 'on'
+        contacto.mostrar_envios_devoluciones = request.POST.get('mostrar_envios_devoluciones') == 'on'
+        
+        contacto.save()
+        messages.success(request, 'Configuración actualizada correctamente.')
+        return redirect('productos:admin_store_settings')
+        
+    return render(request, 'store-setting.html', {'contacto': contacto})
