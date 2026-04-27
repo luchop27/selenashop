@@ -14,10 +14,18 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Cargar .env de forma consistente (gunicorn puede tener otro cwd).
+load_dotenv(BASE_DIR / '.env')
+
+
+def _env_bool(key, default=False):
+    raw = os.environ.get(key, None)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in ('true', '1', 'yes')
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,8 +35,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3+#xyc#bp9k!gl@vc2_e-%fl#0i0_^$li-k%5j*xc1xqvn^uw9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# En hosting define DJANGO_DEBUG=False.
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').strip().lower() in ('true', '1', 'yes')
+# En hosting define DJANGO_DEBUG=False (por defecto False para evitar errores en prod).
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').strip().lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = ['*']
 
@@ -199,15 +207,8 @@ UNPAID_ORDER_CANCEL_HOURS = 2
 import os
 
 # Detectar si estamos en producción.
-# En desarrollo (DEBUG=True) ignoramos PRODUCTION para evitar que una .env mal configurada
-# deje EMAIL_HOST_PASSWORD vacío y rompa envíos (ej. reset de contraseña).
-PRODUCTION = (not DEBUG) and (os.environ.get('PRODUCTION', 'False').strip().lower() in ('true', '1', 'yes'))
-
-def _env_bool(key, default=False):
-    raw = os.environ.get(key, None)
-    if raw is None:
-        return default
-    return str(raw).strip().lower() in ('true', '1', 'yes')
+# Si DEBUG=False y no se define PRODUCTION, asumimos producción.
+PRODUCTION = (not DEBUG) and _env_bool('PRODUCTION', True)
 
 
 if PRODUCTION:
