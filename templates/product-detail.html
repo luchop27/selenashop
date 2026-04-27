@@ -232,7 +232,7 @@ html, body {
                                             <div class="variant-picker-values" id="size-picker-container">
                                                 {% for talla in tallas_disponibles %}
                                                 <input type="radio" name="size1" id="values-size-{{ forloop.counter }}" value="{{ talla.codigo }}" {% if talla_default_codigo and talla.codigo == talla_default_codigo %}checked{% endif %} data-size="{{ talla.codigo }}" data-stock="{{ talla.stock|default:0 }}" {% if talla.agotada %}disabled{% endif %}>
-                                                <label class="style-text size-btn{% if talla.agotada %} size-disabled{% endif %}" for="values-size-{{ forloop.counter }}" data-value="{{ talla.codigo }}" data-stock="{{ talla.stock|default:0 }}">
+                                                <label class="style-text size-btn{% if talla.agotada %} size-disabled{% endif %}" for="values-size-{{ forloop.counter }}" data-value="{{ talla.codigo }}" data-stock="{{ talla.stock|default:0 }}" data-price="{{ talla.precio|default:precio_min|default:producto.precio_base }}">
                                                     <p>{{ talla.codigo }}</p>
                                                     {% if talla.agotada %}<small class="size-soldout-text">Agotada</small>{% endif %}
                                                 </label>
@@ -241,7 +241,12 @@ html, body {
                                         </div>
                                         {% endif %}
                                     </div>
-                                    <div class="tf-product-info-quantity">
+                                    {% if producto_no_disponible %}
+                                    <div class="alert alert-warning mb_20" role="alert">
+                                        Este producto ya no está disponible, pero puedes ver sus detalles.
+                                    </div>
+                                    {% endif %}
+                                    <div class="tf-product-info-quantity"{% if producto_no_disponible %} style="display:none;"{% endif %}>
                                         <div class="quantity-title fw-6">Cantidad</div>
                                         <div class="wg-quantity">
                                             <span class="btn-quantity btn-decrease">-</span>
@@ -249,7 +254,7 @@ html, body {
                                             <span class="btn-quantity btn-increase">+</span>
                                         </div>
                                     </div>
-                                    <div class="tf-product-info-buy-button">
+                                    <div class="tf-product-info-buy-button"{% if producto_no_disponible %} style="display:none;"{% endif %}>
                                         <form class="">
                                             <a href="#"
                                                 id="mainAddToCartBtn"
@@ -309,6 +314,7 @@ html, body {
                     </div>
                 </div>
             </div>
+            {% if not producto_no_disponible %}
             <div class="tf-sticky-btn-atc">
                 <div class="container">
                     <div class="tf-height-observer w-100 d-flex align-items-center">
@@ -351,13 +357,14 @@ html, body {
                                     </div>
                                     <a href="#"
                                         id="stickyAddToCartBtn"
-                                        class="tf-btn btn-fill radius-3 justify-content-center fw-6 fs-14 flex-grow-1 animate-hover-btn btn-add-to-cart sticky-add-cart {% if producto_agotado %}inventory-action-disabled{% endif %}"><span class="sticky-add-cart-text">{% if producto_agotado %}Agotado{% else %}Agregar al carrito{% endif %}</span></a>
+                                        class="tf-btn btn-fill radius-3 justify-content-center fw-6 fs-14 flex-grow-1 animate-hover-btn btn-add-to-cart sticky-add-cart {% if producto_agotado or producto_no_disponible %}inventory-action-disabled{% endif %}"><span class="sticky-add-cart-text">{% if producto_no_disponible %}No disponible{% elif producto_agotado %}Agotado{% else %}Agregar al carrito{% endif %}</span></a>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
+            {% endif %}
         </section>
         <!-- /default -->
         <!-- tabs -->

@@ -84,8 +84,8 @@ def eliminar_imagen_categoria_antigua(sender, instance, **kwargs):
 def verificar_stock_producto(sender, instance, **kwargs):
     """
     Después de guardar o eliminar una variante, verifica el stock total del producto.
-    Si el producto NO está marcado como 'bajo_pedido' y su stock total es 0,
-    lo elimina automáticamente del sistema.
+    Si el stock total llega a 0, el producto se mantiene visible (no se elimina).
+    Esto evita romper links (WhatsApp / SEO) y permite mostrarlo como "Agotado".
     """
     try:
         # El producto puede ya no existir si fue eliminado en cascada.
@@ -99,12 +99,12 @@ def verificar_stock_producto(sender, instance, **kwargs):
     
     logger.info(f"📦 Verificando stock de '{producto.nombre}': {stock_total} unidades")
     
-    # Si el stock es 0 y el producto NO está bajo pedido, eliminarlo
-    if stock_total == 0 and not producto.bajo_pedido:
-        logger.warning(f"🗑️  Eliminando producto '{producto.nombre}' - Stock: 0, Bajo pedido: No")
-        producto.delete()
-    elif stock_total == 0 and producto.bajo_pedido:
-        logger.info(f"✅ Producto '{producto.nombre}' sin stock pero marcado como 'bajo pedido' - Se mantiene visible")
+    # Si el stock es 0, mantener el producto visible (solo queda agotado en UI).
+    if stock_total == 0:
+        logger.info(
+            "✅ Producto '%s' sin stock total (0) - Se mantiene visible como agotado",
+            producto.nombre,
+        )
     else:
         logger.info(f"✅ Producto '{producto.nombre}' con stock suficiente")
 

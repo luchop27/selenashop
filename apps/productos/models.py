@@ -246,6 +246,9 @@ class Producto(models.Model):
     precio_base = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     tiene_tallas = models.BooleanField(default=False)
     activo = models.BooleanField(default=True)
+    # Nuevo interruptor requerido por el flujo de pedidos/consultas.
+    # Nota: se mantiene `activo` por compatibilidad con código existente.
+    is_active = models.BooleanField(default=True)
     
     # Sistema de productos bajo pedido
     bajo_pedido = models.BooleanField(

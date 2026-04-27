@@ -20,6 +20,30 @@ def _credencial_configurada(valor):
     return not valor_normalizado.upper().startswith('YOUR_')
 
 
+def _build_absolute_url(request, path):
+    """Convierte una ruta relativa en URL absoluta cuando hay request."""
+    if not path:
+        return ''
+    return request.build_absolute_uri(path) if request else path
+
+
+def _get_producto_url(item, request=None):
+    """Obtiene una URL estable del producto para incluirla en WhatsApp."""
+    if not getattr(item, 'producto', None):
+        return ''
+
+    try:
+        url_path = item.producto.get_absolute_url()
+    except Exception:
+        url_path = ''
+
+    if not url_path:
+        from django.urls import reverse
+        url_path = reverse('core:product_detail', kwargs={'slug': item.producto.slug})
+
+    return _build_absolute_url(request, url_path)
+
+
 def enviar_notificacion_pedido(pedido):
     """
     Envía una notificación automática a WhatsApp del admin cuando se realiza un pedido.
@@ -95,16 +119,9 @@ def formatear_mensaje_pedido(pedido):
    📊 Cantidad: {item.cantidad}
    💵 Precio unitario: ${item.precio_unitario:.2f}
    📋 Subtotal: ${item.subtotal:.2f}"""
-        if item.producto:
-            from django.urls import reverse
-            url_path = reverse('productos:producto_detail', kwargs={'slug': item.producto.slug})
-            # Intenta crear URL absoluta, si no usa la relativa
-            try:
-                # Si tenemos request guardado (esto no es común en formatear_mensaje_pedido)
-                pass
-            except:
-                pass
-            mensaje += f"\n   URL: {url_path}"
+        producto_url = _get_producto_url(item)
+        if producto_url:
+            mensaje += f"\n   🔗 Ver producto: {producto_url}"
     
     # Notas si existen
     if pedido.order_note:
@@ -277,14 +294,9 @@ def generar_mensaje_factura_cliente(pedido, request=None):
             partes.append(item.color)
         variantes_str = f" [{' / '.join(partes)}]" if partes else ""
         mensaje += f"  - {item.cantidad}x {item.nombre_producto}{variantes_str} - ${item.precio_unitario:.2f}\n"
-        if item.producto:
-            from django.urls import reverse
-            url_path = reverse('productos:producto_detail', kwargs={'slug': item.producto.slug})
-            if request:
-                url_abs = request.build_absolute_uri(url_path)
-                mensaje += f"    URL: {url_abs}\n"
-            else:
-                mensaje += f"    URL: {url_path}\n"
+        producto_url = _get_producto_url(item, request=request)
+        if producto_url:
+            mensaje += f"    Ver producto: {producto_url}\n"
 
     # ── Totales ──────────────────────────────────────────────────────────────
     mensaje += "\n--------------------------------\n"
@@ -304,12 +316,25 @@ def generar_mensaje_factura_cliente(pedido, request=None):
 
     mensaje += f"\n*TOTAL A PAGAR: ${pedido.total:.2f}*\n"
 
-    # ── Donde ver el pedido (sin link) ───────────────────────────────────────
+    # ── Donde ver el pedido (con link directo cuando sea posible) ────────────
+    pedido_url = ''
+    if request:
+        try:
+            from django.urls import reverse
+            pedido_url = _build_absolute_url(
+                request,
+                reverse('core:order_confirmation', kwargs={'numero_pedido': pedido.numero_pedido}),
+            )
+        except Exception:
+            pedido_url = ''
+
     mensaje += (
         "\n--------------------------------\n"
         "Para ver tu pedido con las fotos de los productos:\n"
         "Ingresa a tu cuenta > Mis Pedidos\n"
     )
+    if pedido_url:
+        mensaje += f"Link directo de tu pedido: {pedido_url}\n"
 
     # ── Instrucciones de pago ────────────────────────────────────────────────
     mensaje += (

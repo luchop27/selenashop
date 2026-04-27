@@ -672,7 +672,6 @@ def product_detail(request, slug=None):
                 'variantes__atributos__valor_atributo__atributo',
             ),
             slug=slug,
-            activo=True
         )
         
         # Obtener todas las imÃ¡genes del producto
@@ -687,7 +686,7 @@ def product_detail(request, slug=None):
         for v in variantes:
             print(f"DEBUG - Variante ID: {v.id}, Talla: {v.talla}, Color: {v.color}, Stock: {v.stock}")
         
-        # Extraer tallas unicas y consolidar stock por talla para bloquear agotadas en UI.
+        # Extraer tallas unicas y consolidar stock/precio por talla para bloquear agotadas en UI.
         tallas_map = {}
         for variante in variantes:
             codigo_talla = None
@@ -712,15 +711,20 @@ def product_detail(request, slug=None):
                 continue
 
             stock_variante = int(variante.stock or 0)
+            precio_variante = variante.precio if variante.precio is not None else producto.precio_base
             if codigo_talla not in tallas_map:
                 tallas_map[codigo_talla] = {
                     'codigo': codigo_talla,
                     'nombre': nombre_talla or codigo_talla,
                     'stock': stock_variante,
+                    # Se usa en frontend (data-price) para evitar NaN al clicar la talla.
+                    'precio': precio_variante,
                 }
             else:
                 # Si hay duplicados por talla, conservar el mayor stock visible para esa talla.
-                tallas_map[codigo_talla]['stock'] = max(tallas_map[codigo_talla]['stock'], stock_variante)
+                if stock_variante >= int(tallas_map[codigo_talla]['stock'] or 0):
+                    tallas_map[codigo_talla]['stock'] = stock_variante
+                    tallas_map[codigo_talla]['precio'] = precio_variante
 
         tallas_disponibles = []
         for talla_data in tallas_map.values():
@@ -748,7 +752,7 @@ def product_detail(request, slug=None):
         # Productos relacionados (misma categorÃ­a/subcategorÃ­a)
         productos_relacionados = (
             Producto.objects
-            .filter(activo=True, categoria=producto.categoria)
+            .filter(activo=True, is_active=True, categoria=producto.categoria)
             .exclude(id=producto.id)
             .select_related('categoria', 'coleccion')
             .prefetch_related('imagenes', 'variantes')
@@ -804,6 +808,7 @@ def product_detail(request, slug=None):
             # Obtener productos de todas estas categorÃ­as
             productos_recientes = Producto.objects.filter(
                 activo=True,
+                is_active=True,
                 categoria_id__in=subcategorias_ids
             ).exclude(
                 id=producto.id
@@ -818,7 +823,8 @@ def product_detail(request, slug=None):
         except Categoria.DoesNotExist:
             # Si no existe la categorÃ­a "Ropa", mostrar productos de cualquier categorÃ­a
             productos_recientes = Producto.objects.filter(
-                activo=True
+                activo=True,
+                is_active=True,
             ).exclude(
                 id=producto.id
             ).select_related(
@@ -955,6 +961,8 @@ def product_detail(request, slug=None):
                 in_wishlist = True
                 wishlist_item_id = wishlist_item.id
         
+        producto_no_disponible = (not bool(getattr(producto, 'is_active', True))) or (not bool(getattr(producto, 'activo', True)))
+
         context = {
             'producto': producto,
             'imagenes': imagenes,
@@ -963,6 +971,7 @@ def product_detail(request, slug=None):
             'tallas_disponibles': tallas_disponibles,
             'talla_default_codigo': talla_default_codigo,
             'producto_agotado': producto_agotado,
+            'producto_no_disponible': producto_no_disponible,
             'precio_min': precio_min,
             'precio_max': precio_max,
             'tiene_descuento': tiene_descuento,
@@ -2334,6 +2343,9 @@ def admin_order_update_status(request, pedido_id):
         # Cambiar estado
         pedido.estado = nuevo_estado
         pedido.save()
+
+        # Nota: al entregar el pedido NO se desactiva ni se elimina el producto.
+        # El producto permanece visible; si se agotó, la UI lo mostrará como "Agotado".
         
         return JsonResponse({
             'success': True,
@@ -2376,6 +2388,7 @@ def admin_order_cancel(request, pedido_id):
     
     try:
         # Devolver stock de cada item del pedido
+        productos_a_reactivar = set()
         for item in pedido.items.all():
             if item.variante:
                 try:
@@ -2400,6 +2413,11 @@ def admin_order_cancel(request, pedido_id):
                     stock_returned.append(f"â€¢ {item.nombre_producto}: Variante no encontrada (no se pudo devolver stock)")
             else:
                 stock_returned.append(f"â€¢ {item.nombre_producto}: Sin variante asociada (no se pudo devolver stock)")
+
+            if item.producto_id:
+                productos_a_reactivar.add(item.producto_id)
+
+        # Nota: al cancelar solo devolvemos stock; el producto siempre permanece visible.
         
         # Marcar pedido como cancelado
         pedido.estado = 'cancelado'
