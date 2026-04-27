@@ -27,7 +27,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3+#xyc#bp9k!gl@vc2_e-%fl#0i0_^$li-k%5j*xc1xqvn^uw9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# En hosting define DJANGO_DEBUG=False.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').strip().lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = ['*']
 
@@ -202,17 +203,30 @@ import os
 # deje EMAIL_HOST_PASSWORD vacío y rompa envíos (ej. reset de contraseña).
 PRODUCTION = (not DEBUG) and (os.environ.get('PRODUCTION', 'False').strip().lower() in ('true', '1', 'yes'))
 
+def _env_bool(key, default=False):
+    raw = os.environ.get(key, None)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in ('true', '1', 'yes')
+
+
 if PRODUCTION:
     # ===== CONFIGURACIÓN PARA PRODUCCIÓN =====
-    # Usar Resend con variables de entorno
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.resend.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = False
-    EMAIL_HOST_USER = 'resend'
-    EMAIL_HOST_PASSWORD = os.environ.get('RESEND_API_KEY', '')
-    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Selena Shop <noreply@selenashop.com>')
+    # Preferimos variables de entorno del hosting (cPanel / Render / etc).
+    # Si no se proveen, usamos defaults de Resend.
+    EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.resend.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = _env_bool('EMAIL_USE_TLS', True)
+    EMAIL_USE_SSL = _env_bool('EMAIL_USE_SSL', False)
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'resend')
+    # Resend usa API Key como "password" en SMTP.
+    EMAIL_HOST_PASSWORD = (
+        os.environ.get('EMAIL_HOST_PASSWORD', '').strip()
+        or os.environ.get('RESEND_API_KEY', '').strip()
+    )
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', '').strip() or 'Selena Shop <onboarding@resend.dev>'
+    EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '10'))
 else:
     # ===== CONFIGURACIÓN PARA DESARROLLO CON RESEND =====
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
