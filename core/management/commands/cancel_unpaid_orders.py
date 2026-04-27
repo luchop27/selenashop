@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.core.management.base import BaseCommand
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
@@ -15,11 +16,12 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser):
+        default_hours = int(getattr(settings, 'UNPAID_ORDER_CANCEL_HOURS', 2) or 2)
         parser.add_argument(
             '--hours',
             type=int,
-            default=2,
-            help='Cantidad de horas para considerar un pedido como expirado (default: 2).',
+            default=default_hours,
+            help='Cantidad de horas para considerar un pedido como expirado (default: settings.UNPAID_ORDER_CANCEL_HOURS).',
         )
         parser.add_argument(
             '--dry-run',

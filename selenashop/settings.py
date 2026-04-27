@@ -186,13 +186,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Shopping Cart Configuration
 CART_SESSION_ID = 'cart'
+
+# ==================== ORDER EXPIRATION / STOCK RESTORE ====================
+# Si un pedido queda "pendiente" y no se paga/gestiona, se cancela automáticamente
+# y se restaura el stock. El job que ejecuta esto es el comando:
+#   python manage.py cancel_unpaid_orders
+UNPAID_ORDER_CANCEL_HOURS = 2
 # ==================== EMAIL CONFIGURATION ====================
 # Configuración con Resend (moderno, sin problemas SSL, 3000 emails/mes gratis)
 
 import os
 
-# Detectar si estamos en producción
-PRODUCTION = os.environ.get('PRODUCTION', 'False') == 'True'
+# Detectar si estamos en producción.
+# En desarrollo (DEBUG=True) ignoramos PRODUCTION para evitar que una .env mal configurada
+# deje EMAIL_HOST_PASSWORD vacío y rompa envíos (ej. reset de contraseña).
+PRODUCTION = (not DEBUG) and (os.environ.get('PRODUCTION', 'False').strip().lower() in ('true', '1', 'yes'))
 
 if PRODUCTION:
     # ===== CONFIGURACIÓN PARA PRODUCCIÓN =====
