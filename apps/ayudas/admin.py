@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import PaginaAyuda, CategoriaFAQ, PreguntaFrecuente, DatosContacto
+from .models import PaginaAyuda, CategoriaFAQ, PreguntaFrecuente, DatosContacto, SliderItem
+
+
+@admin.register(SliderItem)
+class SliderItemAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'orden', 'activo', 'created_at')
+    list_editable = ('orden', 'activo')
+    list_filter = ('activo',)
+    ordering = ('orden', '-created_at')
 
 
 @admin.register(PaginaAyuda)

@@ -1,0 +1,166 @@
+{% extends 'baseadmin.html' %}
+{% load static %}
+
+{% block title %}Agregar Slide - Selena Store{% endblock %}
+{% block menu_slider %}active{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="main-content-inner">
+        <div class="main-content-wrap">
+            <div class="flex items-center flex-wrap justify-between gap20 mb-30">
+                <h3>Agregar Slide Personalizado</h3>
+                <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                    <li><a href="{% url 'core:admin_index' %}"><div class="text-tiny">Dashboard</div></a></li>
+                    <li><i class="icon-chevron-right"></i></li>
+                    <li><a href="{% url 'productos:admin_slider_list' %}"><div class="text-tiny">Slider Home</div></a></li>
+                    <li><i class="icon-chevron-right"></i></li>
+                    <li><div class="text-tiny">Agregar Slide</div></li>
+                </ul>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" style="padding:15px;margin-bottom:20px;border-radius:8px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Imagen principal -->
+                <div class="wg-box mb-30">
+                    <div class="body-title mb-10">Imagen Principal <span class="tf-color-1">*</span></div>
+                    <div class="text-tiny text-surface-2 mb-10">Tamaño recomendado: 1920 × 720 px (formato horizontal). La imagen cubrirá todo el ancho del slider.</div>
+
+                    <div id="upload-area-slider" style="min-height:200px;border:2px dashed #ddd;border-radius:8px;padding:20px;text-align:center;cursor:pointer;">
+                        <label class="uploadfile" for="sliderImagen" style="cursor:pointer;display:block;">
+                            <span class="icon"><i class="icon-upload-cloud" style="font-size:40px;color:#aaa;"></i></span>
+                            <div class="body-title mt-10" style="color:#aaa;">Arrastra tu imagen aquí</div>
+                            <div class="text-tiny text-surface-2">o <span class="text-secondary">haz clic para seleccionar</span></div>
+                            <input type="file" id="sliderImagen" name="imagen" accept="image/*" style="display:none;" required>
+                        </label>
+                    </div>
+                    <div id="preview-slider" style="display:none;margin-top:16px;"></div>
+                </div>
+
+                <!-- Imagen Mobile -->
+                <div class="wg-box mb-30">
+                    <div class="body-title mb-10">Imagen Mobile (Opcional)</div>
+                    <div class="text-tiny text-surface-2 mb-10">Tamaño recomendado: 768 × 900 px (formato vertical). Si no subes una, se usará la imagen principal.</div>
+                    <input type="file" id="sliderImagenMobile" name="imagen_mobile" accept="image/*">
+                    <div id="preview-mobile" style="margin-top:12px;"></div>
+                </div>
+
+                <!-- Textos -->
+                <div class="wg-box mb-30">
+                    <div class="body-title mb-20">Textos del Slide (Opcionales)</div>
+
+                    <fieldset class="name mb-20">
+                        <div class="body-title mb-10">Título</div>
+                        <input type="text" name="titulo" placeholder="Ej: Nueva Colección Verano" value="{{ request.POST.titulo }}" maxlength="200">
+                        <div class="text-tiny text-surface-2">Aparece en grande sobre la imagen.</div>
+                    </fieldset>
+
+                    <fieldset class="name mb-20">
+                        <div class="body-title mb-10">Subtítulo</div>
+                        <input type="text" name="subtitulo" placeholder="Ej: Descubre looks frescos y coloridos" value="{{ request.POST.subtitulo }}" maxlength="300">
+                        <div class="text-tiny text-surface-2">Texto más pequeño bajo el título.</div>
+                    </fieldset>
+
+                    <div class="cols-lg gap22">
+                        <fieldset class="name">
+                            <div class="body-title mb-10">URL del Enlace</div>
+                            <input type="text" name="enlace_url" placeholder="Ej: /collections/ o https://..." value="{{ request.POST.enlace_url }}" maxlength="500">
+                            <div class="text-tiny text-surface-2">Adónde va el botón al hacer clic.</div>
+                        </fieldset>
+                        <fieldset class="name">
+                            <div class="body-title mb-10">Texto del Botón</div>
+                            <input type="text" name="texto_boton" placeholder="Ver más" value="{{ request.POST.texto_boton|default:'Ver más' }}" maxlength="80">
+                        </fieldset>
+                    </div>
+                </div>
+
+                <!-- Configuración -->
+                <div class="wg-box mb-30">
+                    <div class="body-title mb-20">Configuración</div>
+
+                    <div class="cols-lg gap22">
+                        <fieldset class="name">
+                            <div class="body-title mb-10">Orden</div>
+                            <input type="number" name="orden" value="{{ request.POST.orden|default:10 }}" min="0" max="999">
+                            <div class="text-tiny text-surface-2">Número menor = aparece antes. Las colecciones siempre van primero.</div>
+                        </fieldset>
+                        <fieldset class="name">
+                            <div class="body-title mb-10">Estado</div>
+                            <div class="flex gap10 items-center mt-10">
+                                <input type="checkbox" name="activo" id="id_activo" checked>
+                                <label for="id_activo">Slide activo (visible en el home)</label>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div class="cols gap10">
+                    <button class="tf-button w380" type="submit">
+                        <i class="icon-plus"></i> Guardar Slide
+                    </button>
+                    <a href="{% url 'productos:admin_slider_list' %}" class="tf-button style-3 w380">
+                        <i class="icon-x"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="bottom-page">
+        <div class="body-text">Copyright © 2024 <a href="#">Selena Store</a>. Design by Themesflat All rights reserved</div>
+    </div>
+</div>
+
+<script>
+function setupImagePreview(inputId, previewId, areaId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    const area = areaId ? document.getElementById(areaId) : null;
+    if (!input) return;
+
+    input.addEventListener('change', function(e) {
+        if (!e.target.files || !e.target.files[0]) return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            if (area) area.style.display = 'none';
+            preview.style.display = 'block';
+            preview.innerHTML = `
+                <div style="position:relative;border:1px solid #ddd;border-radius:8px;overflow:hidden;max-width:400px;">
+                    <img src="${ev.target.result}" style="width:100%;height:auto;display:block;max-height:220px;object-fit:cover;">
+                    <button type="button" onclick="removePreview('${inputId}','${previewId}','${areaId}')"
+                        style="position:absolute;top:8px;right:8px;background:rgba(255,0,0,0.8);color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:18px;line-height:1;">×</button>
+                    <div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.65);color:white;padding:3px 10px;border-radius:4px;font-size:11px;">${file.name} · ${(file.size/1024).toFixed(1)} KB</div>
+                </div>`;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    if (area) {
+        area.addEventListener('dragover', function(e) { e.preventDefault(); area.style.borderColor='#007bff'; });
+        area.addEventListener('dragleave', function() { area.style.borderColor='#ddd'; });
+        area.addEventListener('drop', function(e) {
+            e.preventDefault(); area.style.borderColor='#ddd';
+            const files = e.dataTransfer.files;
+            if (files && files[0]) { input.files = files; input.dispatchEvent(new Event('change')); }
+        });
+    }
+}
+
+function removePreview(inputId, previewId, areaId) {
+    document.getElementById(inputId).value = '';
+    document.getElementById(previewId).style.display = 'none';
+    document.getElementById(previewId).innerHTML = '';
+    if (areaId) document.getElementById(areaId).style.display = 'block';
+}
+
+setupImagePreview('sliderImagen', 'preview-slider', 'upload-area-slider');
+setupImagePreview('sliderImagenMobile', 'preview-mobile', null);
+</script>
+{% endblock %}

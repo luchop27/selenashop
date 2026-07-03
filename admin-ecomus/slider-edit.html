@@ -1,0 +1,171 @@
+{% extends 'baseadmin.html' %}
+{% load static %}
+
+{% block title %}Editar Slide - Selena Store{% endblock %}
+{% block menu_slider %}active{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="main-content-inner">
+        <div class="main-content-wrap">
+            <div class="flex items-center flex-wrap justify-between gap20 mb-30">
+                <h3>Editar Slide</h3>
+                <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                    <li><a href="{% url 'core:admin_index' %}"><div class="text-tiny">Dashboard</div></a></li>
+                    <li><i class="icon-chevron-right"></i></li>
+                    <li><a href="{% url 'productos:admin_slider_list' %}"><div class="text-tiny">Slider Home</div></a></li>
+                    <li><i class="icon-chevron-right"></i></li>
+                    <li><div class="text-tiny">Editar</div></li>
+                </ul>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" style="padding:15px;margin-bottom:20px;border-radius:8px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Imagen principal actual -->
+                <div class="wg-box mb-30">
+                    <div class="body-title mb-10">Imagen Principal</div>
+                    <div class="text-tiny text-surface-2 mb-10">Tamaño recomendado: 1920 × 720 px. Si no seleccionas una nueva, se conserva la actual.</div>
+
+                    {% if item.imagen %}
+                    <div id="current-img" style="margin-bottom:16px;">
+                        <div class="body-title-2 mb-8">Imagen actual:</div>
+                        <div style="position:relative;border:1px solid #ddd;border-radius:8px;overflow:hidden;max-width:400px;">
+                            <img src="{{ item.imagen.url }}" style="width:100%;height:auto;max-height:220px;object-fit:cover;display:block;">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div id="upload-area-slider" style="min-height:140px;border:2px dashed #ddd;border-radius:8px;padding:20px;text-align:center;cursor:pointer;">
+                        <label for="sliderImagen" style="cursor:pointer;display:block;">
+                            <span class="icon"><i class="icon-upload-cloud" style="font-size:32px;color:#aaa;"></i></span>
+                            <div class="text-tiny text-surface-2 mt-8">Seleccionar nueva imagen (opcional)</div>
+                            <input type="file" id="sliderImagen" name="imagen" accept="image/*" style="display:none;">
+                        </label>
+                    </div>
+                    <div id="preview-slider" style="display:none;margin-top:12px;"></div>
+                </div>
+
+                <!-- Imagen Mobile -->
+                <div class="wg-box mb-30">
+                    <div class="body-title mb-10">Imagen Mobile (Opcional)</div>
+
+                    {% if item.imagen_mobile %}
+                    <div style="margin-bottom:14px;">
+                        <div class="body-title-2 mb-8">Imagen mobile actual:</div>
+                        <div style="position:relative;border:1px solid #ddd;border-radius:8px;overflow:hidden;max-width:160px;">
+                            <img src="{{ item.imagen_mobile.url }}" style="width:100%;height:auto;display:block;">
+                        </div>
+                        <div class="flex gap10 items-center mt-10">
+                            <input type="checkbox" name="borrar_mobile" id="borrar_mobile" value="1">
+                            <label for="borrar_mobile" class="text-tiny" style="color:#e53;">Eliminar imagen mobile</label>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <input type="file" id="sliderImagenMobile" name="imagen_mobile" accept="image/*">
+                    <div class="text-tiny text-surface-2 mt-6">Sube una nueva para reemplazar la actual.</div>
+                    <div id="preview-mobile" style="margin-top:12px;"></div>
+                </div>
+
+                <!-- Textos -->
+                <div class="wg-box mb-30">
+                    <div class="body-title mb-20">Textos del Slide</div>
+
+                    <fieldset class="name mb-20">
+                        <div class="body-title mb-10">Título</div>
+                        <input type="text" name="titulo" placeholder="Ej: Nueva Colección Verano" value="{{ item.titulo }}" maxlength="200">
+                    </fieldset>
+
+                    <fieldset class="name mb-20">
+                        <div class="body-title mb-10">Subtítulo</div>
+                        <input type="text" name="subtitulo" placeholder="Ej: Descubre looks frescos" value="{{ item.subtitulo }}" maxlength="300">
+                    </fieldset>
+
+                    <div class="cols-lg gap22">
+                        <fieldset class="name">
+                            <div class="body-title mb-10">URL del Enlace</div>
+                            <input type="text" name="enlace_url" placeholder="/collections/" value="{{ item.enlace_url }}" maxlength="500">
+                        </fieldset>
+                        <fieldset class="name">
+                            <div class="body-title mb-10">Texto del Botón</div>
+                            <input type="text" name="texto_boton" placeholder="Ver más" value="{{ item.texto_boton }}" maxlength="80">
+                        </fieldset>
+                    </div>
+                </div>
+
+                <!-- Configuración -->
+                <div class="wg-box mb-30">
+                    <div class="body-title mb-20">Configuración</div>
+                    <div class="cols-lg gap22">
+                        <fieldset class="name">
+                            <div class="body-title mb-10">Orden</div>
+                            <input type="number" name="orden" value="{{ item.orden }}" min="0" max="999">
+                            <div class="text-tiny text-surface-2">Menor número = aparece antes.</div>
+                        </fieldset>
+                        <fieldset class="name">
+                            <div class="body-title mb-10">Estado</div>
+                            <div class="flex gap10 items-center mt-10">
+                                <input type="checkbox" name="activo" id="id_activo" {% if item.activo %}checked{% endif %}>
+                                <label for="id_activo">Slide activo (visible en el home)</label>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div class="cols gap10">
+                    <button class="tf-button w380" type="submit">
+                        <i class="icon-save"></i> Guardar Cambios
+                    </button>
+                    <a href="{% url 'productos:admin_slider_list' %}" class="tf-button style-3 w380">
+                        <i class="icon-x"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="bottom-page">
+        <div class="body-text">Copyright © 2024 <a href="#">Selena Store</a>. Design by Themesflat All rights reserved</div>
+    </div>
+</div>
+
+<script>
+function setupImagePreview(inputId, previewId, areaId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    const area = areaId ? document.getElementById(areaId) : null;
+    if (!input) return;
+    input.addEventListener('change', function(e) {
+        if (!e.target.files || !e.target.files[0]) return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            if (area) area.style.display = 'none';
+            preview.style.display = 'block';
+            preview.innerHTML = `
+                <div style="position:relative;border:1px solid #ddd;border-radius:8px;overflow:hidden;max-width:400px;">
+                    <img src="${ev.target.result}" style="width:100%;height:auto;display:block;max-height:220px;object-fit:cover;">
+                    <button type="button" onclick="removePreview('${inputId}','${previewId}','${areaId}')"
+                        style="position:absolute;top:8px;right:8px;background:rgba(255,0,0,0.8);color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:18px;line-height:1;">×</button>
+                    <div style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.65);color:white;padding:3px 10px;border-radius:4px;font-size:11px;">${file.name} · ${(file.size/1024).toFixed(1)} KB</div>
+                </div>`;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+function removePreview(inputId, previewId, areaId) {
+    document.getElementById(inputId).value = '';
+    document.getElementById(previewId).style.display = 'none';
+    document.getElementById(previewId).innerHTML = '';
+    if (areaId) document.getElementById(areaId).style.display = 'block';
+}
+setupImagePreview('sliderImagen', 'preview-slider', 'upload-area-slider');
+setupImagePreview('sliderImagenMobile', 'preview-mobile', null);
+</script>
+{% endblock %}

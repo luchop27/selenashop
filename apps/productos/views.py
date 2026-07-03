@@ -39,14 +39,94 @@ def _get_marcas_existentes():
 
 @admin_required
 def panel_dashboard(request):
-	"""Vista principal del dashboard"""
-	total_productos = Producto.objects.count()
-	total_categorias = Categoria.objects.filter(estado=True).count()
-    
-	return render(request, "index.html", {
-		"total_productos": total_productos,
-		"total_categorias": total_categorias,
-	})
+    """Vista principal del dashboard"""
+    total_productos = Producto.objects.count()
+    total_categorias = Categoria.objects.filter(estado=True).count()
+    return render(request, "index.html", {
+        "total_productos": total_productos,
+        "total_categorias": total_categorias,
+    })
+
+
+# ─── Slider Items ────────────────────────────────────────────────────────────
+
+@admin_required
+def admin_slider_list(request):
+    from apps.ayudas.models import SliderItem
+    items = SliderItem.objects.all().order_by('orden', '-created_at')
+    return render(request, 'slider-list.html', {'items': items})
+
+
+@admin_required
+def admin_slider_add(request):
+    from apps.ayudas.models import SliderItem
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo', '').strip()
+        subtitulo = request.POST.get('subtitulo', '').strip()
+        enlace_url = request.POST.get('enlace_url', '').strip()
+        texto_boton = request.POST.get('texto_boton', '').strip()
+        orden = int(request.POST.get('orden', 10) or 10)
+        activo = 'activo' in request.POST
+        imagen = request.FILES.get('imagen')
+        imagen_mobile = request.FILES.get('imagen_mobile')
+
+        if not imagen:
+            messages.error(request, 'La imagen principal es obligatoria.')
+            return render(request, 'slider-add.html')
+
+        item = SliderItem(
+            titulo=titulo,
+            subtitulo=subtitulo,
+            enlace_url=enlace_url,
+            texto_boton=texto_boton,
+            orden=orden,
+            activo=activo,
+            imagen=imagen,
+        )
+        if imagen_mobile:
+            item.imagen_mobile = imagen_mobile
+        item.save()
+        messages.success(request, 'Slide agregado correctamente.')
+        return redirect('productos:admin_slider_list')
+
+    return render(request, 'slider-add.html')
+
+
+@admin_required
+def admin_slider_edit(request, pk):
+    from apps.ayudas.models import SliderItem
+    item = get_object_or_404(SliderItem, pk=pk)
+
+    if request.method == 'POST':
+        item.titulo = request.POST.get('titulo', '').strip()
+        item.subtitulo = request.POST.get('subtitulo', '').strip()
+        item.enlace_url = request.POST.get('enlace_url', '').strip()
+        item.texto_boton = request.POST.get('texto_boton', '').strip()
+        item.orden = int(request.POST.get('orden', 10) or 10)
+        item.activo = 'activo' in request.POST
+
+        if request.FILES.get('imagen'):
+            item.imagen = request.FILES['imagen']
+        if request.FILES.get('imagen_mobile'):
+            item.imagen_mobile = request.FILES['imagen_mobile']
+        if request.POST.get('borrar_mobile') == '1':
+            item.imagen_mobile = None
+
+        item.save()
+        messages.success(request, 'Slide actualizado correctamente.')
+        return redirect('productos:admin_slider_list')
+
+    return render(request, 'slider-edit.html', {'item': item})
+
+
+@admin_required
+def admin_slider_delete(request, pk):
+    from apps.ayudas.models import SliderItem
+    item = get_object_or_404(SliderItem, pk=pk)
+    if request.method == 'POST':
+        item.delete()
+        messages.success(request, 'Slide eliminado.')
+    return redirect('productos:admin_slider_list')
 
 # =========================
 #  VISTAS PÚBLICAS

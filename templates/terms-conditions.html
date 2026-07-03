@@ -1,26 +1,522 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
+
+{% block extra_css %}
+<style>
+    /* ── Page title ──────────────────────────────────── */
+    .tc-hero {
+        padding: 70px 0 50px;
+        text-align: center;
+        border-bottom: 1px solid #ebebeb;
+    }
+    .tc-hero .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #8a7a5a;
+        margin-bottom: 14px;
+    }
+    .tc-hero h1 {
+        font-size: clamp(28px, 5vw, 48px);
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        margin-bottom: 18px;
+        color: #111;
+    }
+    .tc-hero .subtitle {
+        max-width: 520px;
+        margin: 0 auto;
+        color: #888;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    /* ── Layout ──────────────────────────────────────── */
+    .tc-layout {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 60px;
+        padding: 60px 0 90px;
+        align-items: start;
+    }
+    @media (max-width: 991px) {
+        .tc-layout {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+
+    /* ── Sticky sidebar nav ───────────────────────────── */
+    .tc-sidebar {
+        position: sticky;
+        top: 100px;
+    }
+    .tc-sidebar h6 {
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #aaa;
+        margin-bottom: 18px;
+    }
+    .tc-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border-left: 1px solid #ebebeb;
+    }
+    .tc-nav li a {
+        display: block;
+        padding: 9px 16px;
+        font-size: 13px;
+        color: #666;
+        text-decoration: none;
+        transition: color 0.2s, border-color 0.2s;
+        border-left: 2px solid transparent;
+        margin-left: -1px;
+        line-height: 1.4;
+    }
+    .tc-nav li a:hover,
+    .tc-nav li a.active {
+        color: #111;
+        border-left-color: #8a7a5a;
+    }
+    @media (max-width: 991px) {
+        .tc-sidebar {
+            display: none;
+        }
+    }
+
+    /* ── Mobile pills nav ───────────────────────────── */
+    .tc-pills {
+        display: none;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 36px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid #ebebeb;
+    }
+    .tc-pills a {
+        display: inline-block;
+        padding: 7px 16px;
+        border: 1px solid #ddd;
+        border-radius: 999px;
+        font-size: 12px;
+        color: #555;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .tc-pills a:hover {
+        border-color: #8a7a5a;
+        color: #8a7a5a;
+    }
+    @media (max-width: 991px) {
+        .tc-pills {
+            display: flex;
+        }
+    }
+
+    /* ── Content sections ────────────────────────────── */
+    .tc-sections {
+        min-width: 0;
+    }
+    .tc-section {
+        padding-bottom: 56px;
+        margin-bottom: 56px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .tc-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .tc-section-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+    .tc-icon {
+        width: 42px;
+        height: 42px;
+        border: 1px solid #ebebeb;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #8a7a5a;
+        font-size: 16px;
+    }
+    .tc-section-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111;
+        margin: 0 0 4px;
+        letter-spacing: 0.01em;
+    }
+    .tc-section-header .tc-tag {
+        font-size: 11px;
+        color: #8a7a5a;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .tc-section p {
+        font-size: 14px;
+        color: #555;
+        line-height: 1.8;
+        margin-bottom: 14px;
+    }
+    .tc-section p:last-child {
+        margin-bottom: 0;
+    }
+    .tc-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .tc-list li {
+        font-size: 14px;
+        color: #555;
+        line-height: 1.7;
+        padding: 10px 0 10px 22px;
+        border-bottom: 1px solid #f8f8f8;
+        position: relative;
+    }
+    .tc-list li:last-child {
+        border-bottom: none;
+    }
+    .tc-list li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 18px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #c5b99a;
+    }
+    .tc-list li strong {
+        color: #111;
+        font-weight: 600;
+    }
+
+    /* ── Highlight cards ─────────────────────────────── */
+    .tc-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-top: 10px;
+    }
+    .tc-card {
+        background: #fafaf8;
+        border: 1px solid #ebebeb;
+        border-radius: 4px;
+        padding: 20px;
+        text-align: center;
+    }
+    .tc-card .tc-card-icon {
+        font-size: 22px;
+        color: #8a7a5a;
+        margin-bottom: 10px;
+    }
+    .tc-card h4 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 4px;
+    }
+    .tc-card p {
+        font-size: 12px;
+        color: #888;
+        margin: 0;
+    }
+
+    /* ── Alert box ───────────────────────────────────── */
+    .tc-alert {
+        background: #fdf8f0;
+        border-left: 3px solid #c5b99a;
+        padding: 16px 20px;
+        border-radius: 0 4px 4px 0;
+        margin-top: 20px;
+    }
+    .tc-alert p {
+        font-size: 13px;
+        color: #7a6a4f;
+        margin: 0;
+        line-height: 1.7;
+    }
+    .tc-alert strong {
+        color: #5c4a30;
+    }
+
+    /* ── Last updated ────────────────────────────────── */
+    .tc-footer-note {
+        text-align: center;
+        font-size: 12px;
+        color: #bbb;
+        padding-top: 40px;
+        border-top: 1px solid #ebebeb;
+        margin-top: 60px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- page-title -->
-<div class="tf-page-title style-2">
-    <div class="container-full">
-        <div class="heading text-center">{{ pagina.titulo }}</div>
+
+<!-- Hero -->
+<div class="tc-hero">
+    <div class="container">
+        <p class="eyebrow">Selena Boutique</p>
+        <h1>Políticas de la Tienda</h1>
+        <p class="subtitle">Todo lo que necesitas saber sobre cómo comprar, pagar, recibir tus pedidos y nuestras condiciones de venta mayorista.</p>
     </div>
 </div>
-<!-- /page-title -->
-<!-- main-page -->
-<section class="flat-spacing-25">
-    <div class="container">
-        <div class="tf-main-area-page tf-terms-conditions">
-            {% if pagina and pagina.contenido %}
-                {{ pagina.contenido|safe }}
-            {% else %}
-                <div class="box">
-                    <p class="text-center text-muted">No hay contenido disponible</p>
+
+<!-- Main content -->
+<div class="container">
+    <div class="tc-layout">
+
+        <!-- Sidebar navigation (desktop) -->
+        <aside class="tc-sidebar">
+            <h6>En esta página</h6>
+            <ul class="tc-nav">
+                <li><a href="#como-comprar">¿Cómo Comprar?</a></li>
+                <li><a href="#requisitos">Requisitos de Cliente</a></li>
+                <li><a href="#pagos">Métodos de Pago</a></li>
+                <li><a href="#facturacion">Facturación</a></li>
+                <li><a href="#devoluciones">Devoluciones y Cambios</a></li>
+                <li><a href="#envios">Envíos y Entrega</a></li>
+                <li><a href="#separados">Separados y Reservas</a></li>
+                <li><a href="#verificacion">Verificación de Clientes</a></li>
+            </ul>
+        </aside>
+
+        <!-- Sections -->
+        <div class="tc-sections">
+
+            <!-- Pills nav (mobile) -->
+            <nav class="tc-pills">
+                <a href="#como-comprar">Comprar</a>
+                <a href="#requisitos">Requisitos</a>
+                <a href="#pagos">Pagos</a>
+                <a href="#facturacion">Facturación</a>
+                <a href="#devoluciones">Devoluciones</a>
+                <a href="#envios">Envíos</a>
+                <a href="#separados">Separados</a>
+                <a href="#verificacion">Verificación</a>
+            </nav>
+
+            <!-- 1. ¿Cómo Comprar? -->
+            <section class="tc-section" id="como-comprar">
+                <div class="tc-section-header">
+                    <div class="tc-icon">
+                        <i class="icon icon-bag"></i>
+                    </div>
+                    <div>
+                        <h2>¿Cómo Comprar?</h2>
+                        <span class="tc-tag">Proceso de compra</span>
+                    </div>
                 </div>
-            {% endif %}
+                <p>Selena Boutique opera como <strong>distribuidora mayorista</strong> de ropa y accesorios. Para realizar una compra debes cumplir los requisitos detallados en esta página y seguir el proceso de adquisición a continuación.</p>
+                <ul class="tc-list">
+                    <li>El mayorista debe adquirir <strong>por cada modelo las tallas S, M y L</strong> completas.</li>
+                    <li>Para ser considerado cliente activo se requiere una <strong>compra mínima de $500</strong>.</li>
+                    <li>La entrega de la mercadería se realizará <strong>una vez confirmado el pago</strong>.</li>
+                    <li>Los gastos de transporte corren <strong>por cuenta del cliente</strong>.</li>
+                </ul>
+
+                <div class="tc-cards mt-4">
+                    <div class="tc-card">
+                        <div class="tc-card-icon"><i class="icon icon-tag"></i></div>
+                        <h4>S · M · L</h4>
+                        <p>Tallas requeridas por modelo</p>
+                    </div>
+                    <div class="tc-card">
+                        <div class="tc-card-icon"><i class="icon icon-bag"></i></div>
+                        <h4>$500</h4>
+                        <p>Compra mínima para cliente activo</p>
+                    </div>
+                    <div class="tc-card">
+                        <div class="tc-card-icon"><i class="icon icon-clock"></i></div>
+                        <h4>48 h</h4>
+                        <p>Tiempo máximo de reserva</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Requisitos de Cliente -->
+            <section class="tc-section" id="requisitos">
+                <div class="tc-section-header">
+                    <div class="tc-icon">
+                        <i class="icon icon-account"></i>
+                    </div>
+                    <div>
+                        <h2>Requisitos de Cliente</h2>
+                        <span class="tc-tag">Perfil mayorista</span>
+                    </div>
+                </div>
+                <p>Para acceder a los precios y condiciones mayoristas, el cliente debe estar <strong>formalmente registrado como vendedor</strong> del sector textil, de moda o accesorios.</p>
+                <ul class="tc-list">
+                    <li>Presentar <strong>RUC o RISE vigente</strong> donde conste la actividad de venta de ropa, textiles o accesorios.</li>
+                    <li>O demostrar actividad comercial mediante una <strong>red social comercial</strong> (página, catálogo, tienda online) que evidencie la venta de estos productos.</li>
+                    <li>La actividad principal <strong>o secundaria</strong> del cliente debe ser la venta de ropa, textiles o accesorios.</li>
+                </ul>
+                <div class="tc-alert">
+                    <p><strong>Nota importante:</strong> Selena Boutique se reserva el derecho de verificar esta información y de suspender cualquier beneficio mayorista en caso de falsedad o incumplimiento de los requisitos establecidos.</p>
+                </div>
+            </section>
+
+            <!-- 3. Métodos de Pago -->
+            <section class="tc-section" id="pagos">
+                <div class="tc-section-header">
+                    <div class="tc-icon">
+                        <i class="icon icon-gift"></i>
+                    </div>
+                    <div>
+                        <h2>Métodos de Pago</h2>
+                        <span class="tc-tag">Formas de pago aceptadas</span>
+                    </div>
+                </div>
+                <p>Aceptamos los siguientes métodos de pago para tus pedidos:</p>
+                <ul class="tc-list">
+                    <li><strong>Efectivo</strong> — Pago en persona al momento de la entrega o retiro.</li>
+                    <li><strong>Transferencia bancaria</strong> — Depósito o transferencia a nuestra cuenta. El pedido se procesa una vez confirmado el pago.</li>
+                    <li><strong>Tarjeta de crédito</strong> — Disponible; se aplicará un <strong>recargo adicional del banco</strong> sobre el valor total de la compra.</li>
+                </ul>
+                <div class="tc-alert">
+                    <p>En caso de transferencia bancaria, el cliente debe enviar el comprobante de pago para agilizar la confirmación del pedido.</p>
+                </div>
+            </section>
+
+            <!-- 4. Facturación -->
+            <section class="tc-section" id="facturacion">
+                <div class="tc-section-header">
+                    <div class="tc-icon">
+                        <i class="icon icon-edit"></i>
+                    </div>
+                    <div>
+                        <h2>Facturación</h2>
+                        <span class="tc-tag">Emisión de comprobantes</span>
+                    </div>
+                </div>
+                <ul class="tc-list">
+                    <li>Las facturas se emitirán por el <strong>50% del valor total</strong> de la compra.</li>
+                    <li>El comprobante se genera en el momento de la facturación del pedido.</li>
+                </ul>
+            </section>
+
+            <!-- 5. Devoluciones y Cambios -->
+            <section class="tc-section" id="devoluciones">
+                <div class="tc-section-header">
+                    <div class="tc-icon">
+                        <i class="icon icon-return"></i>
+                    </div>
+                    <div>
+                        <h2>Devoluciones y Cambios</h2>
+                        <span class="tc-tag">Política de cambios</span>
+                    </div>
+                </div>
+                <p>Por la naturaleza de nuestro modelo de distribución mayorista, aplicamos la siguiente política:</p>
+                <ul class="tc-list">
+                    <li><strong>Una vez facturada la compra, no se aceptan devoluciones.</strong> El cliente es responsable de revisar cuidadosamente las prendas al momento de recibirlas.</li>
+                    <li>Las prendas pueden ser <strong>separadas con un abono del 80%</strong> del valor total.</li>
+                    <li>Una prenda que ha sido <strong>separada (apartada)</strong> no admite cambio posterior.</li>
+                </ul>
+                <div class="tc-alert">
+                    <p><strong>Recomendación:</strong> Antes de firmar o confirmar la recepción del pedido, verifica el estado, talla y color de todas las prendas. Una vez aceptada la mercadería, no se procesarán devoluciones.</p>
+                </div>
+            </section>
+
+            <!-- 6. Envíos y Entrega -->
+            <section class="tc-section" id="envios">
+                <div class="tc-section-header">
+                    <div class="tc-icon">
+                        <i class="icon icon-shipping"></i>
+                    </div>
+                    <div>
+                        <h2>Envíos y Entrega</h2>
+                        <span class="tc-tag">Logística y transporte</span>
+                    </div>
+                </div>
+                <ul class="tc-list">
+                    <li>La entrega de la mercadería se realizará <strong>únicamente una vez confirmado el pago</strong> en su totalidad.</li>
+                    <li>Los <strong>gastos de transporte corren por cuenta del cliente</strong>. Selena Boutique no incluye costos de envío en el precio de los productos.</li>
+                    <li>Para coordinar la entrega o retiro, comunícate con nosotros por WhatsApp o al correo electrónico indicado.</li>
+                </ul>
+            </section>
+
+            <!-- 7. Separados y Reservas -->
+            <section class="tc-section" id="separados">
+                <div class="tc-section-header">
+                    <div class="tc-icon">
+                        <i class="icon icon-clock"></i>
+                    </div>
+                    <div>
+                        <h2>Separados y Reservas</h2>
+                        <span class="tc-tag">Tiempo de espera</span>
+                    </div>
+                </div>
+                <ul class="tc-list">
+                    <li>Las reservas de productos se mantendrán por un máximo de <strong>48 horas</strong> desde el momento de la separación.</li>
+                    <li>Pasado ese tiempo sin confirmación de pago, <strong>no se entregará el abono</strong> realizado y la prenda volverá a estar disponible para la venta.</li>
+                    <li>Para separar una prenda se requiere un <strong>abono mínimo del 80%</strong> del valor total del artículo.</li>
+                    <li>Una vez separada, <strong>la prenda no admite cambio</strong> de talla, color u otro artículo.</li>
+                </ul>
+            </section>
+
+            <!-- 8. Verificación de Clientes -->
+            <section class="tc-section" id="verificacion">
+                <div class="tc-section-header">
+                    <div class="tc-icon">
+                        <i class="icon icon-mail"></i>
+                    </div>
+                    <div>
+                        <h2>Verificación de Clientes</h2>
+                        <span class="tc-tag">Proceso de validación</span>
+                    </div>
+                </div>
+                <p>Con el fin de mantener la calidad de nuestro canal de distribución, Selena Boutique realiza una verificación de los datos de cada cliente mayorista.</p>
+                <ul class="tc-list">
+                    <li>El proceso de verificación puede incluir la <strong>solicitud de documentos adicionales</strong> (RUC, RISE, capturas de redes sociales comerciales).</li>
+                    <li>Nos reservamos el derecho de <strong>aceptar o rechazar solicitudes</strong> de incorporación como cliente mayorista sin necesidad de justificación.</li>
+                    <li>En caso de detectarse información falsa o incumplimiento de requisitos, <strong>se suspenderán todos los beneficios</strong> otorgados al cliente.</li>
+                </ul>
+                <div class="tc-alert">
+                    <p>Para cualquier consulta sobre los requisitos o el proceso de verificación, contáctanos a <strong>{{ datos_contacto.email }}</strong> o por teléfono al <strong>{{ datos_contacto.telefono }}</strong>.</p>
+                </div>
+            </section>
+
         </div>
+        <!-- /sections -->
+
     </div>
-</section>
-<!-- /main-page -->
+    <!-- /layout -->
+
+    <p class="tc-footer-note">Última actualización: Julio 2025 · Selena Boutique · {{ datos_contacto.direccion }}</p>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Highlight active sidebar link on scroll */
+(function () {
+    const links = document.querySelectorAll('.tc-nav a');
+    const sections = document.querySelectorAll('.tc-section');
+    if (!links.length || !sections.length) return;
+
+    const obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                links.forEach(function (l) { l.classList.remove('active'); });
+                const active = document.querySelector('.tc-nav a[href="#' + entry.target.id + '"]');
+                if (active) active.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+
+    sections.forEach(function (s) { obs.observe(s); });
+})();
+</script>
 {% endblock %}

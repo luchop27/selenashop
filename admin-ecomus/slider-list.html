@@ -1,0 +1,120 @@
+{% extends 'baseadmin.html' %}
+{% load static %}
+
+{% block title %}Slider Home - Selena Store{% endblock %}
+{% block menu_slider %}active{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="main-content-inner">
+        <div class="main-content-wrap">
+            <div class="flex items-center flex-wrap justify-between gap20 mb-30">
+                <h3>Slides Personalizados</h3>
+                <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
+                    <li><a href="{% url 'core:admin_index' %}"><div class="text-tiny">Dashboard</div></a></li>
+                    <li><i class="icon-chevron-right"></i></li>
+                    <li><div class="text-tiny">Slider Home</div></li>
+                </ul>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" style="padding:15px;margin-bottom:20px;border-radius:8px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="wg-box">
+                <div class="flex items-center justify-between gap10 flex-wrap mb-20">
+                    <div class="body-title">Lista de slides (aparecen después de las colecciones)</div>
+                    <a href="{% url 'productos:admin_slider_add' %}" class="tf-button style-1 w208">
+                        <i class="icon-plus"></i> Agregar Slide
+                    </a>
+                </div>
+
+                {% if items %}
+                <div class="wg-table table-all-user">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Imagen</th>
+                                <th>Título</th>
+                                <th>Subtítulo</th>
+                                <th>Enlace</th>
+                                <th>Orden</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>
+                                    <div class="image" style="width:80px;height:50px;overflow:hidden;border-radius:4px;">
+                                        <img src="{{ item.imagen.url }}" alt="{{ item.titulo }}" style="width:100%;height:100%;object-fit:cover;">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="body-title-2">{{ item.titulo|default:"—" }}</div>
+                                </td>
+                                <td>
+                                    <div class="text-tiny text-surface-2">{{ item.subtitulo|truncatechars:50|default:"—" }}</div>
+                                </td>
+                                <td>
+                                    <div class="text-tiny">
+                                        {% if item.enlace_url %}
+                                            <span title="{{ item.enlace_url }}">{{ item.enlace_url|truncatechars:30 }}</span>
+                                        {% else %}—{% endif %}
+                                    </div>
+                                </td>
+                                <td><div class="body-text">{{ item.orden }}</div></td>
+                                <td>
+                                    {% if item.activo %}
+                                        <div class="block-available">Activo</div>
+                                    {% else %}
+                                        <div class="block-not-available">Inactivo</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="list-icon-function">
+                                        <a href="{% url 'productos:admin_slider_edit' item.pk %}" class="item edit">
+                                            <i class="icon-edit-3"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'productos:admin_slider_delete' item.pk %}" style="display:inline;" onsubmit="return confirm('¿Eliminar este slide?')">
+                                            {% csrf_token %}
+                                            <button type="submit" class="item delete" style="border:none;background:transparent;cursor:pointer;padding:0;">
+                                                <i class="icon-trash-2"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <p class="text-surface-2 mb-20">Aún no hay slides personalizados.</p>
+                    <a href="{% url 'productos:admin_slider_add' %}" class="tf-button w208">
+                        <i class="icon-plus"></i> Agregar primer slide
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="wg-box mt-20" style="background:#fffaf5;border:1px solid #f0e8d8;">
+                <div class="body-title mb-10">ℹ️ ¿Cómo funciona el slider?</div>
+                <ul style="list-style:disc;padding-left:20px;font-size:13px;color:#666;line-height:1.8;">
+                    <li>Los slides de <strong>Colecciones</strong> aparecen primero (se gestionan en la sección Colecciones).</li>
+                    <li>Los slides personalizados de esta sección aparecen <strong>después</strong> de las colecciones, ordenados por el campo "Orden" (menor número = antes).</li>
+                    <li>Puedes agregar imágenes propias con título, subtítulo y botón con enlace.</li>
+                    <li>Sube una imagen <strong>Mobile</strong> opcional para que se vea mejor en teléfonos (formato vertical).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-page">
+        <div class="body-text">Copyright © 2024 <a href="#">Selena Store</a>. Design by Themesflat All rights reserved</div>
+    </div>
+</div>
+{% endblock %}

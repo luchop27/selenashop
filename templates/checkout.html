@@ -33,21 +33,38 @@
                                 <div class="select-custom">
                                     <select class="tf-select w-100" id="province" name="province" required>
                                         <option value="">Selecciona tu provincia</option>
-                                        {% for provincia in provincias %}
-                                            <option value="{{ provincia.id }}">{{ provincia.nombre }}</option>
-                                        {% endfor %}
+                                        <option value="Azuay">Azuay</option>
+                                        <option value="Bolívar">Bolívar</option>
+                                        <option value="Cañar">Cañar</option>
+                                        <option value="Carchi">Carchi</option>
+                                        <option value="Chimborazo">Chimborazo</option>
+                                        <option value="Cotopaxi">Cotopaxi</option>
+                                        <option value="El Oro">El Oro</option>
+                                        <option value="Esmeraldas">Esmeraldas</option>
+                                        <option value="Galápagos">Galápagos</option>
+                                        <option value="Guayas">Guayas</option>
+                                        <option value="Imbabura">Imbabura</option>
+                                        <option value="Loja">Loja</option>
+                                        <option value="Los Ríos">Los Ríos</option>
+                                        <option value="Manabí">Manabí</option>
+                                        <option value="Morona Santiago">Morona Santiago</option>
+                                        <option value="Napo">Napo</option>
+                                        <option value="Orellana">Orellana</option>
+                                        <option value="Pastaza">Pastaza</option>
+                                        <option value="Pichincha">Pichincha</option>
+                                        <option value="Santa Elena">Santa Elena</option>
+                                        <option value="Santo Domingo de los Tsáchilas">Santo Domingo de los Tsáchilas</option>
+                                        <option value="Sucumbíos">Sucumbíos</option>
+                                        <option value="Tungurahua">Tungurahua</option>
+                                        <option value="Zamora Chinchipe">Zamora Chinchipe</option>
                                     </select>
                                 </div>
                             </fieldset>
                             <fieldset class="box fieldset">
                                 <label for="city">Ciudad <span class="text-danger">*</span></label>
                                 <div class="select-custom">
-                                    <select class="tf-select w-100" id="city" name="city" required disabled>
+                                    <select class="tf-select w-100" id="city" name="city" required>
                                         <option value="">Selecciona una provincia primero</option>
-                                        {% for ciudad in ciudades %}
-                                            <option value="{{ ciudad.nombre }}" data-province-id="{{ ciudad.provincia.id }}">{{ ciudad.nombre }}</option>
-                                        {% endfor %}
-                                        <option value="Otra" data-province-id="">Otra ciudad</option>
                                     </select>
                                 </div>
                             </fieldset>
@@ -256,9 +273,7 @@
         </section>
         <!-- page-cart -->
 
-{% endblock %}
 
-{% block extra_js %}
 <style>
     .d-none-keep-old-for-reference {
         display: none !important;
@@ -294,51 +309,91 @@
         const otherCityField = document.getElementById('other-city-field');
         const otherCityInput = document.getElementById('other-city');
         
-        // Manejar cambio de provincia
+        // Diccionario de Provincias y Ciudades de Ecuador
+        const ecuadorData = {
+            "Azuay": ["Cuenca", "Gualaceo", "Paute", "Sigsig", "Girón", "Santa Isabel", "Camilo Ponce Enríquez"],
+            "Bolívar": ["Guaranda", "Chillanes", "Chimbo", "Echeandía", "San Miguel", "Caluma"],
+            "Cañar": ["Azogues", "Biblián", "Cañar", "La Troncal", "El Tambo", "Suscal"],
+            "Carchi": ["Tulcán", "Bolívar", "Espejo", "Mira", "Montúfar", "San Pedro de Huaca"],
+            "Chimborazo": ["Riobamba", "Alausí", "Chambo", "Chunchi", "Colta", "Cumandá", "Guano", "Pallatanga"],
+            "Cotopaxi": ["Latacunga", "La Maná", "Pangua", "Pujilí", "Salcedo", "Saquisilí", "Sigchos"],
+            "El Oro": ["Machala", "Santa Rosa", "Pasaje", "Huaquillas", "Arenillas", "Zaruma", "Portovelo", "Piñas", "El Guabo"],
+            "Esmeraldas": ["Esmeraldas", "Atacames", "Eloy Alfaro", "Muisne", "Quinindé", "San Lorenzo"],
+            "Galápagos": ["Puerto Baquerizo Moreno", "Puerto Ayora", "Puerto Villamil"],
+            "Guayas": ["Guayaquil", "Durán", "Milagro", "Daule", "Samborondón", "El Empalme", "Naranjal", "Balzar", "Pedro Carbo", "Playas"],
+            "Imbabura": ["Ibarra", "Otavalo", "Cotacachi", "Antonio Ante", "Pimampiro", "San Miguel de Urcuquí"],
+            "Loja": ["Loja", "Calvas", "Catamayo", "Celica", "Macará", "Puyango", "Saraguro", "Zapotillo"],
+            "Los Ríos": ["Babahoyo", "Quevedo", "Buena Fe", "Ventanas", "Vinces", "Puebloviejo", "Valencia"],
+            "Manabí": ["Portoviejo", "Manta", "Chone", "El Carmen", "Monte Cristi", "Jipijapa", "Pedernales", "Bahía de Caráquez"],
+            "Morona Santiago": ["Macas", "Gualaquiza", "Sucúa", "Palora", "San Juan Bosco", "Logroño", "Limón Indanza"],
+            "Napo": ["Tena", "Archidona", "El Chaco", "Quijos", "Carlos Julio Arosemena Tola"],
+            "Orellana": ["Puerto Francisco de Orellana", "La Joya de los Sachas", "Loreto", "Nuevo Rocafuerte"],
+            "Pastaza": ["Puyo", "Mera", "Santa Clara", "Arajuno"],
+            "Pichincha": ["Quito", "Cayambe", "Machachi", "Sangolquí", "Pedro Vicente Maldonado", "Puerto Quito", "San Miguel de los Bancos", "Tabacundo"],
+            "Santa Elena": ["Santa Elena", "La Libertad", "Salinas"],
+            "Santo Domingo de los Tsáchilas": ["Santo Domingo", "La Concordia"],
+            "Sucumbíos": ["Nueva Loja", "Cascales", "Cuyabeno", "Lumbaqui", "Putumayo", "Shushufindi", "Tarapoa"],
+            "Tungurahua": ["Ambato", "Baños", "Cevallos", "Mocha", "Patate", "Pelileo", "Píllaro", "Quero", "Tisaleo"],
+            "Zamora Chinchipe": ["Zamora", "Zumba", "Yantzaza", "El Pangui", "Zumbi", "Palanda", "Paquisha"]
+        };
+
         if (provinceSelect) {
-            provinceSelect.addEventListener('change', function() {
-                const selectedProvinceId = this.value;
-                
-                if (!selectedProvinceId) {
-                    // Si no hay provincia seleccionada, deshabilitar el select de ciudades
-                    citySelect.disabled = true;
-                    citySelect.value = '';
-                    const firstOption = citySelect.querySelector('option:first-child');
-                    if (firstOption) {
-                        firstOption.textContent = 'Selecciona una provincia primero';
+            // El plugin niceSelect se inicializa automáticamente por el tema
+            // Solo necesitamos vincular el evento 'change'
+
+            const handleProvinceChange = function() {
+                const selectedProvince = this.value;
+                citySelect.innerHTML = '<option value="">Selecciona tu ciudad</option>';
+
+                if (!selectedProvince) {
+                    citySelect.innerHTML = '<option value="">Selecciona una provincia primero</option>';
+                    if (window.jQuery && $(citySelect).length) {
+                        try {
+                            $(citySelect).niceSelect('update');
+                        } catch(e) {}
                     }
                     return;
                 }
-                
-                // Habilitar el select de ciudades
-                citySelect.disabled = false;
-                
-                // Limpiar opciones excepto la primera
-                const options = citySelect.querySelectorAll('option');
-                options.forEach((option, index) => {
-                    if (index === 0) {
-                        option.textContent = 'Selecciona tu ciudad';
-                    } else if (option.value !== 'Otra') {
-                        option.style.display = 'none';
-                    }
-                });
-                
-                // Mostrar solo las ciudades de la provincia seleccionada
-                const ciudadesDeProvince = citySelect.querySelectorAll(`option[data-province-id="${selectedProvinceId}"]`);
-                ciudadesDeProvince.forEach(option => {
-                    option.style.display = 'block';
-                });
-                
-                // Mostrar opción "Otra" siempre
-                const otraOption = citySelect.querySelector('option[value="Otra"]');
-                if (otraOption) {
-                    otraOption.style.display = 'block';
+
+
+                // Llenar ciudades de la provincia seleccionada
+                const ciudades = ecuadorData[selectedProvince];
+                if (ciudades) {
+                    ciudades.forEach(ciudad => {
+                        const option = document.createElement("option");
+                        option.value = ciudad;
+                        option.textContent = ciudad;
+                        citySelect.appendChild(option);
+                    });
                 }
                 
-                // Resetear selección de ciudad
+                // Agregar opción "Otra"
+                const otraOption = document.createElement("option");
+                otraOption.value = "Otra";
+                otraOption.textContent = "Otra ciudad";
+                citySelect.appendChild(otraOption);
+
                 citySelect.value = '';
+                
+                // Refrescar el nice-select después de inyectar las opciones en el DOM
+                if (window.jQuery && $(citySelect).length) {
+                    try {
+                        // Es más seguro destruir y recrear el plugin para que detecte las nuevas opciones dinámicas
+                        $(citySelect).niceSelect('update');
+                    } catch(e) {
+                        try {
+                            $(citySelect).selectpicker('refresh');
+                        } catch(e2) {}
+                    }
+                }
                 calculateShipping();
-            });
+            };
+            
+            if (window.jQuery) {
+                $(provinceSelect).on('change', handleProvinceChange);
+            } else {
+                provinceSelect.addEventListener('change', handleProvinceChange);
+            }
         }
         
         // Función para precargar provincia y ciudad del usuario
@@ -360,9 +415,8 @@
             }
         }
         
-        // Manejar cambio de ciudad - mostrar campo de "otra ciudad" cuando se selecciona "Otra"
         if (citySelect && otherCityField) {
-            citySelect.addEventListener('change', function() {
+            const handleCityChange = function() {
                 if (this.value === 'Otra') {
                     otherCityField.classList.remove('d-none');
                     otherCityInput.setAttribute('required', 'required');
@@ -373,7 +427,13 @@
                 }
                 // Calcular envío cuando cambia la ciudad
                 calculateShipping();
-            });
+            };
+            
+            if (window.jQuery) {
+                $(citySelect).on('change', handleCityChange);
+            } else {
+                citySelect.addEventListener('change', handleCityChange);
+            }
         }
         
         // Calcular envío inicial cuando carga la página
@@ -565,8 +625,8 @@
             
             // Calcular total: subtotal + envío - descuento - carnaval
             const discountAmount = parseFloat(document.getElementById('discount-amount-input').value) || 0;
-            const carnivalDiscount = {{ carnival_discount|default:0 }};
-            const giftWrapCost = {{ has_gift_wrap|yesno:"5.00,0.00" }};
+            const carnivalDiscount = parseFloat("{{ carnival_discount|default:0 }}") || 0;
+            const giftWrapCost = parseFloat("{{ has_gift_wrap|yesno:'5.00,0.00' }}") || 0;
             const finalTotal = subtotalAmount + shippingCost + giftWrapCost - discountAmount - carnivalDiscount;
             
             document.getElementById('checkout-total').textContent = '$' + finalTotal.toFixed(2);
@@ -593,7 +653,7 @@
         
         // Precargar datos del usuario si existen
         preloadUserData();
-        }
-    );
+    });
 </script>
+
 {% endblock %}

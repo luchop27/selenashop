@@ -1,5 +1,27 @@
 from django.db import models
 
+
+class SliderItem(models.Model):
+    """Imagen personalizada para el slider del home, independiente de colecciones."""
+    titulo = models.CharField(max_length=200, blank=True, help_text='Título sobre la imagen (opcional)')
+    subtitulo = models.CharField(max_length=300, blank=True, help_text='Texto debajo del título (opcional)')
+    imagen = models.ImageField(upload_to='slider/', help_text='Imagen desktop (recomendado: 1920x720px)')
+    imagen_mobile = models.ImageField(upload_to='slider/mobile/', blank=True, null=True, help_text='Imagen para móvil (recomendado: 768x900px, opcional)')
+    enlace_url = models.CharField(max_length=500, blank=True, help_text='URL destino al hacer clic (ej: /collections/ o https://...)')
+    texto_boton = models.CharField(max_length=80, blank=True, default='Ver más', help_text='Texto del botón (opcional)')
+    orden = models.PositiveIntegerField(default=10, help_text='Orden en el slider (menor = antes). Las colecciones aparecen primero.')
+    activo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['orden', '-created_at']
+        verbose_name = 'Slide Personalizado'
+        verbose_name_plural = 'Slides Personalizados'
+
+    def __str__(self):
+        return self.titulo or f'Slide #{self.pk}'
+
+
 class PaginaAyuda(models.Model):
     """Modelo para almacenar páginas de ayuda editables desde el admin"""
     

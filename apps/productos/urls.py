@@ -35,6 +35,12 @@ urlpatterns = [
     path('admin-panel/collections/add/', views.admin_coleccion_add, name='admin_coleccion_add'),
     path('admin-panel/collections/edit/<int:pk>/', views.admin_coleccion_edit, name='admin_coleccion_edit'),
     path('admin-panel/collections/delete/<int:pk>/', views.admin_coleccion_delete, name='admin_coleccion_delete'),
+
+    # Slider personalizado
+    path('admin-panel/slider/', views.admin_slider_list, name='admin_slider_list'),
+    path('admin-panel/slider/add/', views.admin_slider_add, name='admin_slider_add'),
+    path('admin-panel/slider/edit/<int:pk>/', views.admin_slider_edit, name='admin_slider_edit'),
+    path('admin-panel/slider/delete/<int:pk>/', views.admin_slider_delete, name='admin_slider_delete'),
     
     # API Atributos
     path('admin-panel/api/atributos/', views.api_atributos_list, name='api_atributos_list'),

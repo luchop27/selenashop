@@ -186,7 +186,7 @@
         data-centered="false" data-space="0" data-loop="true" data-auto-play="true" data-delay="2000"
         data-speed="1000">
         <div class="swiper-wrapper">
-            {% if colecciones %}
+            {% if colecciones or slider_items %}
                 {% for coleccion in colecciones %}
                     <div class="swiper-slide" lazy="true">
                         <div class="wrap-slider">
@@ -203,11 +203,35 @@
                                         <p class="fade-item fade-item-2 text-white">Descubre nuestra colección exclusiva</p>
                                     {% endif %}
                                     <a href="{% url 'core:shop-collection-sub' %}?coleccion={{ coleccion.slug }}"
-                                        class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Ver
-                                            colección</span><i class="icon icon-arrow-right"></i></a>
+                                        class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Ver colección</span><i class="icon icon-arrow-right"></i></a>
                                 </div>
-
                             </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                {% for slide in slider_items %}
+                    <div class="swiper-slide" lazy="true">
+                        <div class="wrap-slider">
+                            <picture class="collection-hero-picture">
+                                <source media="(max-width: 768px)" srcset="{% if slide.imagen_mobile %}{{ slide.imagen_mobile.url }}{% else %}{{ slide.imagen.url }}{% endif %}">
+                                <img src="{{ slide.imagen.url }}" alt="{{ slide.titulo }}">
+                            </picture>
+                            {% if slide.titulo or slide.enlace_url %}
+                            <div class="box-content text-center">
+                                <div class="container">
+                                    {% if slide.titulo %}
+                                        <h1 class="fade-item fade-item-1 text-white heading">{{ slide.titulo }}</h1>
+                                    {% endif %}
+                                    {% if slide.subtitulo %}
+                                        <p class="fade-item fade-item-2 text-white">{{ slide.subtitulo }}</p>
+                                    {% endif %}
+                                    {% if slide.enlace_url %}
+                                        <a href="{{ slide.enlace_url }}"
+                                            class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>{{ slide.texto_boton|default:"Ver más" }}</span><i class="icon icon-arrow-right"></i></a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}
@@ -221,44 +245,8 @@
                                 <h1 class="fade-item fade-item-1 text-white heading">Elegancia Sin Esfuerzo</h1>
                                 <p class="fade-item fade-item-2 text-white">De casual a formal, te tenemos cubierto</p>
                                 <a href="{% url 'productos:producto_list' %}"
-                                    class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Shop
-                                        collection</span><i class="icon icon-arrow-right"></i></a>
+                                    class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Ver colección</span><i class="icon icon-arrow-right"></i></a>
                             </div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="swiper-slide" lazy="true">
-                    <div class="wrap-slider">
-                        <img class="lazyload" data-src="{% static 'images/slider/fashion-slideshow-11.jpg' %}"
-                            src="{% static 'images/slider/fashion-slideshow-11.jpg' %}" alt="fashion-slideshow-01">
-                        <div class="box-content text-center">
-                            <div class="container">
-                                <h1 class="fade-item fade-item-1 text-white heading">El Misterio Detrás</h1>
-                                <p class="fade-item fade-item-2 text-white">De casual a formal, te tenemos
-                                    cubierto</p>
-                                <a href="{% url 'productos:producto_list' %}"
-                                    class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Shop
-                                        collection</span><i class="icon icon-arrow-right"></i></a>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="swiper-slide" lazy="true">
-                    <div class="wrap-slider">
-                        <img class="lazyload" data-src="{% static 'images/slider/fashion-slideshow-12.jpg' %}"
-                            src="{% static 'images/slider/fashion-slideshow-12.jpg' %}" alt="fashion-slideshow-01">
-                        <div class="box-content text-center">
-                            <div class="container">
-                                <h1 class="fade-item fade-item-1 text-white">Belleza Multifacética</h1>
-                                <p class="fade-item fade-item-2 text-white">De casual a formal, te tenemos
-                                    cubierto</p>
-                                <a href="{% url 'productos:producto_list' %}"
-                                    class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Ver
-                                        colección</span><i class="icon icon-arrow-right"></i></a>
-                            </div>
-
                         </div>
                     </div>
                 </div>

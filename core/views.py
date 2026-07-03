@@ -101,8 +101,9 @@ def _get_testimonials_data():
 def inicio(request):
     """Renderiza la plantilla home-05.html (nuevo index)"""
     from apps.productos.models import Coleccion, Categoria, Producto
+    from apps.ayudas.models import SliderItem
     from django.db.models import Count, Min
-    
+
     # Obtener colecciones activas para el slider superior (excluyendo coleccion basica)
     from django.db.models import Q
     colecciones = (
@@ -117,6 +118,9 @@ def inicio(request):
         .annotate(num_productos=Count('productos'))
         .order_by('-destacada', '-created_at')[:5]  # Maximo 5 para el slider
     )
+
+    # Slides personalizados del admin (además de las colecciones)
+    slider_items = SliderItem.objects.filter(activo=True).order_by('orden', '-created_at')
     
     # Obtener subcategorÃ­as de "Ropa" para la secciÃ³n Featured Collections
     try:
@@ -353,6 +357,7 @@ def inicio(request):
 
     context['shop_gram_products'] = shop_gram_products
     context['testimonials'] = _get_testimonials_data()
+    context['slider_items'] = slider_items
     return render(request, 'home-05.html', context)
 
 
@@ -2822,71 +2827,23 @@ def wishlist_count(request):
 
 # Vistas para pÃ¡ginas estÃ¡ticas
 def terms_conditions(request):
-    """Renderiza la pÃ¡gina de tÃ©rminos y condiciones desde el admin Django"""
-    from apps.ayudas.models import PaginaAyuda
-    pagina = None
-    try:
-        pagina = PaginaAyuda.objects.get(tipo='terminos', activo=True)
-    except PaginaAyuda.DoesNotExist:
-        # Si no existe, mostrar una pÃ¡gina por defecto
-        pass
-    
-    if pagina:
-        return render(request, 'terms-conditions.html', {'pagina': pagina})
-    else:
-        # Renderizar template vacÃ­o si no hay contenido
-        return render(request, 'terms-conditions.html', {'pagina': None})
+    return render(request, 'terms-conditions.html')
 
 
 def privacy_policy(request):
-    """Renderiza la pÃ¡gina de polÃ­tica de privacidad desde el admin Django"""
-    from apps.ayudas.models import PaginaAyuda
-    pagina = None
-    try:
-        pagina = PaginaAyuda.objects.get(tipo='privacidad', activo=True)
-    except PaginaAyuda.DoesNotExist:
-        pass
-    
-    if pagina:
-        return render(request, 'terms-conditions.html', {'pagina': pagina})
-    else:
-        return render(request, 'terms-conditions.html', {'pagina': None})
+    return redirect('core:terms-conditions')
 
 
 def delivery_return(request):
-    """Renderiza la pÃ¡gina de devoluciones y cambios desde el admin Django"""
-    from apps.ayudas.models import PaginaAyuda
-    pagina = None
-    try:
-        pagina = PaginaAyuda.objects.get(tipo='devoluciones', activo=True)
-    except PaginaAyuda.DoesNotExist:
-        pass
-    
-    if pagina:
-        return render(request, 'terms-conditions.html', {'pagina': pagina})
-    else:
-        return render(request, 'terms-conditions.html', {'pagina': None})
+    return redirect('core:terms-conditions')
 
 
 def shipping_delivery(request):
-    """Renderiza la pÃ¡gina de envÃ­os desde el admin Django"""
-    from apps.ayudas.models import PaginaAyuda
-    pagina = None
-    try:
-        pagina = PaginaAyuda.objects.get(tipo='envios', activo=True)
-    except PaginaAyuda.DoesNotExist:
-        pass
-    
-    if pagina:
-        return render(request, 'terms-conditions.html', {'pagina': pagina})
-    else:
-        return render(request, 'terms-conditions.html', {'pagina': None})
+    return redirect('core:terms-conditions')
 
 
 def faq(request):
-    """Renderiza la pÃ¡gina de FAQ (redirige a la vista dinÃ¡micamente cargada desde ayudas)"""
-    from apps.ayudas.views import faq_list
-    return faq_list(request)
+    return redirect('core:terms-conditions')
 
 
 def compare(request):
