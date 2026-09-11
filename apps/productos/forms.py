@@ -41,6 +41,18 @@ class ProductoForm(forms.ModelForm):
     def clean_marca(self):
         marca = (self.cleaned_data.get('marca') or '').strip()
         return marca or None
+        
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if nombre:
+            from django.utils.text import slugify
+            slug = slugify(nombre)
+            qs = Producto.objects.filter(slug=slug)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError('Ya existe un producto con este nombre.')
+        return nombre
     
     def save(self, commit=True):
         """
@@ -140,6 +152,18 @@ class CategoriaForm(forms.ModelForm):
         self.fields['padre'].label = 'Categoría padre'
         self.fields['estado'].label = 'Activa'
 
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if nombre:
+            from django.utils.text import slugify
+            slug = slugify(nombre)
+            qs = Categoria.objects.filter(slug=slug)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError('Ya existe una categoría con este nombre.')
+        return nombre
+
 
 # -----------------------------
 # FORMULARIOS PARA COLECCIÓN
@@ -166,3 +190,15 @@ class ColeccionForm(forms.ModelForm):
         self.fields['imagen_mobile'].label = 'Imagen Mobile'
         self.fields['activo'].label = 'Activa'
         self.fields['destacada'].label = 'Destacada'
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        if nombre:
+            from django.utils.text import slugify
+            slug = slugify(nombre)
+            qs = Coleccion.objects.filter(slug=slug)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError('Ya existe una colección con este nombre.')
+        return nombre

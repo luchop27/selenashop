@@ -130,7 +130,13 @@ class Coleccion(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             from django.utils.text import slugify
-            self.slug = slugify(self.nombre)
+            base_slug = slugify(self.nombre)
+            slug = base_slug
+            counter = 1
+            while Coleccion.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         optimize_image_field(self, 'imagen')
         optimize_image_field(self, 'imagen_mobile')
         super().save(*args, **kwargs)
@@ -193,7 +199,13 @@ class Categoria(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             from django.utils.text import slugify
-            self.slug = slugify(self.nombre)
+            base_slug = slugify(self.nombre)
+            slug = base_slug
+            counter = 1
+            while Categoria.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         optimize_image_field(self, 'imagen')
         super().save(*args, **kwargs)
 
@@ -294,7 +306,13 @@ class Producto(models.Model):
         """Garantiza una marca por defecto cuando el campo llega vacio y auto-genera slug."""
         if not self.slug:
             from django.utils.text import slugify
-            self.slug = slugify(self.nombre)
+            base_slug = slugify(self.nombre)
+            slug = base_slug
+            counter = 1
+            while Producto.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
         self.marca = (self.marca or '').strip() or 'Básica'
         super().save(*args, **kwargs)
 

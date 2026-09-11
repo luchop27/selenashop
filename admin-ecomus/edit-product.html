@@ -331,6 +331,12 @@ async function cargarDatosIniciales() {
         
         console.log('Datos iniciales cargados exitosamente');
         
+        {% if form.nombre.errors %}
+        setTimeout(() => {
+            alert("Atención: {{ form.nombre.errors.0|escapejs }}");
+        }, 500);
+        {% endif %}
+        
         // Pre-seleccionar la categoría actual del producto
         const categoriaActualId = {{ producto.categoria.id }};
         const categoriaActual = categoriasData.find(c => c.id === categoriaActualId);

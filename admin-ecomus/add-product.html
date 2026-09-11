@@ -278,6 +278,41 @@ async function cargarDatosIniciales() {
         
         console.log('Datos iniciales cargados exitosamente');
         
+        {% if form.nombre.errors %}
+        setTimeout(() => {
+            alert("Atención: {{ form.nombre.errors.0|escapejs }}");
+        }, 500);
+        {% endif %}
+        
+        // Restaurar estado si el formulario tiene errores (está bound)
+        {% if form.is_bound %}
+        const categoriaSeleccionadaId = "{{ form.categoria.value|default:'' }}";
+        if (categoriaSeleccionadaId) {
+            console.log('Restaurando categoría seleccionada:', categoriaSeleccionadaId);
+            const categoriaSel = categoriasData.find(c => c.id == parseInt(categoriaSeleccionadaId));
+            if (categoriaSel) {
+                if (categoriaSel.padre) {
+                    // Es subcategoría, primero seleccionar el padre
+                    selectCategoriaPrincipal.value = categoriaSel.padre;
+                    selectCategoriaPrincipal.dispatchEvent(new Event('change'));
+                    
+                    // Dar tiempo a que el select de subcategorías se pueble
+                    setTimeout(() => {
+                        const selectSub = document.getElementById('id_categoria');
+                        if (selectSub) {
+                            selectSub.value = categoriaSeleccionadaId;
+                            selectSub.dispatchEvent(new Event('change'));
+                        }
+                    }, 50);
+                } else {
+                    // Es categoría principal
+                    selectCategoriaPrincipal.value = categoriaSeleccionadaId;
+                    selectCategoriaPrincipal.dispatchEvent(new Event('change'));
+                }
+            }
+        }
+        {% endif %}
+        
     } catch (error) {
         console.error('Error cargando datos:', error);
         alert('Error cargando los datos del formulario. Por favor, recarga la página.');
