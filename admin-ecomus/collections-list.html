@@ -63,7 +63,7 @@
                                                 class="icon-plus"></i>Agregar nueva</a>
                                     </div>
                                     <div class="wg-table table-all-attribute">
-                                        <ul class="table-title flex gap20 mb-14">
+                                        <ul class="table-title flex gap20 mb-14" style="grid-template-columns: minmax(250px, 1.5fr) 150px 100px 100px 100px 100px 120px; display: grid; align-items: center;">
                                             <li>
                                                 <div class="body-title">Colección</div>
                                             </li>
@@ -80,12 +80,15 @@
                                                 <div class="body-title">Posición</div>
                                             </li>
                                             <li>
+                                                <div class="body-title">Color</div>
+                                            </li>
+                                            <li>
                                                 <div class="body-title">Acciones</div>
                                             </li>
                                         </ul>
                                         <ul class="flex flex-column">
                                             {% for coleccion in colecciones %}
-                                            <li class="attribute-item item-row flex items-center justify-between gap20">
+                                            <li class="attribute-item item-row flex items-center justify-between gap20" style="grid-template-columns: minmax(250px, 1.5fr) 150px 100px 100px 100px 100px 120px; display: grid; align-items: center;">
                                                 <div class="name">
                                                     <a href="{% url 'productos:admin_coleccion_edit' coleccion.pk %}" class="body-title-2">
                                                         {{ coleccion.nombre }}
@@ -122,6 +125,10 @@
                                                     {% endif %}
                                                 </div>
                                                 <div class="body-text">{{ coleccion.posicion }}</div>
+                                                <div class="body-text flex gap10 items-center">
+                                                    <div class="color-toggle" data-id="{{ coleccion.pk }}" data-color="negro" style="width: 22px; height: 22px; border-radius: 50%; background-color: #000; border: 2px solid {% if coleccion.color_texto == 'blanco' %}#e5e7eb{% else %}#10b981{% endif %}; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" title="Texto Negro"></div>
+                                                    <div class="color-toggle" data-id="{{ coleccion.pk }}" data-color="blanco" style="width: 22px; height: 22px; border-radius: 50%; background-color: #fff; border: 2px solid {% if coleccion.color_texto == 'blanco' %}#10b981{% else %}#e5e7eb{% endif %}; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" title="Texto Blanco"></div>
+                                                </div>
                                                 <div class="list-icon-function">
                                                     <div class="item edit">
                                                         <a href="{% url 'productos:admin_coleccion_edit' coleccion.pk %}">
@@ -197,4 +204,46 @@
                         <!-- /bottom-page -->
                     </div>
                     <!-- /main-content -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggles = document.querySelectorAll('.color-toggle');
+    toggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const color = this.getAttribute('data-color');
+            const formData = new FormData();
+            formData.append('color_texto', color);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch(`/admin-panel/api/collections/${id}/color/`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    // Update visual state
+                    const rowToggles = document.querySelectorAll(`.color-toggle[data-id="${id}"]`);
+                    rowToggles.forEach(t => {
+                        if (t.getAttribute('data-color') === color) {
+                            t.style.borderColor = '#10b981';
+                        } else {
+                            t.style.borderColor = '#e5e7eb';
+                        }
+                    });
+                } else {
+                    alert('Error al actualizar el color.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Ocurrió un error en la conexión.');
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

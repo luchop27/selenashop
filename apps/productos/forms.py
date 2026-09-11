@@ -7,14 +7,13 @@ class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
         fields = [
-            'nombre', 'slug', 'categoria', 'coleccion', 'tipo',
+            'nombre', 'categoria', 'coleccion', 'tipo',
             'descripcion_corta', 'descripcion_larga', 'marca',
             'precio_base', 'tiene_tallas', 'bajo_pedido'
         ]
         widgets = {
             # Ajustes de clases para que coincidan con el CSS del template admin-ecomus
             'nombre': forms.TextInput(attrs={'class': 'mb-10 tf-input', 'placeholder': 'Título del producto'}),
-            'slug': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'slug-ejemplo'}),
             'categoria': forms.Select(attrs={'class': 'tf-input', 'placeholder': 'Seleccionar categoría'}),
             'coleccion': forms.Select(attrs={'class': 'tf-input', 'placeholder': 'Seleccionar colección'}),
             'tipo': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Tipo (ej: vestido)'}),
@@ -120,31 +119,24 @@ ImagenFormSet = inlineformset_factory(
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
-        fields = ['nombre', 'slug', 'descripcion', 'imagen', 'coleccion', 'padre', 'estado']
+        fields = ['nombre', 'descripcion', 'imagen', 'padre', 'estado']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Nombre de la categoría'}),
-            'slug': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'slug-ejemplo'}),
             'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'tf-input', 'placeholder': 'Descripción de la categoría'}),
             'imagen': forms.FileInput(attrs={'class': 'tf-input'}),
-            'coleccion': forms.Select(attrs={'class': 'tf-input'}),
             'padre': forms.Select(attrs={'class': 'tf-input'}),
             'estado': forms.CheckboxInput(attrs={'class': 'tf-checkbox'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Filtrar solo colecciones activas
-        self.fields['coleccion'].queryset = Coleccion.objects.filter(activo=True).order_by('nombre')
-        self.fields['coleccion'].empty_label = 'Sin colección'
         # Filtrar solo categorías padre (sin padre)
         self.fields['padre'].queryset = Categoria.objects.filter(padre__isnull=True).order_by('nombre')
         self.fields['padre'].empty_label = 'Ninguna (Categoría principal)'
         # Etiquetas en español
         self.fields['nombre'].label = 'Nombre'
-        self.fields['slug'].label = 'Slug'
         self.fields['descripcion'].label = 'Descripción'
         self.fields['imagen'].label = 'Imagen'
-        self.fields['coleccion'].label = 'Colección'
         self.fields['padre'].label = 'Categoría padre'
         self.fields['estado'].label = 'Activa'
 
@@ -155,10 +147,9 @@ class CategoriaForm(forms.ModelForm):
 class ColeccionForm(forms.ModelForm):
     class Meta:
         model = Coleccion
-        fields = ['nombre', 'slug', 'descripcion', 'imagen', 'imagen_mobile', 'activo', 'destacada']
+        fields = ['nombre', 'descripcion', 'color_texto', 'imagen', 'imagen_mobile', 'activo', 'destacada']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'Nombre de la colección'}),
-            'slug': forms.TextInput(attrs={'class': 'tf-input', 'placeholder': 'slug-ejemplo'}),
             'descripcion': forms.Textarea(attrs={'rows': 3, 'class': 'tf-input', 'placeholder': 'Descripción de la colección'}),
             'imagen': forms.FileInput(attrs={'class': 'tf-input'}),
             'imagen_mobile': forms.FileInput(attrs={'class': 'tf-input'}),
@@ -170,7 +161,6 @@ class ColeccionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Etiquetas en español
         self.fields['nombre'].label = 'Nombre'
-        self.fields['slug'].label = 'Slug'
         self.fields['descripcion'].label = 'Descripción'
         self.fields['imagen'].label = 'Imagen Desktop'
         self.fields['imagen_mobile'].label = 'Imagen Mobile'

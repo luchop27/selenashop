@@ -93,7 +93,7 @@
                                                 <div class="body-title">Imagen</div>
                                             </li>
                                             <li>
-                                                <div class="body-title">Slug</div>
+                                                <div class="body-title">Acciones</div>
                                             </li>
                                             <li>
                                                 <div class="body-title">Subcategorías</div>
@@ -106,9 +106,6 @@
                                             </li>
                                             <li>
                                                 <div class="body-title">Estado</div>
-                                            </li>
-                                            <li>
-                                                <div class="body-title">Acciones</div>
                                             </li>
                                         </ul>
 
@@ -136,9 +133,30 @@
                                                     {% endif %}
                                                 </div>
                                                 
-                                                <div class="body-text text-main-dark mt-4">
-                                                    <code>{{ categoria.slug }}</code>
+                                                <!-- Columna de Acciones -->
+                                                <div class="list-icon-function mt-4">
+                                                    {% if categoria.num_subcategorias > 0 %}
+                                                    <div class="item eye" title="Ver subcategorías">
+                                                        <a href="?padre={{ categoria.id }}">
+                                                            <i class="icon-eye"></i>
+                                                        </a>
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="item edit" title="Editar">
+                                                        <a href="{% url 'productos:panel_categoria_edit' categoria.id %}">
+                                                            <i class="icon-edit-3"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="item trash" title="Eliminar">
+                                                        <form method="post" action="{% url 'productos:panel_categoria_delete' categoria.id %}" style="display: inline;">
+                                                            {% csrf_token %}
+                                                            <button type="submit" onclick="return confirm('¿Estás seguro de eliminar esta categoría?')" style="background: none; border: none; cursor: pointer; padding: 0;">
+                                                                <i class="icon-trash-2"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </div>
+                                                
                                                 <div class="body-text text-main-dark mt-4">
                                                     {% if categoria.num_subcategorias > 0 %}
                                                         <a href="?padre={{ categoria.id }}" class="tf-button style-3">
@@ -160,28 +178,6 @@
                                                     {% else %}
                                                         <span class="badge bg-secondary">Inactivo</span>
                                                     {% endif %}
-                                                </div>
-                                                <div class="list-icon-function">
-                                                    {% if categoria.num_subcategorias > 0 %}
-                                                    <div class="item eye" title="Ver subcategorías">
-                                                        <a href="?padre={{ categoria.id }}">
-                                                            <i class="icon-eye"></i>
-                                                        </a>
-                                                    </div>
-                                                    {% endif %}
-                                                    <div class="item edit" title="Editar">
-                                                        <a href="{% url 'productos:panel_categoria_edit' categoria.id %}">
-                                                            <i class="icon-edit-3"></i>
-                                                        </a>
-                                                    </div>
-                                                    <div class="item trash" title="Eliminar">
-                                                        <form method="post" action="{% url 'productos:panel_categoria_delete' categoria.id %}" style="display: inline;">
-                                                            {% csrf_token %}
-                                                            <button type="submit" onclick="return confirm('¿Estás seguro de eliminar esta categoría?')" style="background: none; border: none; cursor: pointer; padding: 0;">
-                                                                <i class="icon-trash-2"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
                                                 </div>
                                             </li>
                                             {% endfor %}

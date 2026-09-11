@@ -74,7 +74,13 @@ def normalizar_mensajes_publicos(request):
             continue
 
         vistos.add(key)
-        mensajes_validos.append((message.level, text, extra_tags))
+        mensajes_validos.append((message.level, str(message), extra_tags))
+
+    # Limpiar las listas internas de forma segura para evitar duplicación
+    if hasattr(storage, '_loaded_data'):
+        storage._loaded_data = []
+    if hasattr(storage, '_queued_messages'):
+        storage._queued_messages = []
 
     for msg in mensajes_validos:
         level = msg[0]

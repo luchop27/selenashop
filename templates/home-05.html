@@ -13,37 +13,20 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: center;
-        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
     }
-
-    .tf-slideshow .wrap-slider .collection-hero-picture {
-        display: block;
-        width: 100%;
-        height: 100%;
-    }
-
-    .tf-slideshow .wrap-slider .collection-hero-picture img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-        display: block;
-    }
-
+    
+    /* En dispositivos móviles, permitimos que la altura se adapte a la imagen original */
     @media (max-width: 768px) {
         .tf-slideshow .wrap-slider {
             height: auto;
         }
-
-        .tf-slideshow .wrap-slider .collection-hero-picture {
+        .tf-slideshow .wrap-slider img {
+            position: relative;
+            object-fit: contain; /* Mostramos la imagen completa en móvil */
             height: auto;
-        }
-
-        .tf-slideshow .wrap-slider .collection-hero-picture img {
-            width: 100%;
-            height: auto;
-            object-fit: initial;
         }
     }
     
@@ -196,11 +179,11 @@
                             </picture>
                             <div class="box-content text-center">
                                 <div class="container">
-                                    <h1 class="fade-item fade-item-1 text-white heading">{{ coleccion.nombre }}</h1>
+                                    <h1 class="fade-item fade-item-1 heading" style="color: {% if coleccion.color_texto == 'blanco' %}#fff{% else %}#000{% endif %};">{{ coleccion.nombre }}</h1>
                                     {% if coleccion.descripcion %}
-                                        <p class="fade-item fade-item-2 text-white">{{ coleccion.descripcion|truncatewords:15 }}</p>
+                                        <p class="fade-item fade-item-2" style="color: {% if coleccion.color_texto == 'blanco' %}#fff{% else %}#000{% endif %};">{{ coleccion.descripcion|truncatewords:15 }}</p>
                                     {% else %}
-                                        <p class="fade-item fade-item-2 text-white">Descubre nuestra colección exclusiva</p>
+                                        <p class="fade-item fade-item-2" style="color: {% if coleccion.color_texto == 'blanco' %}#fff{% else %}#000{% endif %};">Descubre nuestra colección exclusiva</p>
                                     {% endif %}
                                     <a href="{% url 'core:shop-collection-sub' %}?coleccion={{ coleccion.slug }}"
                                         class="fade-item fade-item-3 tf-btn btn-light-icon animate-hover-btn btn-xl radius-3"><span>Ver colección</span><i class="icon icon-arrow-right"></i></a>

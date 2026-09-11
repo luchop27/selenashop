@@ -56,12 +56,7 @@
                                                    tabindex="0" value="" aria-required="true" required>
                                         </fieldset>
 
-                                        <fieldset class="name">
-                                            <div class="body-title mb-10">Slug <span class="tf-color-1">*</span></div>
-                                            <input type="text" placeholder="primavera-2024" name="slug" id="id_slug" 
-                                                   tabindex="0" value="" aria-required="true" required>
-                                            <div class="text-tiny text-surface-2">Se genera automáticamente del nombre.</div>
-                                        </fieldset>
+
 
                         <fieldset class="description">
                             <div class="body-title mb-10">Descripción</div>
@@ -96,6 +91,20 @@
                         </fieldset>
 
                         <div class="cols-lg gap22">
+                            <fieldset class="name">
+                                <div class="body-title mb-10">Color del Texto (Slider)</div>
+                                <div class="flex gap20 items-center">
+                                    <div class="flex gap10 items-center">
+                                        <input type="radio" name="color_texto" id="color_negro" value="negro" checked>
+                                        <label for="color_negro">Negro</label>
+                                    </div>
+                                    <div class="flex gap10 items-center">
+                                        <input type="radio" name="color_texto" id="color_blanco" value="blanco">
+                                        <label for="color_blanco">Blanco</label>
+                                    </div>
+                                </div>
+                            </fieldset>
+
                             <fieldset class="name">
                                 <div class="body-title mb-10">Estado</div>
                                 <div class="flex gap10 items-center">
@@ -138,15 +147,7 @@
                     <!-- /main-content -->
 
 <script>
-// Auto-generate slug from nombre
-document.getElementById('id_nombre').addEventListener('input', function() {
-    const nombre = this.value;
-    const slug = nombre.toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
-        .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with dashes
-        .replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
-    document.getElementById('id_slug').value = slug;
-});
+
 
 // ========================================
 // MANEJO DE IMAGEN DE COLECCIÓN

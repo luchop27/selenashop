@@ -584,8 +584,12 @@ function generarVariantes() {
     variantsList.innerHTML = '';
     
     // Obtener el slug del producto para generar el SKU
-    const productoSlug = document.querySelector('[name="slug"]').value || 'producto';
-    
+    const nombreVal = document.querySelector('[name="nombre"]').value;
+    const productoSlug = nombreVal ? nombreVal.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') : 'producto';
+        
     combinaciones.forEach((combo, index) => {
         const nombre = combo.map(c => c.valorNombre).join(' / ');
         
@@ -635,21 +639,8 @@ function generarVariantes() {
     });
 }
 
-// Auto-generar slug
+// Regenerar variantes cuando cambie el nombre (para el SKU)
 document.querySelector('[name="nombre"]').addEventListener('input', function() {
-    const nombre = this.value;
-    const slug = nombre.toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-    document.querySelector('[name="slug"]').value = slug;
-    
-    // Regenerar variantes con el nuevo slug
-    generarVariantes();
-});
-
-// También regenerar cuando se modifique el slug manualmente
-document.querySelector('[name="slug"]').addEventListener('input', function() {
     generarVariantes();
 });
 

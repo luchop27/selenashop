@@ -1643,6 +1643,20 @@ def admin_coleccion_delete(request, pk):
 	return redirect('productos:admin_colecciones_list')
 
 
+@admin_required
+def api_coleccion_update_color(request, pk):
+    """API para actualizar el color del texto de una colección desde la lista."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+        
+    coleccion = get_object_or_404(Coleccion, pk=pk)
+    color = request.POST.get('color_texto') or 'negro'
+    if color in ['blanco', 'negro']:
+        coleccion.color_texto = color
+        coleccion.save(update_fields=['color_texto'])
+        return JsonResponse({'success': True, 'color_texto': color})
+    return JsonResponse({'success': False, 'error': 'Color no válido'}, status=400)
+
 
 # =========================
 #  API QUICK VIEW

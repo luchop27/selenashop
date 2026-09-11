@@ -78,21 +78,21 @@
                                     </div>
                                     
                                     <div class="wg-table table-product-list">
-                                        <ul class="table-title flex gap20 mb-14">
+                                        <ul class="table-title flex gap20 mb-14" style="grid-template-columns: minmax(200px, 1.5fr) 60px 100px 100px 80px 80px 60px 80px 80px; display: grid; align-items: center;">
                                             <li><div class="body-title">Producto</div></li>
                                             <li><div class="body-title">ID</div></li>
+                                            <li><div class="body-title">Acciones</div></li>
                                             <li><div class="body-title">Colección</div></li>
                                             <li><div class="body-title">Precio</div></li>
                                             <li><div class="body-title">Variantes</div></li>
                                             <li><div class="body-title">Sstock</div></li>
                                             <li><div class="body-title">Estado</div></li>
                                             <li><div class="body-title">Fecha</div></li>
-                                            <li><div class="body-title">Acciones</div></li>
                                         </ul>
 
                                         <ul class="flex flex-column">
                                         {% for producto in productos %}
-                                        <li class="wg-product item-row gap20">
+                                        <li class="wg-product item-row gap20" style="grid-template-columns: minmax(200px, 1.5fr) 60px 100px 100px 80px 80px 60px 80px 80px; display: grid; align-items: center;">
                                             <!-- nombre + imagen -->
                                             <div class="name" style="display: flex; align-items: center; gap: 15px;">
                                                 <label class="custom-toggle" style="margin-right: 10px;">
@@ -131,6 +131,21 @@
 
                                             <!-- ID -->
                                             <div class="body-text text-main-dark mt-4">#{{ producto.id }}</div>
+
+                                            <!-- acciones -->
+                                            <div class="list-icon-function">
+                                                <div class="item eye">
+                                                    <a href="{% url 'productos:admin_producto_view' producto.pk %}" title="Ver producto"><i class="icon-eye"></i></a>
+                                                </div>
+                                                <div class="item edit">
+                                                    <a href="{% url 'productos:admin_producto_edit' producto.pk %}" title="Editar producto"><i class="icon-edit-3"></i></a>
+                                                </div>
+                                                <div class="item trash">
+                                                    <a href="javascript:void(0);" onclick="eliminarProducto({{ producto.pk }}, '{{ producto.nombre|escapejs }}', {{ producto.variantes.count }})" title="Eliminar producto">
+                                                        <i class="icon-trash-2"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
 
                                             <!-- COLECCIÓN -->
                                             <div class="body-text text-main-dark mt-4">
@@ -179,20 +194,6 @@
                                                 {{ producto.created_at|date:"d/m/Y" }}
                                             </div>
 
-                                            <!-- acciones -->
-                                            <div class="list-icon-function">
-                                                <div class="item eye">
-                                                    <a href="{% url 'productos:admin_producto_view' producto.pk %}" title="Ver producto"><i class="icon-eye"></i></a>
-                                                </div>
-                                                <div class="item edit">
-                                                    <a href="{% url 'productos:admin_producto_edit' producto.pk %}" title="Editar producto"><i class="icon-edit-3"></i></a>
-                                                </div>
-                                                <div class="item trash">
-                                                    <a href="javascript:void(0);" onclick="eliminarProducto({{ producto.pk }}, '{{ producto.nombre|escapejs }}', {{ producto.variantes.count }})" title="Eliminar producto">
-                                                        <i class="icon-trash-2"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
                                         </li>
                                         {% empty %}
                                         <li class="item-row gap20">

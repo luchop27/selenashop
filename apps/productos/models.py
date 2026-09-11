@@ -86,6 +86,17 @@ class Coleccion(models.Model):
     slug = models.SlugField(max_length=180, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     
+    COLOR_TEXTO_CHOICES = [
+        ('negro', 'Negro'),
+        ('blanco', 'Blanco'),
+    ]
+    color_texto = models.CharField(
+        max_length=10,
+        choices=COLOR_TEXTO_CHOICES,
+        default='negro',
+        help_text="Color del texto para el título en el slider"
+    )
+    
     # Imagen desktop de la colección (formato horizontal)
     imagen = models.ImageField(
         upload_to='colecciones/',
@@ -117,6 +128,9 @@ class Coleccion(models.Model):
         return self.nombre
 
     def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.nombre)
         optimize_image_field(self, 'imagen')
         optimize_image_field(self, 'imagen_mobile')
         super().save(*args, **kwargs)
@@ -177,6 +191,9 @@ class Categoria(models.Model):
         return self.nombre
 
     def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.nombre)
         optimize_image_field(self, 'imagen')
         super().save(*args, **kwargs)
 
@@ -205,6 +222,12 @@ class Estilo(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.nombre)
+        super().save(*args, **kwargs)
 
 
 # ------------------------------
@@ -268,7 +291,10 @@ class Producto(models.Model):
         return self.nombre
 
     def save(self, *args, **kwargs):
-        """Garantiza una marca por defecto cuando el campo llega vacio."""
+        """Garantiza una marca por defecto cuando el campo llega vacio y auto-genera slug."""
+        if not self.slug:
+            from django.utils.text import slugify
+            self.slug = slugify(self.nombre)
         self.marca = (self.marca or '').strip() or 'Básica'
         super().save(*args, **kwargs)
 
